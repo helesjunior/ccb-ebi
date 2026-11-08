@@ -13,7 +13,7 @@ Duas listas: **decisões em aberto** (D-nn), que precisam de aprovação da CCB,
 | D-05 | Quais feedbacks os responsáveis veem e quem modera | CCB | RF-09 | resolvida: só após moderação do Ministério Local | [ADR-0008](ADR-0008-moderacao-de-feedback.md) |
 | D-06 | Política editorial, direitos autorais e publicação nacional dos PDFs | CCB + jurídico | RF-10 | aberta | — |
 | D-07 | Um ou dois apps; quem tem a conta de desenvolvedor nas lojas | CCB + TI | RF-13, E11 | em parte: um app único; titular das lojas em aberto | [ADR-0009](ADR-0009-aplicativo-unico.md) |
-| D-08 | Funcionamento offline e sincronização | Produto | E13 | aberta; opções e recomendação abaixo | — |
+| D-08 | Funcionamento offline e sincronização | Produto | E13 | resolvida: offline só para presença, com o app | [ADR-0016](ADR-0016-offline-para-presenca.md) |
 | D-09 | Equipe mínima por sessão e aprovação de escalas | CCB | RF-07, M-06 | em parte: aprovação pela Coordenadora chefe; tamanho da equipe em aberto | [ADR-0010](ADR-0010-equipe-minima-e-aprovacao-de-escala.md) |
 | D-10 | Exportação e acesso a dados identificáveis em níveis superiores | CCB + DPO | RF-14, matriz | aberta | — |
 | D-11 | Infraestrutura, padrões tecnológicos e metas finais de SLA/RPO/RTO | TI CCB | RNF-03, arquitetura | aberta; proposta para o piloto nos ADRs 0004 a 0006 | [ADR-0004](ADR-0004-conteineres-e-orquestracao.md) |
@@ -43,15 +43,6 @@ Duas listas: **decisões em aberto** (D-nn), que precisam de aprovação da CCB,
 | [ADR-0013](ADR-0013-bloqueio-menores-de-3-anos.md) | Menores de 3 anos não participam | aceito |
 | [ADR-0014](ADR-0014-avaliacao-por-utilizacao.md) | Avaliação de atividade por utilização | aceito |
 | [ADR-0015](ADR-0015-cadastro-assistido.md) | Cadastro assistido pela coordenadora | aceito |
-
-## D-08 — Opções para funcionamento offline
-
-| Opção | O que é | Custo | Risco |
-|---|---|---|---|
-| A. Só online, com contingência em papel | Sem internet, a coordenadora anota as presenças numa lista e lança depois no sistema | Nenhum desenvolvimento extra | Retrabalho e erro de digitação quando falta internet |
-| B. Offline só para presença | O app guarda na fila as presenças da sessão aberta e envia quando a conexão volta; o servidor resolve duplicidades | Médio: cache dos participantes do EBI no aparelho, fila e sincronização | Dados de crianças armazenados no celular (precisa de criptografia e limpeza) |
-| C. Offline completo | Todas as funções funcionam sem internet | Alto | Conflitos de edição difíceis de resolver; mais dados no aparelho |
-
-**Recomendação:** começar com **A** no piloto e medir quantas sessões ficam sem internet. Se o problema for frequente, implementar **B** junto com o app (fase 3). A opção C não compensa para o EBI.
+| [ADR-0016](ADR-0016-offline-para-presenca.md) | Offline só para registro de presença | aceito |
 
 Para criar um ADR, copie o [modelo](ADR-0001-registro-de-decisoes.md#modelo) e use o próximo número.

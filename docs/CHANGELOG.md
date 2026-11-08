@@ -16,7 +16,7 @@ Registro das decisões tomadas por Heles Júnior em 08/11/2026.
 - D-14: menores de 3 anos bloqueados (ADR-0013).
 - D-16: avaliação por utilização (ADR-0014).
 - D-17: cadastro assistido pela coordenadora (ADR-0015).
-- D-08 continua aberta, com opções e recomendação no índice de decisões.
+- D-08: offline só para registro de presença, junto com o app na fase 3 (ADR-0016).
 
 ### Documentos atualizados
 - Perfis, glossário, matriz de autorização (coluna Ministério Local), visão geral (app único).

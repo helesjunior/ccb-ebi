@@ -9,7 +9,7 @@
 | R-05 | PDF com direitos de terceiros | Risco jurídico e reputacional | Declaração de direitos, moderação, retirada rápida | RF-10, D-06 |
 | R-06 | Feedback subjetivo ou sensível | Estigmatização do participante | Campos objetivos, treinamento, moderação, direito de correção | RF-09, ADR-0008 |
 | R-07 | Estatísticas com dupla contagem | Decisões equivocadas | Métricas distintas por participante único, sessão e presença | [métricas](../02-regras-de-negocio/metricas-e-indicadores.md) |
-| R-08 | Falta de internet na igreja | Perda de registros | Procedimento de contingência; modo offline seguro se necessário | RNF-03, D-08 |
+| R-08 | Falta de internet na igreja | Perda de registros | Contingência em papel nas fases 1 e 2; presença offline no app na fase 3 | RNF-03, ADR-0016 |
 | R-09 | Mudança na hierarquia administrativa | Perda de contexto histórico | Vínculos com vigência e histórico organizacional | RN-09 |
 | R-10 | WhatsApp como canal de MFA | Custo, dependência, tomada de conta | Preferir TOTP/passkey; WhatsApp só após avaliação | [autenticação](../05-seguranca-e-privacidade/autenticacao.md) |
 | R-11 | Publicação em lojas oficiais | Dependência de governança e políticas | Confirmar titularidade, responsáveis e conformidade | D-07 |

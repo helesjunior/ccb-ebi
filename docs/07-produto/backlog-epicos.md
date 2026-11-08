@@ -16,7 +16,7 @@ Cada épico aponta para uma fase. A prioridade segue a fase: **P0** = fase 1 (MV
 | E10 Feedback | Registro, moderação pelo Ministério Local, visualização pelo responsável | RF-09 | 2 | P1 |
 | E11 App | App único com todas as visões (ADR-0009), publicação nas lojas | RF-13 | 3 | P2 |
 | E12 Geolocalização e notificações | Sugestão de EBI, push, WhatsApp opcional (e-mail transacional já entra no E01) | RF-08, RF-15 | 3 | P2 |
-| E13 Continuidade | Offline, sincronização, resiliência avançada (depende de D-08) | RF-08, RNF-03 | 3 ou 4, conforme o piloto | P2 |
+| E13 Continuidade | Presença offline no app com sincronização (ADR-0016), resiliência avançada | RF-08, RNF-03 | 3 | P2 |
 
 ## Mudanças em relação à versão anterior
 - E11 Apps era P1 mas estava na fase 3; agora é P2 e fase 3, coerente com o roadmap.

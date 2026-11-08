@@ -15,7 +15,7 @@ flowchart LR
 | 0 — Descoberta e governança | Validação da hierarquia, política de dados, fluxos de legitimidade, perfis, arquitetura, protótipos; resolução de D-01, D-03, D-04, D-11 e validação jurídica do ADR-0012 | — | Aprovação institucional, jurídica e de segurança |
 | 1 — MVP Brasília | Estrutura, login/MFA, participantes/responsáveis, consentimento, elegibilidade etária, agenda, sessões, presença (Web responsivo), dashboards básicos | E01–E06 | Piloto com igrejas selecionadas e controles de acesso aprovados |
 | 2 — Operação EBI | Escalas, feedback, biblioteca PDF, reutilização, estrelas, relatórios ampliados | E07–E10 | Testes de aceitação e moderação concluídos |
-| 3 — Aplicativos e escala | Apps Android/iOS, push, sugestão por GPS, desempenho, implantação regional; offline se o piloto exigir | E11–E13 | Publicação nas contas oficiais e suporte preparado |
+| 3 — Aplicativos e escala | App Android/iOS único, push, sugestão por GPS, presença offline, desempenho, implantação regional | E11–E13 | Publicação nas contas oficiais e suporte preparado |
 | 4 — Expansão nacional | Importação de unidades, operação multirregional, relatórios nacionais, continuidade aprimorada | E02, E06, E13 (evoluções) | Governança e capacidade nacional demonstradas |
 
 Na fase 1, o registro de presença é feito pelo portal Web responsivo no celular; os apps nativos chegam na fase 3.
