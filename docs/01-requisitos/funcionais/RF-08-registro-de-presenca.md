@@ -8,7 +8,7 @@
 3. Um participante pode frequentar igrejas diferentes, com matrícula única e histórico por local.
 4. Impedir presença duplicada na mesma sessão. Sinalizar presença em sessões simultâneas de locais diferentes para verificação.
 5. Correção ou estorno justificado e auditado, sem exclusão física silenciosa.
-6. **Geolocalização (fase 3):** com permissão do dispositivo, sugerir igrejas próximas pelas coordenadas cadastradas; exigir confirmação manual do EBI e da sessão. Seleção manual sempre disponível. Proximidade não é prova de presença; participantes não são rastreados.
+6. **Geolocalização (fase 3):** com permissão do dispositivo, sugerir igrejas próximas pelas coordenadas cadastradas, seguindo a [RN-04](../../02-regras-de-negocio/regras-de-negocio.md#rn-04). Participantes não são rastreados.
 7. **Offline para presença (fase 3, com o app):** sem internet, o app registra presenças da sessão aberta e sincroniza depois; conflitos e duplicações são resolvidos no servidor ([ADR-0016](../../06-arquitetura/decisoes/ADR-0016-offline-para-presenca.md)). Antes disso, vale a contingência em papel.
 
 ## Relacionados

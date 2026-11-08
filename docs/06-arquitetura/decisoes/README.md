@@ -18,11 +18,16 @@ Duas listas: **decisões em aberto** (D-nn), que precisam de aprovação da CCB,
 | D-10 | Exportação e acesso a dados identificáveis em níveis superiores | CCB + DPO | RF-14, matriz | aberta | — |
 | D-11 | Infraestrutura, padrões tecnológicos e metas finais de SLA/RPO/RTO | TI CCB | RNF-03, arquitetura | aberta; proposta para o piloto nos ADRs 0004 a 0006 | [ADR-0004](ADR-0004-conteineres-e-orquestracao.md) |
 | D-12 | Confirmar a faixa de 3 a menos de 12 anos e aprovar o fluxo de autorização e revisão das exceções inclusivas | CCB | RN-13, RN-14, FL-06 | resolvida | [ADR-0011](ADR-0011-faixa-etaria-confirmada.md), [ADR-0012](ADR-0012-excecao-decidida-pela-coordenadora.md) |
-| D-13 | Participante adulto com deficiência; adolescentes de 12 a 17 anos | CCB + jurídico | RF-02, RF-03, LGPD | resolvida pela CCB: sem limite de idade, coordenadora do dia decide com o responsável; validação jurídica pendente em D-04 | [ADR-0012](ADR-0012-excecao-decidida-pela-coordenadora.md) |
+| D-13 | Participante adulto com deficiência; adolescentes de 12 a 17 anos | CCB + jurídico | RF-02, RF-03, LGPD | em parte: regra de produto aprovada (sem limite de idade, coordenadora do dia decide com o responsável); concordância do participante adulto pendente no jurídico ([ADR-0019](ADR-0019-base-normativa-lgpd.md)) | [ADR-0012](ADR-0012-excecao-decidida-pela-coordenadora.md) |
 | D-14 | Regra para menores de 3 anos | CCB | RN-13 | resolvida: bloquear | [ADR-0013](ADR-0013-bloqueio-menores-de-3-anos.md) |
 | D-15 | Limiar de supressão em relatórios e definição de "participante ativo" e "EBI ativo" | Produto + DPO | RF-14, M-01, M-09 | resolvida: "< 5" para contagens de 1 a 4; ativo = presença em 12 meses ou cadastro em 90 dias; EBI ativo = sessão em 90 dias | [ADR-0020](ADR-0020-supressao-e-definicao-de-ativo.md) |
 | D-16 | Avaliação de atividade: uma nota por utilização ou por usuário e versão | Produto | RF-12 | resolvida: por utilização | [ADR-0014](ADR-0014-avaliacao-por-utilizacao.md) |
 | D-17 | Cadastro assistido pela coordenadora para famílias sem e-mail ou com pouca familiaridade digital | CCB + DPO | RF-02, FL-01 | resolvida: permitido; evidência de consentimento com o DPO | [ADR-0015](ADR-0015-cadastro-assistido.md) |
+| D-18 | Linguagem de gênero nos perfis (Coordenadora/Auxiliar) | Produto | Telas | aberta; proposta em [perfis](../../00-visao/perfis-e-atores.md#linguagem-de-gênero) | — |
+| D-19 | Escala de participação no feedback | Produto | RF-09 | aberta; proposta de 3 níveis em [RF-09](../../01-requisitos/funcionais/RF-09-feedback.md) | — |
+| D-20 | Mínimo de avaliações para mostrar a média de uma atividade | Produto | RF-12 | aberta; proposta: 5, em [RF-12](../../01-requisitos/funcionais/RF-12-avaliacao-de-atividades.md) | — |
+| D-21 | Confirmações pendentes do bloco de idade: RN-15, RN-16, cadastro antecipado de menores de 3 anos, validade da exceção entre sessões | Produto | E04 | aberta; propostas em [elegibilidade etária](../../02-regras-de-negocio/elegibilidade-etaria.md#status-do-bloco) | — |
+| D-22 | Escopo da coordenadora para mesclar e corrigir cadastros | Produto | RF-02 | aberta; proposta em [ADR-0007](ADR-0007-cadastro-e-correcao-de-participantes.md) | — |
 
 ## ADRs
 

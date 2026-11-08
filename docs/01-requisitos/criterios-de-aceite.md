@@ -18,7 +18,7 @@ Cenários essenciais que precisam passar antes do piloto. Cada critério tem ID 
 | <a id="ca-12"></a>CA-12 | **Escalas:** conflito de horários é sinalizado antes da confirmação. | RF-07 | 10 |
 | <a id="ca-13"></a>CA-13 | **Auditoria:** estorno de presença preserva o registro original, motivo, autor e data. | RF-08, RF-16, RN-10 | 11 |
 | <a id="ca-14"></a>CA-14 | **Relatório nacional:** participante presente em duas igrejas conta como um participante distinto no total nacional e como duas presenças. | RF-14, M-02, M-03 | 12 |
-| <a id="ca-15"></a>CA-15 | **MFA:** usuário de equipe ou administração sem segundo fator validado não acessa a área operacional. | Autenticação §2 | 13 |
+| <a id="ca-15"></a>CA-15 | **MFA:** usuário de equipe ou administração sem segundo fator validado não acessa a área operacional. | RNF-01, [autenticação](../05-seguranca-e-privacidade/autenticacao.md#2-equipes-administradores-e-consulta) | 13 |
 | <a id="ca-16"></a>CA-16 | **Consentimento:** versão do termo e evidência de manifestação podem ser recuperadas por operador autorizado. | RF-04 | 14 |
 | <a id="ca-17"></a>CA-17 | **Exceção revogada ou expirada:** participante com 12 anos ou mais, cuja exceção foi revogada ou passou de `vigente_ate`, tem nova presença bloqueada; presenças anteriores continuam visíveis no histórico. | RF-02, RF-08, RN-15 | novo |
 | <a id="ca-18"></a>CA-18 | **Transferência de igreja:** depois que a igreja muda de setor, relatórios de períodos anteriores continuam atribuindo as sessões antigas ao setor original. | RF-01, RN-09 | novo |
@@ -26,3 +26,6 @@ Cenários essenciais que precisam passar antes do piloto. Cada critério tem ID 
 | <a id="ca-20"></a>CA-20 | **Aprovação de escala:** escala sem aprovação da coordenadora chefe, ou abaixo da equipe mínima, não aparece como confirmada e não conta na cobertura (M-06). | RF-07 | novo (2.2) |
 | <a id="ca-21"></a>CA-21 | **Cadastro assistido:** coordenadora cadastra participante e responsável sem e-mail; a matrícula é gerada, o cadastro fica marcado como assistido e a evidência de consentimento é exigida. | RF-02, RF-03 | novo (2.2) |
 | <a id="ca-22"></a>CA-22 | **Exceção pela coordenadora:** coordenadora registra exceção para participante de 12 anos ou mais, com o responsável indicado; a partir daí a presença é aceita em qualquer EBI; o registro guarda quem decidiu e quem concordou. | RF-02, RN-14 | novo (2.2) |
+| <a id="ca-23"></a>CA-23 | **Sessão duplicada e correção:** criar uma segunda sessão no mesmo EBI e intervalo é bloqueado; corrigir uma sessão encerrada exige perfil autorizado e motivo, e fica na auditoria. | RF-06 | novo (2.5) |
+| <a id="ca-24"></a>CA-24 | **Notificações:** usuário que desativou um tipo de notificação não a recebe; códigos de verificação enviados não ficam legíveis no banco nem nos logs. | RF-15 | novo (2.5) |
+| <a id="ca-25"></a>CA-25 | **Matrícula:** em 10.000 matrículas geradas não há duas iguais nem relação entre matrículas consecutivas; uma matrícula com um caractere trocado é rejeitada pelo dígito verificador. | RF-02 | novo (2.5) |

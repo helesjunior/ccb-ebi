@@ -25,7 +25,7 @@ Regras agrupadas por domínio. Os IDs são os mesmos da versão anterior e não 
 |---|---|---|
 | <a id="rn-02"></a>RN-02 | A presença exige sessão existente e autorização do operador para o EBI correspondente. | proposto |
 | <a id="rn-03"></a>RN-03 | Um registro ativo de presença por participante e sessão. Estorno não apaga o registro; ele passa a `estornada` e permite novo registro ativo. | proposto |
-| <a id="rn-04"></a>RN-04 | Igreja sugerida por GPS precisa ser confirmada; sem GPS, seleção manual. | proposto |
+| <a id="rn-04"></a>RN-04 | Igreja sugerida por GPS precisa ser confirmada pelo operador, junto com o EBI e a sessão; a seleção manual está sempre disponível. Proximidade não é prova de presença. | proposto |
 | <a id="rn-09"></a>RN-09 | Transferências organizacionais não mudam a igreja, o setor nem a regional históricos da sessão. | proposto |
 
 ## Atividades

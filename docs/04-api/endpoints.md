@@ -1,5 +1,7 @@
 # Catálogo de endpoints
 
+> **Fonte da verdade:** a partir do desenvolvimento, o contrato é o [openapi.yaml](openapi.yaml) (*contract-first*, ver [plano](../07-produto/plano-de-desenvolvimento.md)). Esta página é o mapa de planejamento: cada rota que entra no OpenAPI é marcada aqui como `no OpenAPI`, e rotas novas entram primeiro no OpenAPI.
+
 Proposta inicial, prefixo `/api/v1`. Rotas marcadas *novo* não existiam na versão anterior e cobrem requisitos que não tinham rota.
 
 ## Autenticação
@@ -7,7 +9,7 @@ Proposta inicial, prefixo `/api/v1`. Rotas marcadas *novo* não existiam na vers
 |---|---|---|---|
 | POST | `/auth/register-guardian` | Criar conta de responsável (era `register-parent`) | RF-03 |
 | POST | `/auth/verify-email` | Verificar e-mail | RF-03 |
-| POST | `/auth/login` | Autenticar | — |
+| POST | `/auth/login` | Autenticar (`no OpenAPI`) | — |
 | POST | `/auth/mfa/verify` | Validar MFA | — |
 | POST | `/auth/refresh` | Renovar sessão *novo* | — |
 | POST | `/auth/logout` | Encerrar sessão *novo* | — |
@@ -51,7 +53,7 @@ Proposta inicial, prefixo `/api/v1`. Rotas marcadas *novo* não existiam na vers
 | GET/POST | `/ebis/{id}/agenda` | Programação *novo* | RF-06 |
 | GET | `/ebis/{id}/sessions` | Sessões | RF-06 |
 | POST | `/sessions/{id}/open`, `/close`, `/cancel` | Ciclo da sessão *novo* | RF-06 |
-| POST | `/sessions/{id}/attendance` | Registrar presença (idempotente) | RF-08 |
+| POST | `/sessions/{id}/attendance` | Registrar presença, idempotente (`no OpenAPI`) | RF-08 |
 | POST | `/attendance/{id}/reversal` | Estornar presença *novo* | RF-08 |
 | GET | `/ebis/{id}/schedules` | Consultar escala (era `/roster`) | RF-07 |
 | POST | `/sessions/{id}/schedules` | Criar escala *novo* | RF-07 |

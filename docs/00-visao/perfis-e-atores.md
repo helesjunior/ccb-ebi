@@ -48,4 +48,4 @@ Funções que se somam a um perfil existente, com escopo próprio.
 
 ## Linguagem de gênero
 
-Os perfis "Coordenadora" e "Auxiliar" estão no feminino, como na versão anterior. Se for uma regra institucional, registrar. Se não, as telas devem usar forma neutra (por exemplo, "Coordenação EBI"). Pendente de confirmação com a CCB.
+Os perfis "Coordenadora" e "Auxiliar" estão no feminino, como na versão anterior. Decisão pendente em [D-18](../06-arquitetura/decisoes/README.md). Proposta: manter o feminino, se o EBI for conduzido só por irmãs; caso contrário, a tela mostra "Coordenadora" ou "Coordenador" conforme o cadastro da pessoa.

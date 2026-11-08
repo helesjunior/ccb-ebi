@@ -12,6 +12,6 @@
 
 Fluxos ainda não escritos, a detalhar depois das decisões correspondentes:
 - Estorno de presença (RF-08) — procedimento já coberto por [CA-13](../criterios-de-aceite.md#ca-13).
-- Contestação e revogação de vínculo de responsável (RF-03, [D-03](../../06-arquitetura/decisoes/README.md)).
+- Contestação e revogação de vínculo de responsável (RF-03). A comprovação já está definida ([ADR-0018](../../06-arquitetura/decisoes/ADR-0018-comprovacao-de-responsavel.md)); falta escrever o fluxo.
 - Transferência de igreja entre setores (RF-01).
 - Solicitação de direitos do titular (RF-16).

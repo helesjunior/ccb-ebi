@@ -2,7 +2,7 @@
 
 Especificação da Plataforma de Gestão do Espaço Bíblico Infantil (EBI) da CCB, dividida por assunto para que cada área (produto, jurídico/DPO, segurança, desenvolvimento, institucional) revise a parte que lhe cabe.
 
-**Versão:** 2.0 — proposta para validação · **Data:** 08/11/2026 · **Abrangência prevista:** nacional, com piloto na Regional de Brasília
+**Versão:** 2.5 — proposta para validação · **Data:** 08/11/2026 · **Abrangência prevista:** nacional, com piloto na Regional de Brasília
 
 > Documento de trabalho. Os requisitos dependem de aprovação institucional e não substituem validação jurídica, pastoral/institucional, de segurança ou de proteção de dados.
 
@@ -47,10 +47,21 @@ Todo requisito, regra e decisão tem um status:
 |---|---|
 | `proposto` | Redigido, ainda não revisado |
 | `em validação` | Em revisão pela CCB, jurídico ou segurança |
-| `aprovado` | Aprovado; a origem da aprovação fica registrada |
+| `aprovado` | Aprovado pelo responsável do produto; o ADR de origem fica registrado |
 | `descontinuado` | Retirado; o ID não é reutilizado |
 
-Nesta versão, todos os itens estão `proposto`, salvo indicação.
+Nos ADRs, `aceito` equivale a `aprovado`. Item sem ADR ou aprovação registrada continua `proposto`.
+
+### Quem aprova o quê
+
+| Assunto | Quem aprova | Situação em 08/11/2026 |
+|---|---|---|
+| Produto: regras de negócio, perfis, fluxos, prioridades | **Heles Júnior**, responsável pelo produto | Decisões D-01 a D-03, D-05, D-07 a D-09, D-12 e D-14 a D-17 aprovadas, D-13 em parte (ADR-0007 a ADR-0020); D-18 a D-22 aguardando |
+| Institucional: autorização do projeto pela CCB | Administração da CCB | **Pendente para todo o documento.** Uma aprovação de produto não substitui a autorização da CCB ([plano](07-produto/plano-de-desenvolvimento.md)) |
+| Jurídico e privacidade (LGPD) | Jurídico e encarregado (DPO) da CCB | Pendente: itens listados no [ADR-0019](06-arquitetura/decisoes/ADR-0019-base-normativa-lgpd.md) |
+| Arquitetura e infraestrutura | TI da CCB | Pendente: ADRs técnicos estão `proposto` até a validação (D-11) |
+
+Quando um item aprovado pelo produto ainda depende do jurídico ou da CCB, o arquivo diz isso ao lado do status, apontando para o item aberto.
 
 ### Uma regra, um lugar
 
@@ -60,8 +71,12 @@ Uma regra é escrita em um único arquivo. Os demais documentos apenas apontam p
 
 - **Participante** é a pessoa atendida pelo EBI, de qualquer idade. É o termo padrão em telas, dados e API.
 - **Criança** é usado só quando a regra depende de idade (participação regular de 3 a 11 anos).
-- **Responsável** é o adulto que acompanha o participante. Para participante adulto, ver [D-13](06-arquitetura/decisoes/README.md).
+- **Responsável** é o adulto que acompanha o participante. Para participante adulto, ver [ADR-0012](06-arquitetura/decisoes/ADR-0012-excecao-decidida-pela-coordenadora.md) e a pendência jurídica no [ADR-0019](06-arquitetura/decisoes/ADR-0019-base-normativa-lgpd.md).
 - Domínio e documentação em português; rotas da API em inglês. Ver [ADR-0003](06-arquitetura/decisoes/ADR-0003-entidade-participante.md) e [convenções da API](04-api/convencoes.md).
+
+### Versões
+
+A versão da especificação sobe a cada mudança integrada ao `main` (2.0, 2.1, …). Várias versões podem ter a mesma data; o [CHANGELOG](CHANGELOG.md) registra o que mudou em cada uma.
 
 ### Como contribuir
 

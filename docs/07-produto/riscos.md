@@ -3,7 +3,7 @@
 | ID | Risco | Impacto | Tratamento | Referência |
 |---|---|---|---|---|
 | R-01 | Dados de crianças e participação religiosa | Alto risco de privacidade e exposição sensível | Minimização, avaliação jurídica/RIPD, controles reforçados, política de retenção | [LGPD](../05-seguranca-e-privacidade/lgpd.md) |
-| R-02 | Responsável fraudulento reivindica participante | Exposição do histórico | Validação de vínculo e contestação; matrícula nunca é segredo de acesso | RF-03, D-03 |
+| R-02 | Responsável fraudulento reivindica participante | Exposição do histórico | Validação de vínculo e contestação; matrícula nunca é segredo de acesso | RF-03, ADR-0018 |
 | R-03 | Busca nacional aberta por nome | Consulta indevida e enumeração | Busca contextual, limites, justificativa quando necessário, auditoria | RF-02 |
 | R-04 | Geolocalização imprecisa ou falsificada | Presença na igreja errada | GPS só sugere; confirmação de EBI/sessão pelo operador | RN-04 |
 | R-05 | PDF com direitos de terceiros | Risco jurídico e reputacional | Declaração de direitos, moderação, retirada rápida | RF-10, D-06 |
@@ -13,6 +13,6 @@
 | R-09 | Mudança na hierarquia administrativa | Perda de contexto histórico | Vínculos com vigência e histórico organizacional | RN-09 |
 | R-10 | WhatsApp como canal de MFA | Custo, dependência, tomada de conta | Preferir TOTP/passkey; WhatsApp só após avaliação | [autenticação](../05-seguranca-e-privacidade/autenticacao.md) |
 | R-11 | Publicação em lojas oficiais | Dependência de governança e políticas | Confirmar titularidade, responsáveis e conformidade | D-07 |
-| R-12 | Exceção inclusiva para adultos sem a concordância do próprio participante | Consentimento inválido; exposição de dado sensível | Regra da CCB definida (ADR-0012); validar com o jurídico antes da fase 1 | [elegibilidade](../02-regras-de-negocio/elegibilidade-etaria.md) |
+| R-12 | Exceção inclusiva para adultos sem a concordância do próprio participante | Consentimento inválido; exposição de dado sensível | Regra de produto definida (ADR-0012); validar com o jurídico antes da fase 1 | [elegibilidade](../02-regras-de-negocio/elegibilidade-etaria.md) |
 | R-13 | Exclusão de famílias sem e-mail | Baixa adesão no piloto | Cadastro assistido (ADR-0015) | [FL-07](../01-requisitos/fluxos/FL-07-cadastro-assistido.md) |
 | R-14 | Feedback retido por falta de Ministério Local cadastrado *(novo)* | Responsáveis sem retorno | Alerta ao administrador da igreja; prazo de moderação | [ADR-0008](../06-arquitetura/decisoes/ADR-0008-moderacao-de-feedback.md) |

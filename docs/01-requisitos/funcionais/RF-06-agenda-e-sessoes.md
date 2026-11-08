@@ -11,6 +11,7 @@
 6. Ao encerrar, confirmar se a sessão foi realizada. Só sessões realizadas contam em [M-05](../../02-regras-de-negocio/metricas-e-indicadores.md).
 
 ## Relacionados
+- Critérios de aceite: [CA-23](../criterios-de-aceite.md#ca-23)
 - Regras: [RN-02](../../02-regras-de-negocio/regras-de-negocio.md#rn-02), [RN-09](../../02-regras-de-negocio/regras-de-negocio.md#rn-09)
 - Dados: `agenda_ebi`, `agenda_excecao`, `sessao` ([estados](../../03-dados/estados.md#sessão))
 - API: `GET /ebis/{id}/sessions`, `POST /sessions/{id}/open`, `POST /sessions/{id}/close`, `POST /sessions/{id}/cancel`

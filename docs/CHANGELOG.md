@@ -2,6 +2,29 @@
 
 Formato: versão, data, autor e mudanças. Itens mais recentes primeiro.
 
+## 2.5 — 08/11/2026
+
+Correções a partir de uma avaliação externa da documentação.
+
+### Alta
+- README: tabela "quem aprova o quê". `aprovado` passa a significar aprovado pelo responsável do produto (Heles Júnior); aprovação institucional da CCB, jurídico e TI continuam pendentes onde indicado.
+- Elegibilidade etária: status do bloco RN-13 a RN-16 numa tabela única, com o que falta aprovar (D-21).
+- Equipe mínima: ADR-0010 é a única fonte; RF-07 e M-06 só apontam para ele.
+- Concordância do participante adulto: RF-02, RF-03, FL-06 e o índice de decisões apontam para o mesmo item aberto (D-04 / ADR-0019). D-13 passa a "em parte".
+
+### Média
+- FL-03: moderação editorial incluída no texto, como já estava no diagrama.
+- Requisitos com critério objetivo: matrícula (RF-02, CA-25), mínimo de avaliações (RF-12, D-20), taxa de comparecimento marcada como pendente (RF-14), notificações listadas (RF-15), escala de participação (RF-09, D-19).
+- Duplicações removidas: supressão (RF-14 e métricas), GPS (RF-08 aponta para RN-04), moderação de feedback (RF-09 aponta para ADR-0008), parágrafo solto em RF-12.
+- Referências: justificativa obsoleta em fluxos, CA-15 aponta para RNF-01, links para ADR-0005, D-06 e matriz em RF-10, RF-11 e RF-13.
+- Novos CA-23 (RF-06) e CA-24 (RF-15); RF-13 e RF-15 no mesmo modelo dos demais.
+- OpenAPI declarado fonte da verdade; endpoints.md vira mapa de planejamento.
+
+### Baixa
+- Termo "participante" nos exemplos de métricas.
+- Linguagem de gênero registrada como D-18.
+- Regra de versionamento: a versão sobe a cada mudança integrada.
+
 ## 2.4 — 08/11/2026
 
 - Novo [plano de desenvolvimento](07-produto/plano-de-desenvolvimento.md) do MVP Brasília: o que bloqueia e o que não bloqueia o início, etapas 0 a 8 com critérios de pronto e definição de pronto por tarefa.

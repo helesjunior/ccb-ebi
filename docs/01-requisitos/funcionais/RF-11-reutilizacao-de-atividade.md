@@ -7,7 +7,7 @@
 2. Gravar adaptação local, se houver. Igreja/EBI, data e equipe vêm da sessão.
 3. **Visualização ou download não contam como utilização**; só o vínculo confirmado com sessão válida.
 4. Sem contagem duplicada para o mesmo par versão/sessão; várias atividades por sessão são permitidas.
-5. Exibir total de sessões que usaram a atividade e o histórico territorial conforme permissão.
+5. Exibir total de sessões que usaram a atividade e o histórico territorial conforme a [matriz de autorização](../../05-seguranca-e-privacidade/matriz-de-autorizacao.md).
 
 ## Relacionados
 - Regras: [RN-06](../../02-regras-de-negocio/regras-de-negocio.md#rn-06), [RN-07](../../02-regras-de-negocio/regras-de-negocio.md#rn-07)
