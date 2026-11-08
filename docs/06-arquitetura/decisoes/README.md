@@ -16,7 +16,7 @@ Duas listas: **decisões em aberto** (D-nn), que precisam de aprovação da CCB,
 | D-08 | Funcionamento offline e sincronização | Produto | E13 | aberta | — |
 | D-09 | Equipe mínima por sessão e aprovação de escalas | CCB | RF-07, M-06 | aberta | — |
 | D-10 | Exportação e acesso a dados identificáveis em níveis superiores | CCB + DPO | RF-14, matriz | aberta | — |
-| D-11 | Infraestrutura, padrões tecnológicos e metas finais de SLA/RPO/RTO | TI CCB | RNF-03, arquitetura | aberta | — |
+| D-11 | Infraestrutura, padrões tecnológicos e metas finais de SLA/RPO/RTO | TI CCB | RNF-03, arquitetura | aberta; proposta para o piloto nos ADRs 0004 a 0006 | [ADR-0004](ADR-0004-conteineres-e-orquestracao.md) |
 | D-12 | Confirmar a faixa de 3 a menos de 12 anos e aprovar o fluxo de autorização e revisão das exceções inclusivas, com responsáveis definidos | CCB | RN-13, RN-14, FL-06 | aberta | — |
 | D-13 | Participante adulto com deficiência: consentimento próprio, apoiador ou curador, conta própria; tratamento de adolescentes de 12 a 17 anos | CCB + jurídico | RF-02, RF-03, LGPD | aberta (nova na 2.0) | — |
 | D-14 | Regra para menores de 3 anos: bloquear, alertar ou permitir com autorização | CCB | RN-13 | aberta (nova na 2.0) | — |
@@ -31,5 +31,8 @@ Duas listas: **decisões em aberto** (D-nn), que precisam de aprovação da CCB,
 | [ADR-0001](ADR-0001-registro-de-decisoes.md) | Registrar decisões em ADRs | aceito |
 | [ADR-0002](ADR-0002-monolito-modular.md) | Monólito modular no início | proposto |
 | [ADR-0003](ADR-0003-entidade-participante.md) | Entidade `participante` no lugar de `crianca` | aceito |
+| [ADR-0004](ADR-0004-conteineres-e-orquestracao.md) | Contêineres Docker e orquestração com Compose no piloto | proposto |
+| [ADR-0005](ADR-0005-armazenamento-e-antivirus.md) | Armazenamento de PDFs e verificação antivírus | proposto |
+| [ADR-0006](ADR-0006-segredos-backups-e-observabilidade.md) | Segredos, backups e observabilidade | proposto |
 
 Para criar um ADR, copie o [modelo](ADR-0001-registro-de-decisoes.md#modelo) e use o próximo número.

@@ -1,0 +1,31 @@
+# Override para desenvolvimento local:
+#   docker compose -f compose.yml -f compose.dev.yml up
+# Troca o e-mail real por Mailpit e expõe portas só em 127.0.0.1 para depuração.
+services:
+  api:
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      MAIL_HOST: mailpit
+      MAIL_PORT: "1025"
+    networks: [edge, app, data, dev]
+
+  worker:
+    environment:
+      MAIL_HOST: mailpit
+      MAIL_PORT: "1025"
+    networks: [app, data, dev]
+
+  postgres:
+    ports: ["127.0.0.1:5432:5432"]
+
+  minio:
+    ports: ["127.0.0.1:9001:9001"]
+
+  mailpit:
+    image: axllent/mailpit:v1.24
+    ports: ["127.0.0.1:8025:8025"]
+    networks: [dev]
+
+networks:
+  dev:
