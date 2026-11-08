@@ -3,7 +3,7 @@
 **Status:** proposto · **Épico:** [E03](../../07-produto/backlog-epicos.md) · **Fase:** 1
 
 ## Requisitos
-1. O responsável cria conta com e-mail verificado, senha e aceite dos termos pertinentes.
+1. O responsável cria conta com e-mail verificado, senha e aceite dos termos pertinentes. No cadastro assistido, o responsável pode existir sem conta e reivindicar o vínculo depois ([FL-07](../fluxos/FL-07-cadastro-assistido.md)).
 2. Registrar nome, e-mail, telefone (opcional) e relação com o participante. Pedir comprovação ou validação de legitimidade conforme o risco.
 3. Permitir mais de um responsável por participante, com permissões e restrições individuais (por exemplo, guarda restrita).
 4. Conhecer a matrícula não basta para vincular um participante a uma conta.
@@ -19,4 +19,4 @@
 
 ## Pendências
 - [D-03](../../06-arquitetura/decisoes/README.md): como comprovar legitimidade, inclusive guarda compartilhada ou restrita.
-- [D-13](../../06-arquitetura/decisoes/README.md): quem é "responsável" de participante adulto.
+- Concordância do próprio participante adulto (jurídico; ver [ADR-0012](../../06-arquitetura/decisoes/ADR-0012-excecao-decidida-pela-coordenadora.md)).

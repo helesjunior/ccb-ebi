@@ -4,7 +4,7 @@ Estados e transições das entidades com regras de negócio. Toda transição ge
 
 ## Exceção inclusiva
 
-Definido em [FL-06](../01-requisitos/fluxos/FL-06-excecao-inclusiva.md). Estados: `solicitada`, `aprovada`, `recusada`, `suspensa`, `revogada`, `expirada`. Só `aprovada` dentro de `vigente_ate` permite presença fora da faixa regular.
+Definido em [FL-06](../01-requisitos/fluxos/FL-06-excecao-inclusiva.md). Estados: `solicitada`, `aprovada`, `recusada`, `suspensa`, `revogada`, `expirada`. A coordenadora faz todas as transições, com o responsável. Só `aprovada` dentro de `vigente_ate` (quando houver) permite presença depois dos 12 anos; abaixo de 3 anos nenhuma exceção vale.
 
 ## Sessão
 
@@ -58,7 +58,21 @@ stateDiagram-v2
   liberado --> retirado
 ```
 
-Se a política ([D-05](../06-arquitetura/decisoes/README.md)) dispensar moderação, `em_revisao` é pulado.
+A moderação é obrigatória e feita pelo Ministério Local ([ADR-0008](../06-arquitetura/decisoes/ADR-0008-moderacao-de-feedback.md)); não há atalho de `rascunho` para `liberado`.
+
+## Escala
+
+```mermaid
+stateDiagram-v2
+  [*] --> prevista: criada pela coordenadora
+  prevista --> aprovada: coordenadora chefe aprova (equipe mínima atingida)
+  aprovada --> confirmada: membro confirma
+  confirmada --> substituida: troca aprovada pela coordenadora chefe
+  confirmada --> ausencia: não compareceu
+  confirmada --> cumprida: compareceu
+```
+
+Ver [ADR-0010](../06-arquitetura/decisoes/ADR-0010-equipe-minima-e-aprovacao-de-escala.md).
 
 ## Atividade
 

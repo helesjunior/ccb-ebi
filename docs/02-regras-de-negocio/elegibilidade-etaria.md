@@ -6,7 +6,7 @@ Este é o único lugar onde a regra de idade é definida. RF-02, RF-08, FL-02, F
 
 | Situação | Pode registrar presença? |
 |---|---|
-| Menos de 3 anos | A definir ([D-14](../06-arquitetura/decisoes/README.md)) |
+| Menos de 3 anos | Não, em nenhum caso ([ADR-0013](../06-arquitetura/decisoes/ADR-0013-bloqueio-menores-de-3-anos.md)) |
 | De 3 anos até a véspera do 12º aniversário | Sim |
 | A partir do 12º aniversário, sem exceção vigente | Não |
 | Qualquer idade, com exceção inclusiva `aprovada` e dentro de `vigente_ate` | Sim |
@@ -15,7 +15,7 @@ Este é o único lugar onde a regra de idade é definida. RF-02, RF-08, FL-02, F
 flowchart TD
   A[Data da sessão] --> B[Calcula idade no fuso da igreja]
   B --> C{Idade < 3?}
-  C -- Sim --> D[Regra pendente D-14]
+  C -- Sim --> D[Bloqueia: menores de 3 anos não participam]
   C -- Não --> E{Idade < 12?}
   E -- Sim --> F[Permite]
   E -- Não --> G{Exceção aprovada e vigente?}
@@ -27,17 +27,20 @@ flowchart TD
 
 <a id="rn-13"></a>
 ### RN-13 — Faixa etária regular
-**Status:** proposto (confirmação em [D-12](../06-arquitetura/decisoes/README.md))
+**Status:** aprovado ([ADR-0011](../06-arquitetura/decisoes/ADR-0011-faixa-etaria-confirmada.md), [ADR-0013](../06-arquitetura/decisoes/ADR-0013-bloqueio-menores-de-3-anos.md))
 
 A participação regular é permitida a partir dos 3 anos e enquanto o participante **não tiver completado 12 anos** na data da sessão (até 11 anos, 11 meses e o último dia antes do aniversário). No dia do 12º aniversário, novas presenças pela regra geral são bloqueadas, sem apagar cadastro ou histórico.
 
+**Menores de 3 anos não participam.** A presença é bloqueada e a exceção inclusiva não se aplica abaixo dessa idade. O cadastro antecipado é permitido (proposta a confirmar).
+
 <a id="rn-14"></a>
 ### RN-14 — Exceção inclusiva
-**Status:** proposto (confirmação em [D-12](../06-arquitetura/decisoes/README.md))
+**Status:** aprovado ([ADR-0012](../06-arquitetura/decisoes/ADR-0012-excecao-decidida-pela-coordenadora.md))
 
 Pessoas com deficiência e/ou neurodivergência podem continuar participando, **sem limite máximo de idade**, quando a necessidade de apoio e a adequação das atividades justificarem, conforme política institucional.
 
-- A exceção exige avaliação e autorização institucional registradas.
+- **A coordenadora do dia decide, junto com o responsável**, e registra a decisão no sistema. Não há avaliador regional ou setorial.
+- Interpretação adotada, a confirmar: a exceção registrada vale para as sessões seguintes, em qualquer EBI, até ser revogada; a coordenadora de cada sessão pode recusar a participação naquele dia.
 - O diagnóstico isolado não gera presunção automática de incapacidade nem de "idade mental".
 - A condição não é exposta a outras igrejas sem necessidade operacional e autorização.
 - Para quem tem 12 anos ou mais, telas e registros usam "participante do EBI".
@@ -63,17 +66,16 @@ Campos registrados (entidade `excecao_etaria`, ver [modelo de dados](../03-dados
 - adaptações e apoios necessários;
 - justificativa funcional mínima;
 - status: `solicitada`, `aprovada`, `recusada`, `suspensa`, `revogada`, `expirada` ([estados](../03-dados/estados.md#exceção-inclusiva));
-- quem autorizou e quando; `vigente_ate`; `revisao_prevista_em`; histórico de alterações.
+- coordenadora que decidiu, responsável que concordou e data; `vigente_ate` (opcional); `revisao_prevista_em`; histórico de alterações.
 
 Diagnóstico ou laudo, quando estritamente necessário, fica no módulo segregado `dado_sensivel_participante`, com acesso restrito, nunca em relatórios gerais.
 
-A exceção pode ser pedida pelo responsável e é avaliada por perfis expressamente autorizados, com revisão e recurso definidos pela CCB. Fluxo proposto em [FL-06](../01-requisitos/fluxos/FL-06-excecao-inclusiva.md).
+A exceção é pedida pelo responsável (pelo app ou pessoalmente) e decidida pela coordenadora com ele. Fluxo em [FL-06](../01-requisitos/fluxos/FL-06-excecao-inclusiva.md).
 
 ## Proposta complementar
 - Avisar o responsável 30 dias antes do 12º aniversário de participante sem exceção, para que possa pedir uma se for o caso ([RF-15](../01-requisitos/funcionais/RF-15-notificacoes.md)).
 
 ## Questões em aberto
-- **[D-12](../06-arquitetura/decisoes/README.md):** confirmar a faixa de 3 a menos de 12 anos e o fluxo de autorização e revisão.
-- **[D-13](../06-arquitetura/decisoes/README.md):** participante adulto. A Lei Brasileira de Inclusão (Lei 13.146/2015) mantém a capacidade civil plena da pessoa com deficiência. O modelo "responsável → dependente" não serve automaticamente: é preciso definir quem consente, o papel de curador ou apoiador (tomada de decisão apoiada) e se o participante pode ter conta própria. Participantes de 12 a 17 anos são adolescentes pelo ECA e também precisam de tratamento definido.
-- **[D-14](../06-arquitetura/decisoes/README.md):** menores de 3 anos — bloquear, alertar ou permitir com autorização.
+- **Validação jurídica do participante adulto (D-04).** A CCB decidiu que não há limite de idade e que a coordenadora decide com o responsável ([ADR-0012](../06-arquitetura/decisoes/ADR-0012-excecao-decidida-pela-coordenadora.md)). Pela Lei Brasileira de Inclusão (Lei 13.146/2015), o adulto com deficiência tem capacidade civil plena, e seu "responsável" não é automaticamente representante legal. O jurídico deve definir como colher a concordância do próprio participante adulto.
+- A exceção vale até ser revogada ou só para a sessão do dia? Adotada a primeira leitura; confirmar com a CCB.
 - Revisão vencida (`revisao_prevista_em` no passado, mas antes de `vigente_ate`) bloqueia presença? Proposta: não bloqueia, só alerta o avaliador.

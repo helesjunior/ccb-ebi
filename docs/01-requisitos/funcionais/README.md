@@ -16,7 +16,7 @@ Um arquivo por requisito. Cada arquivo traz status, épico, fase, os requisitos 
 | [RF-10](RF-10-biblioteca-de-atividades.md) | Biblioteca de atividades | E08 | 2 |
 | [RF-11](RF-11-reutilizacao-de-atividade.md) | Reutilização de atividade | E09 | 2 |
 | [RF-12](RF-12-avaliacao-de-atividades.md) | Avaliação de atividades | E09 | 2 |
-| [RF-13](RF-13-portal-dos-responsaveis.md) | Portal e app dos responsáveis | E11 | 1 (Web), 3 (app) |
+| [RF-13](RF-13-portal-dos-responsaveis.md) | Portal e visão dos responsáveis no app | E11 | 1 (Web), 3 (app) |
 | [RF-14](RF-14-indicadores-e-relatorios.md) | Indicadores e relatórios | E06 | 1, 2 e 4 |
 | [RF-15](RF-15-notificacoes.md) | Notificações | E12 | 1 e 3 |
 | [RF-16](RF-16-administracao-e-auditoria.md) | Administração, auditoria e suporte | E05 | 1 |

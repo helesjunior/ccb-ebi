@@ -1,29 +1,30 @@
-# FL-06 — Solicitação e revisão de exceção inclusiva
+# FL-06 — Exceção inclusiva
 
-**Status:** proposto (novo na 2.0) · **Requisitos:** [RF-02](../funcionais/RF-02-cadastro-de-participantes.md) · **Regras:** [elegibilidade etária](../../02-regras-de-negocio/elegibilidade-etaria.md)
+**Status:** aprovado ([ADR-0012](../../06-arquitetura/decisoes/ADR-0012-excecao-decidida-pela-coordenadora.md)) · **Requisitos:** [RF-02](../funcionais/RF-02-cadastro-de-participantes.md) · **Regras:** [elegibilidade etária](../../02-regras-de-negocio/elegibilidade-etaria.md)
 
-Esta é a regra mais delicada do sistema e a versão anterior não tinha fluxo para ela. Proposta para validar em [D-12](../../06-arquitetura/decisoes/README.md):
+A coordenadora do dia decide, junto com o responsável, se o participante com deficiência e/ou neurodivergência continua no EBI depois dos 12 anos. Não há limite de idade.
 
-1. O responsável (ou a coordenadora, com ciência do responsável) solicita a exceção, informando as adaptações e apoios necessários e uma justificativa funcional mínima.
-2. Laudo ou diagnóstico só é anexado se a política exigir, e vai para o módulo segregado.
-3. Um avaliador com atribuição específica analisa e decide: aprova (com `vigente_ate` e `revisao_prevista_em`), pede complemento ou recusa.
-4. O responsável é informado da decisão e do canal de recurso.
-5. Antes de `revisao_prevista_em`, o sistema avisa o avaliador e o responsável.
-6. A exceção pode ser suspensa ou revogada, com motivo. Presenças passadas não mudam.
+1. O responsável pede a exceção pelo app ou conversa pessoalmente com a coordenadora.
+2. A coordenadora e o responsável conversam sobre as adaptações e apoios necessários.
+3. A coordenadora registra a decisão: aprova (com as adaptações e, se quiser, `revisao_prevista_em` e `vigente_ate`) ou recusa. O sistema grava quem decidiu, o responsável que concordou e a data.
+4. Laudo ou diagnóstico só é anexado se for indispensável, e vai para o módulo segregado.
+5. Com a exceção aprovada, o participante pode ter presença registrada em qualquer EBI. A coordenadora de cada sessão pode recusar a participação naquele dia sem revogar a exceção (interpretação a confirmar).
+6. A exceção pode ser suspensa ou revogada pela coordenadora, com motivo. Presenças passadas não mudam.
 
 ```mermaid
 stateDiagram-v2
-  [*] --> solicitada
-  solicitada --> aprovada: avaliador aprova
-  solicitada --> recusada: avaliador recusa
-  recusada --> solicitada: recurso
+  [*] --> solicitada: responsável pede pelo app
+  [*] --> aprovada: coordenadora registra com o responsável
+  solicitada --> aprovada: coordenadora aprova com o responsável
+  solicitada --> recusada: coordenadora recusa
+  recusada --> solicitada: novo pedido
   aprovada --> suspensa: suspensão com motivo
   suspensa --> aprovada: reativação
   aprovada --> revogada: revogação com motivo
   suspensa --> revogada
   aprovada --> expirada: passou de vigente_ate
-  expirada --> solicitada: nova solicitação
+  expirada --> solicitada: novo pedido
   revogada --> [*]
 ```
 
-**Pendências:** quem é avaliador, prazos de revisão e recurso ([D-12](../../06-arquitetura/decisoes/README.md)); participante adulto ([D-13](../../06-arquitetura/decisoes/README.md)).
+**Pendências:** como colher a concordância do próprio participante adulto (jurídico, D-04).

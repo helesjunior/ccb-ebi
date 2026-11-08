@@ -41,7 +41,9 @@ Proposta inicial, prefixo `/api/v1`. Rotas marcadas *novo* não existiam na vers
 | POST | `/participants/{id}/guardians` | Solicitar vínculo | RF-03 |
 | PATCH | `/guardian-requests/{id}` | Aprovar, recusar, contestar ou revogar *novo* | RF-03 |
 | POST | `/participants/{id}/age-exceptions` | Solicitar exceção inclusiva *novo* | RF-02 |
-| PATCH | `/age-exceptions/{id}` | Decidir, suspender ou revogar *novo* | RF-02 |
+| PATCH | `/age-exceptions/{id}` | Coordenadora decide (com o responsável), suspende ou revoga *novo* | RF-02 |
+| POST | `/participants/assisted` | Cadastro assistido pela coordenadora *novo (2.2)* | RF-02 |
+| POST | `/participants/{id}/merge` | Mesclar duplicidade (coordenadora) *novo (2.2)* | RF-02 |
 
 ## Agenda, sessões e presença
 | Método | Rota | Finalidade | RF |
@@ -53,9 +55,10 @@ Proposta inicial, prefixo `/api/v1`. Rotas marcadas *novo* não existiam na vers
 | POST | `/attendance/{id}/reversal` | Estornar presença *novo* | RF-08 |
 | GET | `/ebis/{id}/schedules` | Consultar escala (era `/roster`) | RF-07 |
 | POST | `/sessions/{id}/schedules` | Criar escala *novo* | RF-07 |
+| POST | `/schedules/{id}/approve` | Aprovação pela coordenadora chefe *novo (2.2)* | RF-07 |
 | POST/PATCH | `/schedule-swaps` | Pedir e aprovar troca *novo* | RF-07 |
 | POST | `/sessions/{id}/feedback` | Registrar feedback | RF-09 |
-| POST | `/feedback/{id}/release` | Liberar feedback *novo* | RF-09 |
+| POST | `/feedback/{id}/moderation` | Ministério Local libera ou devolve *novo* | RF-09 |
 
 ## Biblioteca
 | Método | Rota | Finalidade | RF |

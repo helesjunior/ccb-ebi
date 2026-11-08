@@ -1,6 +1,6 @@
 # Perfis e atores
 
-O sistema tem 11 perfis de acesso, todos limitados a uma unidade territorial ou aos dependentes vinculados. A matriz detalhada de permissões está em [matriz de autorização](../05-seguranca-e-privacidade/matriz-de-autorizacao.md).
+O sistema tem 12 perfis de acesso, todos limitados a uma unidade territorial ou aos dependentes vinculados. A matriz detalhada de permissões está em [matriz de autorização](../05-seguranca-e-privacidade/matriz-de-autorizacao.md).
 
 ## Perfis
 
@@ -10,7 +10,8 @@ O sistema tem 11 perfis de acesso, todos limitados a uma unidade territorial ou 
 | Administrador de Regional | Regional designada | Gerir setores/igrejas, equipes, relatórios e parâmetros regionais | Obrigatório |
 | Administrador de Setor | Setor designado | Gerir igrejas/EBIs, equipes e relatórios do setor | Obrigatório |
 | Administrador de Igreja | Igreja designada | Gerir EBI, horários, equipe, escalas e dados operacionais locais | Obrigatório |
-| Coordenadora EBI | EBI(s) autorizados | Planejar sessões, registrar presenças, feedbacks, atividades e escalas locais | Obrigatório |
+| Ministério Local | Igreja designada | Moderar e liberar feedbacks dos EBIs da igreja ([ADR-0008](../06-arquitetura/decisoes/ADR-0008-moderacao-de-feedback.md)) | Obrigatório |
+| Coordenadora EBI | EBI(s) autorizados | Planejar sessões, registrar presenças, feedbacks, atividades e escalas locais; cadastro assistido; mesclar e corrigir cadastros ([ADR-0007](../06-arquitetura/decisoes/ADR-0007-cadastro-e-correcao-de-participantes.md)); decidir exceção inclusiva com o responsável ([ADR-0012](../06-arquitetura/decisoes/ADR-0012-excecao-decidida-pela-coordenadora.md)) | Obrigatório |
 | Auxiliar EBI | EBI(s) autorizados | Consultar escalas, registrar presenças, contribuir com atividades e feedbacks conforme autorização | Obrigatório |
 | Consulta Nacional | Nacional, leitura | Indicadores agregados; dados identificáveis só com autorização específica | Obrigatório |
 | Consulta da Regional | Regional, leitura | Indicadores e consultas autorizadas na regional | Obrigatório |
@@ -20,15 +21,18 @@ O sistema tem 11 perfis de acesso, todos limitados a uma unidade territorial ou 
 
 O perfil "Consulta Todas Regionais" da versão anterior passou a se chamar **Consulta Nacional**, alinhado ao nível "Central Nacional" da hierarquia.
 
-## Perfis a definir
+**Nomes usados pela CCB.** Na decisão do app único ([ADR-0009](../06-arquitetura/decisoes/ADR-0009-aplicativo-unico.md)) as visões foram chamadas de Responsável, Coordenadoras, Auxiliares, Ministério Local, Setorial, Regional e Nacional. Interpretação adotada, a confirmar: "Setorial", "Regional" e "Nacional" correspondem aos perfis de Administrador e de Consulta de cada nível. Se forem perfis próprios (por exemplo, o ministério de cada nível), a tabela precisa ser revista.
 
-Os requisitos citam funções que ainda não têm perfil. Proposta: tratá-las como **atribuições** que se somam a um perfil existente, com escopo próprio.
+## Atribuições
+
+Funções que se somam a um perfil existente, com escopo próprio.
 
 | Atribuição | Citada em | Proposta | Status |
 |---|---|---|---|
-| Avaliador de exceção inclusiva | [RF-02](../01-requisitos/funcionais/RF-02-cadastro-de-participantes.md) | Atribuição concedida por regional ou setor; decide sobre exceções | Pendente de [D-12](../06-arquitetura/decisoes/README.md) |
+| Coordenadora chefe | [RF-07](../01-requisitos/funcionais/RF-07-escalas.md) | Uma por EBI; aprova escalas | Aceito ([ADR-0010](../06-arquitetura/decisoes/ADR-0010-equipe-minima-e-aprovacao-de-escala.md)) |
+| Avaliador de exceção inclusiva | [RF-02](../01-requisitos/funcionais/RF-02-cadastro-de-participantes.md) | Não é atribuição separada: a coordenadora do dia decide com o responsável | Aceito ([ADR-0012](../06-arquitetura/decisoes/ADR-0012-excecao-decidida-pela-coordenadora.md)) |
 | Moderador editorial | [RF-10](../01-requisitos/funcionais/RF-10-biblioteca-de-atividades.md), [RF-12](../01-requisitos/funcionais/RF-12-avaliacao-de-atividades.md) | Atribuição regional ou nacional; aprova e retira materiais | Pendente de [D-06](../06-arquitetura/decisoes/README.md) |
-| Moderador de feedback | [RF-09](../01-requisitos/funcionais/RF-09-feedback.md) | Coordenadora do EBI ou atribuição específica | Pendente de [D-05](../06-arquitetura/decisoes/README.md) |
+| Moderador de feedback | [RF-09](../01-requisitos/funcionais/RF-09-feedback.md) | Perfil Ministério Local da igreja | Aceito ([ADR-0008](../06-arquitetura/decisoes/ADR-0008-moderacao-de-feedback.md)) |
 | Encarregado (DPO) | [RF-16](../01-requisitos/funcionais/RF-16-administracao-e-auditoria.md) | Atribuição nacional; atende solicitações LGPD com acesso registrado | Pendente de [D-04](../06-arquitetura/decisoes/README.md) |
 | Suporte | [RF-16](../01-requisitos/funcionais/RF-16-administracao-e-auditoria.md) | Sem acesso a dados de participantes por padrão; acesso temporário com justificativa | Proposto |
 

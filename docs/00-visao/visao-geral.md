@@ -53,7 +53,9 @@ Disponibilizar uma plataforma integrada **Web + aplicativos Android/iOS + API**,
 - Biblioteca PDF, revisão, utilização e avaliações.
 - Relatórios, exportações, auditoria e solicitações de privacidade.
 
-### App de coordenadoras e auxiliares
+Todos os módulos de app abaixo ficam em **um único aplicativo**, que mostra as visões conforme os papéis do usuário ([ADR-0009](../06-arquitetura/decisoes/ADR-0009-aplicativo-unico.md)).
+
+### Visão de coordenadoras e auxiliares (app)
 - Login/MFA, unidades autorizadas e escala pessoal.
 - Próxima sessão, abertura/encerramento e registro rápido de presença.
 - Sugestão de igreja por proximidade e seleção manual.
@@ -62,14 +64,18 @@ Disponibilizar uma plataforma integrada **Web + aplicativos Android/iOS + API**,
 - Biblioteca PDF, publicação e registro de reutilização.
 - Notificações de escala e substituição.
 
-### App de responsáveis
+### Visão de responsáveis (app e portal Web)
 - Cadastro, verificação de e-mail, login e recuperação de acesso.
 - Termos, consentimentos e gestão de privacidade.
 - Dependentes, matrícula, atualização cadastral e vínculos.
 - Calendário/histórico de presença, igreja, passagem bíblica e feedback liberado.
 - Notificações e canais de suporte.
 
-> **Decisão em aberto ([D-07](../06-arquitetura/decisoes/README.md)):** um app com módulos por papel ou dois apps. Um app só compensa se a CCB aceitar navegação e suporte mais complexos; dois apps simplificam a experiência dos responsáveis e a segurança operacional. Validar antes do desenho de UX.
+### Visão de Ministério Local, Setorial, Regional e Nacional (app)
+- Moderação de feedbacks (Ministério Local).
+- Indicadores e consultas autorizadas no nível do usuário.
+
+> **Decidido ([ADR-0009](../06-arquitetura/decisoes/ADR-0009-aplicativo-unico.md)):** um único app para todas as visões. Continua em aberto quem é titular da conta nas lojas ([D-07](../06-arquitetura/decisoes/README.md)).
 
 ## Ver também
 - [Perfis e atores](perfis-e-atores.md)
