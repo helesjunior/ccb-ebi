@@ -2,6 +2,15 @@
 
 Formato: versão, data, autor e mudanças. Itens mais recentes primeiro.
 
+## 2.1 — 08/11/2026
+
+### Arquitetura
+- ADR-0004: contêineres Docker e orquestração com Compose, uma VM por ambiente no piloto.
+- ADR-0005: PDFs em MinIO com bucket de quarentena e verificação por ClamAV.
+- ADR-0006: segredos em arquivos montados, backups com WAL-G fora da VM e stack de observabilidade.
+- Arquitetura de referência atualizada: Laravel confirmado e diagrama de contêineres.
+- Pasta `infra/` com rascunho do `compose.yml`.
+
 ## 2.0 — 08/11/2026
 
 Reorganização da especificação em documentos por assunto, com correções de consistência. O conteúdo original está preservado em [arquivo/especificacao-v2-original.md](arquivo/especificacao-v2-original.md).

@@ -1,6 +1,6 @@
 # Arquitetura de referência
 
-**Status:** proposto, não vinculante. A decisão de infraestrutura e tecnologia depende de [D-11](decisoes/README.md).
+**Status:** proposto. A decisão final de infraestrutura depende de [D-11](decisoes/README.md); a proposta para o piloto está nos ADRs 0004 a 0006.
 
 ## Visão de componentes
 
@@ -37,12 +37,39 @@ Um **monólito modular** com fronteiras claras entre módulos ([ADR-0002](deciso
 
 O módulo de dados sensíveis (laudos) fica isolado, com chave de criptografia própria e acesso sempre auditado.
 
-## Stack candidata (a validar)
-- Backend: Laravel/PHP ou outra plataforma homologada pela CCB.
-- Banco: PostgreSQL.
-- Arquivos: armazenamento de objetos compatível com a infraestrutura da CCB.
-- Filas: Redis ou equivalente.
-- Web: framework moderno a definir.
-- Mobile: Flutter ou React Native.
+## Stack e implantação
 
-Não impor tecnologia antes de confirmar padrões, capacidade operacional e suporte da CCB.
+- Backend: **Laravel** (confirmado), com Octane/FrankenPHP na api e Horizon nas filas.
+- Banco: PostgreSQL.
+- Arquivos: MinIO (compatível com S3) no piloto, com bucket de quarentena e verificação por ClamAV ([ADR-0005](decisoes/ADR-0005-armazenamento-e-antivirus.md)).
+- Filas, cache e sessões: Redis.
+- Web: build estático servido por nginx; framework a definir.
+- Mobile: Flutter ou React Native (a definir).
+- Implantação: tudo em contêineres Docker, orquestrados com Docker Compose em uma VM por ambiente no piloto ([ADR-0004](decisoes/ADR-0004-conteineres-e-orquestracao.md)). Segredos, backups e observabilidade em [ADR-0006](decisoes/ADR-0006-segredos-backups-e-observabilidade.md). Rascunho em [`infra/`](../../infra/README.md).
+
+### Contêineres por ambiente (piloto)
+
+```mermaid
+flowchart LR
+  U[Usuários e apps] -->|443| PX[proxy · Traefik]
+  subgraph edge
+    PX --> API[api · Laravel Octane]
+    PX --> WEB[web · nginx]
+  end
+  subgraph app
+    API --> RD[(redis)]
+    WK[worker · Horizon] --> RD
+    SC[scheduler] --> RD
+    WK --> AV[clamav]
+  end
+  subgraph data [data · sem internet]
+    API --> PG[(postgres)]
+    API --> MN[(minio)]
+    WK --> PG
+    WK --> MN
+  end
+  PG -. WAL-G .-> BK[(backup fora da VM)]
+  MN -. replicação .-> BK
+```
+
+Homologação e produção rodam em VMs separadas com a mesma imagem, promovida pelo digest. A validação final continua com a TI da CCB (D-11).
