@@ -8,7 +8,8 @@
 4. Informa os dados mínimos do participante e a relação legal.
 5. O sistema procura possíveis duplicidades sem revelar cadastros de terceiros.
 6. Cadastro novo: gera matrícula. Possível duplicidade: encaminha para validação segura.
-7. O vínculo é aprovado conforme a política institucional e o responsável recebe confirmação.
+7. A coordenadora do EBI valida o cadastro e o vínculo. Se tiver dúvida, pede certidão de nascimento ou documento judicial de guarda ([ADR-0018](../../06-arquitetura/decisoes/ADR-0018-comprovacao-de-responsavel.md)).
+8. O responsável recebe a confirmação.
 
 ```mermaid
 flowchart TD
@@ -23,11 +24,14 @@ flowchart TD
   H -- Não --> F
   F --> J[Vínculo aguardando aprovação]
   I --> J
-  J --> K{Aprovado?}
+  J --> V{Coordenadora tem dúvida?}
+  V -- Sim --> W[Pede certidão ou documento de guarda]
+  W --> K
+  V -- Não --> K{Aprovado?}
   K -- Sim --> L[Responsável recebe confirmação]
   K -- Não --> M[Responsável recebe recusa com canal de contestação]
 ```
 
 Famílias sem e-mail usam o [cadastro assistido (FL-07)](FL-07-cadastro-assistido.md). Duplicidades são revisadas pela coordenadora ([ADR-0007](../../06-arquitetura/decisoes/ADR-0007-cadastro-e-correcao-de-participantes.md)).
 
-**Pendências:** quem aprova o vínculo ([D-03](../../06-arquitetura/decisoes/README.md)).
+Comprovação de vínculo: [ADR-0018](../../06-arquitetura/decisoes/ADR-0018-comprovacao-de-responsavel.md).

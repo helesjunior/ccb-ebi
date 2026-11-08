@@ -8,7 +8,7 @@ Termos em ordem alfabética. Use estes termos em telas, documentos e código.
 | ADR | Architecture Decision Record. Registro de uma decisão com contexto, opções e consequências. |
 | Auxiliar | Membro da equipe do EBI que apoia a coordenadora; pode registrar presença e contribuir com atividades conforme autorização. |
 | CCB | Congregação Cristã no Brasil. |
-| Central Nacional | Nível mais alto da hierarquia organizacional. |
+| Central Nacional | Nível mais alto da hierarquia: a Central da CCB, no Brás. |
 | Coordenadora | Responsável pela condução do EBI em uma igreja; planeja sessões, escalas e feedbacks. |
 | Coordenadora chefe | Coordenadora responsável pelo EBI; aprova as escalas. Uma por EBI. |
 | Criança | Participante dentro da faixa etária regular (de 3 anos até a véspera do 12º aniversário). Usado só quando a regra depende de idade. |
@@ -21,6 +21,7 @@ Termos em ordem alfabética. Use estes termos em telas, documentos e código.
 | LGPD | Lei Geral de Proteção de Dados Pessoais (Lei nº 13.709/2018). |
 | Matrícula | Identificador nacional único e imutável do participante. Não é segredo de acesso. |
 | MFA | Autenticação multifator. |
+| Ministério da Central / Regional / Setorial | Ministério responsável pela Central (visão nacional), por uma regional ou por um setor; acompanha os EBIs do seu nível. |
 | Ministério Local | Irmão do ministério da igreja responsável pelo EBI; modera os feedbacks antes de chegarem aos responsáveis. |
 | Participante | Pessoa atendida pelo EBI, de qualquer idade. Termo padrão do sistema. |
 | Presença | Registro de que um participante esteve em uma sessão. |
