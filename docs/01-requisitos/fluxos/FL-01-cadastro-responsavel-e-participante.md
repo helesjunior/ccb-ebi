@@ -17,7 +17,7 @@ flowchart TD
   C --> D[Informa dados do participante]
   D --> E{Possível duplicidade?}
   E -- Não --> F[Gera matrícula]
-  E -- Sim --> G[Validação segura por operador]
+  E -- Sim --> G[Revisão pela coordenadora]
   G --> H{Mesmo participante?}
   H -- Sim --> I[Solicita vínculo ao cadastro existente]
   H -- Não --> F
@@ -28,4 +28,6 @@ flowchart TD
   K -- Não --> M[Responsável recebe recusa com canal de contestação]
 ```
 
-**Pendências:** quem aprova o vínculo ([D-03](../../06-arquitetura/decisoes/README.md)); famílias sem e-mail ([D-17](../../06-arquitetura/decisoes/README.md)).
+Famílias sem e-mail usam o [cadastro assistido (FL-07)](FL-07-cadastro-assistido.md). Duplicidades são revisadas pela coordenadora ([ADR-0007](../../06-arquitetura/decisoes/ADR-0007-cadastro-e-correcao-de-participantes.md)).
+
+**Pendências:** quem aprova o vínculo ([D-03](../../06-arquitetura/decisoes/README.md)).

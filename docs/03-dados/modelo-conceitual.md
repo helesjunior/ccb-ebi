@@ -44,7 +44,7 @@ erDiagram
 | `setor` | id, regional_id, nome, código, status |
 | `igreja` | id, nome, endereço, latitude, longitude, timezone, status |
 | `igreja_vinculacao` | id, igreja_id, setor_id, inicio, fim *(novo: histórico de transferências, RF-01)* |
-| `ebi` | id, igreja_id, nome, status |
+| `ebi` | id, igreja_id, nome, status, coordenadora_chefe_id, equipe_minima (parâmetro) |
 
 ### Identidade e acesso
 | Entidade | Campos-chave |
@@ -60,10 +60,10 @@ erDiagram
 ### Participantes e responsáveis
 | Entidade | Campos-chave |
 |---|---|
-| `participante` | id, matricula, nome, nome_social, data_nascimento, status, igreja_referencia_id (opcional) *(era `crianca`; ver [ADR-0003](../06-arquitetura/decisoes/ADR-0003-entidade-participante.md))* |
-| `excecao_etaria` | id, participante_id, tipo_necessidade (categoria geral), apoios_necessarios, justificativa_funcional, status, solicitado_por, autorizado_por, autorizado_em, vigente_ate, revisao_prevista_em, revogado_em, motivo *(`vigente_ate` e `motivo` novos)* |
+| `participante` | id, matricula, nome, nome_social, data_nascimento, status, igreja_referencia_id (opcional), origem_cadastro (responsavel, assistido), cadastrado_por, evidencia_consentimento_id *(origem e evidência novas na 2.2, ADR-0015; era `crianca`; ver [ADR-0003](../06-arquitetura/decisoes/ADR-0003-entidade-participante.md))* |
+| `excecao_etaria` | id, participante_id, tipo_necessidade (categoria geral), apoios_necessarios, justificativa_funcional, status, solicitado_por, decidido_por (coordenadora), responsavel_concordante_id, decidido_em, vigente_ate (opcional), revisao_prevista_em, revogado_em, motivo *(decisão pela coordenadora com o responsável, ADR-0012)* |
 | `dado_sensivel_participante` | id, participante_id, tipo, conteudo_cifrado ou referencia_segura, finalidade, base_legal, controle_acesso, prazo_retencao |
-| `responsavel_participante` | id, usuario_id, participante_id, tipo_relacao, permissoes, restricoes, status, validacao, inicio, fim *(`permissoes` e `restricoes` novos, RF-03)* |
+| `responsavel_participante` | id, usuario_id (opcional), nome, telefone, participante_id, tipo_relacao, permissoes, restricoes, status, validacao, inicio, fim *(`usuario_id` opcional para responsável sem conta no cadastro assistido, ADR-0015)* |
 | `solicitacao_vinculo` | id, usuario_id, participante_id, tipo (solicitação, contestação, revogação), status, decidido_por, decidido_em, motivo *(novo)* |
 
 ### Privacidade
@@ -79,10 +79,10 @@ erDiagram
 | `agenda_ebi` | id, ebi_id, dia_semana, hora_inicio, hora_fim, vigência |
 | `agenda_excecao` | id, agenda_ebi_id ou ebi_id, data, tipo (feriado, cancelamento, horário especial), motivo *(novo, RF-06)* |
 | `sessao` | id, ebi_id, agenda_ebi_id, igreja_id, setor_id, regional_id, inicio_previsto, fim_previsto, inicio_real, fim_real, tema, passagem_biblica, status, realizada *(unidade territorial gravada na data — RN-09; previsto/real separados)* |
-| `escala` | id, sessao_id, usuario_id, função, horário, status, confirmado_em, presente |
+| `escala` | id, sessao_id, usuario_id, função, horário, status, aprovado_por, aprovado_em, confirmado_em, presente *(aprovação pela coordenadora chefe, ADR-0010)* |
 | `solicitacao_troca_escala` | id, escala_id, solicitante_id, substituto_id, status, aprovado_por *(novo, RF-07)* |
 | `presenca` | id, sessao_id, participante_id, registrado_por, registrado_em, origem (web, app), status, estornado_por, estornado_em, motivo_estorno *(origem e estorno novos, RF-08)* |
-| `feedback` | id, sessao_id, participante_id, autor_id, conteúdo, participação, visibilidade, status, liberado_por, liberado_em |
+| `feedback` | id, sessao_id, participante_id, autor_id, conteúdo, participação, visibilidade, status, moderado_por (Ministério Local), moderado_em |
 
 ### Biblioteca
 | Entidade | Campos-chave |
@@ -92,7 +92,7 @@ erDiagram
 | `atividade_versao` | id, atividade_id, número, arquivo_id, hash, créditos, declaracao_direitos, publicado_em |
 | `arquivo` | id, chave_storage, mime, tamanho, sha256, status_antivirus |
 | `utilizacao_atividade` | id, atividade_versao_id, sessao_id, adaptacao_local, registrado_por, registrado_em *(adaptacao_local nova)* |
-| `avaliacao_atividade` | id, utilizacao_id, usuario_id, estrelas, atualizado_em *(chave depende de [D-16](../06-arquitetura/decisoes/README.md))* |
+| `avaliacao_atividade` | id, utilizacao_id, usuario_id, estrelas, atualizado_em |
 | `denuncia` | id, alvo (atividade, versão, avaliação), autor_id, motivo, status, decidido_por *(novo, RF-10 e RF-12)* |
 
 ### Comunicação e auditoria
@@ -108,7 +108,7 @@ erDiagram
 - `usuario.email_normalizado` UNIQUE.
 - `presenca(sessao_id, participante_id)` UNIQUE parcial onde `status = 'valida'`.
 - `utilizacao_atividade(sessao_id, atividade_versao_id)` UNIQUE.
-- `avaliacao_atividade`: UNIQUE conforme [D-16](../06-arquitetura/decisoes/README.md).
+- `avaliacao_atividade(utilizacao_id, usuario_id)` UNIQUE ([ADR-0014](../06-arquitetura/decisoes/ADR-0014-avaliacao-por-utilizacao.md)).
 - `igreja_vinculacao`: sem sobreposição de vigência para a mesma igreja.
 - Índices em hierarquia, datas, vínculos e referências bíblicas.
 - IDs opacos (UUID/ULID) expostos externamente; chaves e integridade referencial no banco.

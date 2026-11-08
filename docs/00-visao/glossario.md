@@ -10,15 +10,18 @@ Termos em ordem alfabética. Use estes termos em telas, documentos e código.
 | CCB | Congregação Cristã no Brasil. |
 | Central Nacional | Nível mais alto da hierarquia organizacional. |
 | Coordenadora | Responsável pela condução do EBI em uma igreja; planeja sessões, escalas e feedbacks. |
-| Criança | Participante dentro da faixa etária regular (3 a 11 anos). Usado só quando a regra depende de idade. |
+| Coordenadora chefe | Coordenadora responsável pelo EBI; aprova as escalas. Uma por EBI. |
+| Criança | Participante dentro da faixa etária regular (de 3 anos até a véspera do 12º aniversário). Usado só quando a regra depende de idade. |
 | EBI | Espaço Bíblico Infantil. |
 | Encarregado (DPO) | Pessoa indicada pelo controlador para atuar como canal com titulares e com a ANPD (LGPD, art. 41). |
-| Escala | Designação de coordenadoras e auxiliares para uma sessão, com função e situação. |
-| Exceção inclusiva | Autorização para participante com deficiência e/ou neurodivergência continuar no EBI fora da faixa etária regular. Ver [elegibilidade etária](../02-regras-de-negocio/elegibilidade-etaria.md). |
+| Cadastro assistido | Cadastro do participante feito pela coordenadora, presencialmente, para famílias sem e-mail ou com pouca familiaridade digital. |
+| Escala | Designação de coordenadoras e auxiliares para uma sessão, com função e situação; aprovada pela coordenadora chefe. |
+| Exceção inclusiva | Autorização, decidida pela coordenadora com o responsável, para participante com deficiência e/ou neurodivergência continuar no EBI depois dos 12 anos, sem limite de idade. Ver [elegibilidade etária](../02-regras-de-negocio/elegibilidade-etaria.md). |
 | Igreja de referência | Vínculo cadastral preferencial do participante. Não limita visitas a outros EBIs. |
 | LGPD | Lei Geral de Proteção de Dados Pessoais (Lei nº 13.709/2018). |
 | Matrícula | Identificador nacional único e imutável do participante. Não é segredo de acesso. |
 | MFA | Autenticação multifator. |
+| Ministério Local | Irmão do ministério da igreja responsável pelo EBI; modera os feedbacks antes de chegarem aos responsáveis. |
 | Participante | Pessoa atendida pelo EBI, de qualquer idade. Termo padrão do sistema. |
 | Presença | Registro de que um participante esteve em uma sessão. |
 | RBAC | Controle de acesso por papéis. |

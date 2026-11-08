@@ -2,6 +2,28 @@
 
 Formato: versão, data, autor e mudanças. Itens mais recentes primeiro.
 
+## 2.2 — 08/11/2026
+
+Registro das decisões tomadas por Heles Júnior em 08/11/2026.
+
+### Decisões (ADR-0007 a ADR-0015)
+- D-02: o responsável cria o cadastro; a coordenadora mescla e corrige (ADR-0007).
+- D-05: feedback só chega ao responsável depois de moderado pelo irmão do Ministério Local (ADR-0008). Novo perfil **Ministério Local**.
+- D-07: um único app para todas as visões (ADR-0009). Titular das lojas continua em aberto.
+- D-09: equipe mínima obrigatória e escala aprovada pela **coordenadora chefe** (ADR-0010). Tamanho da equipe continua em aberto.
+- D-12: faixa de 3 anos até a véspera do 12º aniversário confirmada (ADR-0011).
+- D-13: exceção sem limite de idade, decidida pela coordenadora do dia com o responsável (ADR-0012). Validação jurídica pendente.
+- D-14: menores de 3 anos bloqueados (ADR-0013).
+- D-16: avaliação por utilização (ADR-0014).
+- D-17: cadastro assistido pela coordenadora (ADR-0015).
+- D-08 continua aberta, com opções e recomendação no índice de decisões.
+
+### Documentos atualizados
+- Perfis, glossário, matriz de autorização (coluna Ministério Local), visão geral (app único).
+- Elegibilidade etária, FL-01, FL-04, FL-05, FL-06; novo FL-07 (cadastro assistido).
+- RF-02, RF-03, RF-07, RF-09, RF-12, RF-13; novos critérios CA-19 a CA-22.
+- Modelo de dados, estados (novo diagrama de escala), endpoints, backlog, riscos (R-14), LGPD.
+
 ## 2.1 — 08/11/2026
 
 ### Arquitetura
