@@ -2,6 +2,11 @@
 
 Formato: versão, data, autor e mudanças. Itens mais recentes primeiro.
 
+## 2.4 — 08/11/2026
+
+- Novo [plano de desenvolvimento](07-produto/plano-de-desenvolvimento.md) do MVP Brasília: o que bloqueia e o que não bloqueia o início, etapas 0 a 8 com critérios de pronto e definição de pronto por tarefa.
+- Portal Web em React com TypeScript (ADR-0021).
+
 ## 2.3 — 08/11/2026
 
 ### Decisões (ADR-0017 a ADR-0019)

@@ -17,7 +17,7 @@ Especificação da Plataforma de Gestão do Espaço Bíblico Infantil (EBI) da C
 | [04-api](04-api/) | [Convenções](04-api/convencoes.md), [endpoints](04-api/endpoints.md), [OpenAPI](04-api/openapi.yaml) | Desenvolvimento |
 | [05-seguranca-e-privacidade](05-seguranca-e-privacidade/) | [Autenticação](05-seguranca-e-privacidade/autenticacao.md), [matriz de autorização](05-seguranca-e-privacidade/matriz-de-autorizacao.md), [LGPD](05-seguranca-e-privacidade/lgpd.md), [modelo de ameaças](05-seguranca-e-privacidade/modelo-de-ameacas.md) | Segurança, jurídico/DPO |
 | [06-arquitetura](06-arquitetura/) | [Arquitetura de referência](06-arquitetura/arquitetura-de-referencia.md), [decisões e ADRs](06-arquitetura/decisoes/README.md) | Desenvolvimento, TI da CCB |
-| [07-produto](07-produto/) | [Fases](07-produto/fases-e-roadmap.md), [backlog](07-produto/backlog-epicos.md), [riscos](07-produto/riscos.md), [entregáveis](07-produto/entregaveis.md) | Produto, gestão |
+| [07-produto](07-produto/) | [Fases](07-produto/fases-e-roadmap.md), [backlog](07-produto/backlog-epicos.md), [riscos](07-produto/riscos.md), [entregáveis](07-produto/entregaveis.md), [plano de desenvolvimento](07-produto/plano-de-desenvolvimento.md) | Produto, gestão |
 | [arquivo](arquivo/) | [Especificação v2 original](arquivo/especificacao-v2-original.md), mantida só para consulta | — |
 
 ## Convenções
