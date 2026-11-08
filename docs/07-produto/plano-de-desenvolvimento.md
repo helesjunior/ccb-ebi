@@ -24,11 +24,12 @@ Sim, com uma condição: **dá para desenvolver, mas não dá para colocar dados
 
 | Pendência | Bloqueia | Precisa estar resolvida até |
 |---|---|---|
-| **Framework do portal Web** (a arquitetura diz "a definir") | Telas de todos os épicos | Etapa 1 |
 | Itens jurídicos do ADR-0019 | Uso de dados reais | Etapa 8 (piloto) |
 | Destino dos backups e VMs de homologação e produção | Ir ao ar | Etapa 8 |
 | Indicação do encarregado (DPO) e canal do titular | Tela de privacidade e RF-16 | Etapa 8 |
 | Autorização formal da CCB e lista das igrejas do piloto | Piloto | Etapa 8 |
+
+O framework do portal Web, que era a única pendência que bloqueava o início, foi decidido: React com TypeScript ([ADR-0021](../06-arquitetura/decisoes/ADR-0021-portal-web-react.md)).
 
 ### 1.3 Lacunas na documentação técnica
 
@@ -58,7 +59,7 @@ flowchart LR
 
 ### Etapa 0 — Repositório e CI
 
-- Estrutura do monorepo: `api/` (Laravel), `web/` (portal), `infra/`, `docs/`.
+- Estrutura do monorepo: `api/` (Laravel), `web/` (portal em React + TypeScript), `infra/`, `docs/`.
 - Proteção do `main`: só por PR, com CI verde e uma revisão.
 - Modelo de PR (com campo "RF/CA atendidos"), `CODEOWNERS`, Dependabot, secret scanning.
 - GitHub Actions: lint (Pint, PHPStan nível alto, ESLint), testes, validação do OpenAPI (Spectral), build das imagens e publicação no GHCR com digest.
@@ -74,7 +75,7 @@ flowchart LR
 - Configuração *twelve-factor*: variáveis `*_FILE` para segredos, logs JSON em stdout sem dados pessoais.
 - Base comum da API: `/api/v1`, `problem+json`, paginação por cursor, `Idempotency-Key`, rate limit, healthchecks.
 - Base da trilha de auditoria (RF-16), *append-only*.
-- Portal Web: projeto criado, login de mentira, layout responsivo e acessível (RNF-05).
+- Portal Web: projeto React + TypeScript com Vite, cliente da API gerado do OpenAPI, login de mentira, layout responsivo e acessível (RNF-05).
 
 **Pronto quando:** `docker compose up` sobe tudo do zero, `/health` responde, um teste de arquitetura falha se um módulo violar fronteira, e o CI roda a suíte em menos de 10 minutos.
 

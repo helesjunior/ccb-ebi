@@ -43,7 +43,7 @@ O módulo de dados sensíveis (laudos) fica isolado, com chave de criptografia p
 - Banco: PostgreSQL.
 - Arquivos: MinIO (compatível com S3) no piloto, com bucket de quarentena e verificação por ClamAV ([ADR-0005](decisoes/ADR-0005-armazenamento-e-antivirus.md)).
 - Filas, cache e sessões: Redis.
-- Web: build estático servido por nginx; framework a definir.
+- Web: SPA em React com TypeScript (Vite), build estático servido por nginx ([ADR-0021](decisoes/ADR-0021-portal-web-react.md)).
 - Mobile: Flutter ou React Native (a definir).
 - Implantação: tudo em contêineres Docker, orquestrados com Docker Compose em uma VM por ambiente no piloto ([ADR-0004](decisoes/ADR-0004-conteineres-e-orquestracao.md)). Segredos, backups e observabilidade em [ADR-0006](decisoes/ADR-0006-segredos-backups-e-observabilidade.md). Rascunho em [`infra/`](../../infra/README.md).
 
