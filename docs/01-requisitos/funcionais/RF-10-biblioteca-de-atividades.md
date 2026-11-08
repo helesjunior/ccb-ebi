@@ -6,8 +6,8 @@
 1. Coordenadoras e auxiliares autorizadas enviam **PDFs** com título, descrição, livro/capítulo/versículos, tema, faixa etária recomendada, tags, autoria/créditos, Regional/Setor/Igreja de origem e data da apresentação original.
 2. Origem territorial e data original são preservadas; edições geram nova versão.
 3. Pré-visualização, pesquisa por texto e metadados, filtros por passagem bíblica, idade, tema, regional, setor, igreja, data, popularidade e avaliação.
-4. Downloads sujeitos a regras de acesso e licenciamento. Arquivos passam por antivírus, validação do tipo real e limites de tamanho; armazenamento privado.
-5. Revisão editorial/moderação antes da publicação nacional, se aprovada pela CCB.
+4. Downloads sujeitos a regras de acesso ([matriz](../../05-seguranca-e-privacidade/matriz-de-autorizacao.md)) e licenciamento. Arquivos passam por antivírus, validação do tipo real e limites de tamanho, em armazenamento privado ([ADR-0005](../../06-arquitetura/decisoes/ADR-0005-armazenamento-e-antivirus.md)).
+5. Revisão editorial/moderação antes da publicação; abrangência e responsáveis pendentes em [D-06](../../06-arquitetura/decisoes/README.md).
 6. Registrar autoria, declaração de direitos de uso e retirada de material por infração ou inadequação.
 
 ## Relacionados

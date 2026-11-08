@@ -12,5 +12,8 @@
 
 ## Relacionados
 - Regras: [RN-05](../../02-regras-de-negocio/regras-de-negocio.md#rn-05)
+- Fluxos: [FL-01](../fluxos/FL-01-cadastro-responsavel-e-participante.md), [FL-02](../fluxos/FL-02-presenca-em-outra-igreja.md), [FL-05](../fluxos/FL-05-feedback.md)
+- Permissões: [matriz de autorização](../../05-seguranca-e-privacidade/matriz-de-autorizacao.md) (coluna Responsável)
+- Dados: `responsavel_participante`, `presenca`, `feedback`, `manifestacao_privacidade`
 - Critérios de aceite: [CA-04](../criterios-de-aceite.md#ca-04), [CA-11](../criterios-de-aceite.md#ca-11)
 - API: `GET /me/participants`, `GET /me/participants/{id}/attendance`

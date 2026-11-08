@@ -19,4 +19,4 @@
 
 ## Pendências
 - Guardar ou não cópia do documento conferido (proposta: só registrar a conferência, exceto em guarda judicial; validar com o DPO).
-- Concordância do próprio participante adulto (jurídico; ver [ADR-0012](../../06-arquitetura/decisoes/ADR-0012-excecao-decidida-pela-coordenadora.md)).
+- Concordância do próprio participante adulto: item aberto do jurídico em [D-04](../../06-arquitetura/decisoes/README.md) ([ADR-0019](../../06-arquitetura/decisoes/ADR-0019-base-normativa-lgpd.md)).

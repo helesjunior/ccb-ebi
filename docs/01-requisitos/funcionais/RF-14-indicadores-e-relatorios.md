@@ -5,9 +5,9 @@
 ## Requisitos
 1. Indicadores definidos em [métricas e indicadores](../../02-regras-de-negocio/metricas-e-indicadores.md), por nível (nacional, regional, setor, igreja, EBI).
 2. **Não somar contagens locais de participantes distintos para obter o total nacional**: um participante pode frequentar várias igrejas.
-3. Taxa de comparecimento só com denominador válido e definição documentada ([M-10](../../02-regras-de-negocio/metricas-e-indicadores.md)).
+3. **Pendente:** a taxa de comparecimento ([M-10](../../02-regras-de-negocio/metricas-e-indicadores.md)) não tem fórmula aprovada e não é publicada no MVP.
 4. Filtros por período, Regional, Setor, Igreja e EBI; exportação CSV/XLSX/PDF conforme autorização e minimização.
-5. Contagens de 1 a 4 aparecem como "< 5" em relatórios acima do EBI, para evitar reidentificação ([ADR-0020](../../06-arquitetura/decisoes/ADR-0020-supressao-e-definicao-de-ativo.md)).
+5. Aplicar a supressão de contagens pequenas definida em [métricas](../../02-regras-de-negocio/metricas-e-indicadores.md#supressão-e-definição-de-ativo).
 6. Todo relatório declara período, fuso, abrangência, filtros, critérios de exclusão e data de atualização.
 
 ## Relacionados

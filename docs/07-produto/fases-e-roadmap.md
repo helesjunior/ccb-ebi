@@ -12,7 +12,7 @@ flowchart LR
 
 | Fase | Entregáveis | Épicos | Critério de passagem |
 |---|---|---|---|
-| 0 — Descoberta e governança | Validação da hierarquia, política de dados, fluxos de legitimidade, perfis, arquitetura, protótipos; resolução de D-01, D-03, D-04, D-11 e validação jurídica do ADR-0012 | — | Aprovação institucional, jurídica e de segurança |
+| 0 — Descoberta e governança | Validação da hierarquia, política de dados, fluxos de legitimidade, perfis, arquitetura, protótipos; autorização da CCB, itens jurídicos do ADR-0019 (D-04), infraestrutura (D-11) e decisões D-18 a D-22 | — | Aprovação institucional, jurídica e de segurança |
 | 1 — MVP Brasília | Estrutura, login/MFA, participantes/responsáveis, consentimento, elegibilidade etária, agenda, sessões, presença (Web responsivo), dashboards básicos | E01–E06 | Piloto com igrejas selecionadas e controles de acesso aprovados |
 | 2 — Operação EBI | Escalas, feedback, biblioteca PDF, reutilização, estrelas, relatórios ampliados | E07–E10 | Testes de aceitação e moderação concluídos |
 | 3 — Aplicativos e escala | App Android/iOS único, push, sugestão por GPS, presença offline, desempenho, implantação regional | E11–E13 | Publicação nas contas oficiais e suporte preparado |
@@ -22,9 +22,9 @@ Na fase 1, o registro de presença é feito pelo portal Web responsivo no celula
 
 ## Dependências críticas
 - Autorização formal da CCB.
-- Validação da estrutura nacional (D-01).
+- Hierarquia definida ([ADR-0017](../06-arquitetura/decisoes/ADR-0017-hierarquia-e-ministerios.md)); falta a validação institucional.
 - Nomeação de responsável pelo produto e de encarregado de dados.
-- Definição de quem valida responsáveis (D-03).
+- Comprovação de responsáveis definida ([ADR-0018](../06-arquitetura/decisoes/ADR-0018-comprovacao-de-responsavel.md)).
 - Política de proteção infantil.
 - Titularidade das contas das lojas (D-07).
 - Dimensionamento de infraestrutura e orçamento (D-11, volumetria em [RNF-04](../01-requisitos/nao-funcionais.md)).

@@ -3,7 +3,7 @@
 **Status:** proposto · **Épico:** [E03](../../07-produto/backlog-epicos.md) · **Fase:** 1
 
 ## Requisitos
-1. Gerar **matrícula nacional imutável e não sequencialmente previsível**.
+1. Gerar **matrícula nacional imutável e não previsível**: 8 caracteres aleatórios em base32 Crockford (40 bits, sem letras ambíguas) mais 1 dígito verificador, nunca derivados de sequência, data ou dados pessoais (proposto). Ver [CA-25](../criterios-de-aceite.md#ca-25).
 2. Dados mínimos: nome completo, data de nascimento, nome social quando aplicável, vínculo com responsáveis, situação cadastral, igreja/EBI de referência (opcional), datas de criação e atualização.
 3. Dados adicionais (fotografia, necessidades de acessibilidade, contatos de emergência, saúde) só se indispensáveis, com acesso restrito e base legal específica. Não coletar por padrão.
 4. Pesquisa por matrícula e nome, limitada à finalidade e ao escopo do operador, com critérios adicionais controlados para evitar homônimos.
@@ -23,4 +23,4 @@
 
 ## Pendências
 - Escopo da coordenadora para mesclar e corrigir: proposta de limitar a participantes com presença ou referência nos EBIs onde ela atua ([ADR-0007](../../06-arquitetura/decisoes/ADR-0007-cadastro-e-correcao-de-participantes.md)).
-- Evidência do consentimento no cadastro assistido e concordância do participante adulto (jurídico, [D-04](../../06-arquitetura/decisoes/README.md)).
+- Evidência do consentimento no cadastro assistido e concordância do participante adulto: itens abertos do jurídico em [D-04](../../06-arquitetura/decisoes/README.md) ([ADR-0019](../../06-arquitetura/decisoes/ADR-0019-base-normativa-lgpd.md)).
