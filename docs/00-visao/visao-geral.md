@@ -10,10 +10,10 @@ Para esta solução, a CCB organiza-se em:
 
 ```mermaid
 flowchart LR
-  CN[Central Nacional] --> R[Regionais] --> S[Setores] --> I[Igrejas] --> E[EBIs]
+  CN["Central da CCB (Brás)"] --> R["Regionais<br/>Ministério Regional"] --> S["Setores<br/>Ministério Setorial"] --> I["Igrejas<br/>Ministério Local"] --> E["EBIs<br/>Coordenadoras e Auxiliares"]
 ```
 
-Uma igreja pode não ter EBI ou ter mais de um. A hierarquia precisa ser validada com a administração da CCB ([D-01](../06-arquitetura/decisoes/README.md)).
+Hoje cada igreja tem no máximo um EBI, mas o sistema permite mais de um, como pode acontecer na Central (Brás). Hierarquia confirmada em [ADR-0017](../06-arquitetura/decisoes/ADR-0017-hierarquia-e-ministerios.md).
 
 ## Objetivo
 

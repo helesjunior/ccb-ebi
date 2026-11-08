@@ -21,7 +21,16 @@ Definições únicas para todos os relatórios. A regra mais importante: **parti
 - Sessões são atribuídas à igreja, ao setor e à regional gravados na própria sessão ([RN-09](regras-de-negocio.md#rn-09)).
 - **Supressão:** contagens identificáveis abaixo de um limiar são exibidas como "< N". Ponto de partida sugerido: N = 5 ([D-15](../06-arquitetura/decisoes/README.md)).
 
-## Definições pendentes ([D-15](../06-arquitetura/decisoes/README.md))
-- **Participante ativo:** proposta — com ao menos uma presença válida nos últimos 12 meses ou cadastrado há menos de 90 dias.
-- **EBI ativo:** proposta — com ao menos uma sessão realizada nos últimos 90 dias.
-- Denominador da taxa de comparecimento (M-10).
+## Definições pendentes (D-15)
+
+Três números deixam os relatórios corretos e seguros. Os valores abaixo são sugestões e aguardam confirmação ([D-15](../06-arquitetura/decisoes/README.md)).
+
+| Definição | Para que serve | Valor sugerido | Exemplo |
+|---|---|---|---|
+| Limiar de supressão | Evitar que um número pequeno identifique uma criança | Contagens de 1 a 4 aparecem como "< 5" em relatórios de quem não é da equipe do EBI | Uma igreja com 2 crianças com exceção inclusiva mostraria "2"; quem conhece a igreja saberia quem são. O relatório mostra "< 5" |
+| Participante ativo | Separar quem frequenta de cadastros antigos | Pelo menos uma presença nos últimos 12 meses, ou cadastro feito nos últimos 90 dias | Criança que veio em março e não voltou continua ativa até março do ano seguinte |
+| EBI ativo | Saber quantos EBIs estão funcionando | Pelo menos uma sessão realizada nos últimos 90 dias | EBI parado desde julho fica inativo em outubro |
+
+A equipe do próprio EBI vê os números reais; a supressão vale para relatórios agregados e exportações em níveis acima.
+
+O denominador da taxa de comparecimento (M-10) continua a definir.

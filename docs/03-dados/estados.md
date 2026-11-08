@@ -35,6 +35,9 @@ Um estorno não apaga o registro. Depois dele, um novo registro `valida` pode se
 ```mermaid
 stateDiagram-v2
   [*] --> solicitado
+  solicitado --> aguardando_documento: coordenadora pede comprovação
+  aguardando_documento --> ativo: documento conferido
+  aguardando_documento --> recusado
   solicitado --> ativo: aprovado
   solicitado --> recusado
   ativo --> contestado: contestação

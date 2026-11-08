@@ -2,6 +2,17 @@
 
 Formato: versão, data, autor e mudanças. Itens mais recentes primeiro.
 
+## 2.3 — 08/11/2026
+
+### Decisões (ADR-0017 a ADR-0019)
+- D-01: hierarquia Central (Brás) → Regional → Setor → Igreja → EBI, com Ministério Regional, Setorial e Local; mais de um EBI por igreja é permitido (ADR-0017). Novos perfis Ministério Regional e Ministério Setorial.
+- D-03: certidão de nascimento ou documento judicial, pedido pela coordenadora só em caso de dúvida (ADR-0018). Novo estado de vínculo `aguardando_documento`.
+- D-04: referência nas normas para instituição filantrópica; itens para o jurídico listados (ADR-0019).
+- D-15: explicação e valores sugeridos em métricas, aguardando confirmação.
+
+### Documentos atualizados
+- Visão geral (hierarquia), perfis, glossário, RF-01, RF-03, FL-01, estados, LGPD, métricas.
+
 ## 2.2 — 08/11/2026
 
 Registro das decisões tomadas por Heles Júnior em 08/11/2026.

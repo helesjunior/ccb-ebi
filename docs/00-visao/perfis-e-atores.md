@@ -1,6 +1,6 @@
 # Perfis e atores
 
-O sistema tem 12 perfis de acesso, todos limitados a uma unidade territorial ou aos dependentes vinculados. A matriz detalhada de permissões está em [matriz de autorização](../05-seguranca-e-privacidade/matriz-de-autorizacao.md).
+O sistema tem 14 perfis de acesso, todos limitados a uma unidade territorial ou aos dependentes vinculados. A matriz detalhada de permissões está em [matriz de autorização](../05-seguranca-e-privacidade/matriz-de-autorizacao.md).
 
 ## Perfis
 
@@ -10,6 +10,8 @@ O sistema tem 12 perfis de acesso, todos limitados a uma unidade territorial ou 
 | Administrador de Regional | Regional designada | Gerir setores/igrejas, equipes, relatórios e parâmetros regionais | Obrigatório |
 | Administrador de Setor | Setor designado | Gerir igrejas/EBIs, equipes e relatórios do setor | Obrigatório |
 | Administrador de Igreja | Igreja designada | Gerir EBI, horários, equipe, escalas e dados operacionais locais | Obrigatório |
+| Ministério Regional | Regional designada | Acompanhar indicadores e consultas autorizadas da regional (proposta, [ADR-0017](../06-arquitetura/decisoes/ADR-0017-hierarquia-e-ministerios.md)) | Obrigatório |
+| Ministério Setorial | Setor designado | Acompanhar indicadores e consultas autorizadas do setor (proposta, [ADR-0017](../06-arquitetura/decisoes/ADR-0017-hierarquia-e-ministerios.md)) | Obrigatório |
 | Ministério Local | Igreja designada | Moderar e liberar feedbacks dos EBIs da igreja ([ADR-0008](../06-arquitetura/decisoes/ADR-0008-moderacao-de-feedback.md)) | Obrigatório |
 | Coordenadora EBI | EBI(s) autorizados | Planejar sessões, registrar presenças, feedbacks, atividades e escalas locais; cadastro assistido; mesclar e corrigir cadastros ([ADR-0007](../06-arquitetura/decisoes/ADR-0007-cadastro-e-correcao-de-participantes.md)); decidir exceção inclusiva com o responsável ([ADR-0012](../06-arquitetura/decisoes/ADR-0012-excecao-decidida-pela-coordenadora.md)) | Obrigatório |
 | Auxiliar EBI | EBI(s) autorizados | Consultar escalas, registrar presenças, contribuir com atividades e feedbacks conforme autorização | Obrigatório |
@@ -21,7 +23,7 @@ O sistema tem 12 perfis de acesso, todos limitados a uma unidade territorial ou 
 
 O perfil "Consulta Todas Regionais" da versão anterior passou a se chamar **Consulta Nacional**, alinhado ao nível "Central Nacional" da hierarquia.
 
-**Nomes usados pela CCB.** Na decisão do app único ([ADR-0009](../06-arquitetura/decisoes/ADR-0009-aplicativo-unico.md)) as visões foram chamadas de Responsável, Coordenadoras, Auxiliares, Ministério Local, Setorial, Regional e Nacional. Interpretação adotada, a confirmar: "Setorial", "Regional" e "Nacional" correspondem aos perfis de Administrador e de Consulta de cada nível. Se forem perfis próprios (por exemplo, o ministério de cada nível), a tabela precisa ser revista.
+**Ministérios.** A hierarquia confirmada ([ADR-0017](../06-arquitetura/decisoes/ADR-0017-hierarquia-e-ministerios.md)) tem um ministério em cada nível: Regional, Setorial e Local. As visões "Regional" e "Setorial" do app único são as desses ministérios. A confirmar: se os perfis de Administrador e de Consulta de cada nível são as mesmas pessoas do ministério (e podem ser unificados) e se a Central (Brás) tem ministério próprio com visão nacional.
 
 ## Atribuições
 
