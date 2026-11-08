@@ -20,7 +20,7 @@ Duas listas: **decisões em aberto** (D-nn), que precisam de aprovação da CCB,
 | D-12 | Confirmar a faixa de 3 a menos de 12 anos e aprovar o fluxo de autorização e revisão das exceções inclusivas | CCB | RN-13, RN-14, FL-06 | resolvida | [ADR-0011](ADR-0011-faixa-etaria-confirmada.md), [ADR-0012](ADR-0012-excecao-decidida-pela-coordenadora.md) |
 | D-13 | Participante adulto com deficiência; adolescentes de 12 a 17 anos | CCB + jurídico | RF-02, RF-03, LGPD | resolvida pela CCB: sem limite de idade, coordenadora do dia decide com o responsável; validação jurídica pendente em D-04 | [ADR-0012](ADR-0012-excecao-decidida-pela-coordenadora.md) |
 | D-14 | Regra para menores de 3 anos | CCB | RN-13 | resolvida: bloquear | [ADR-0013](ADR-0013-bloqueio-menores-de-3-anos.md) |
-| D-15 | Limiar de supressão em relatórios e definição de "participante ativo" e "EBI ativo" | Produto + DPO | RF-14, M-01, M-09 | aberta; valores sugeridos em [métricas](../../02-regras-de-negocio/metricas-e-indicadores.md#definições-pendentes-d-15), aguardando confirmação | — |
+| D-15 | Limiar de supressão em relatórios e definição de "participante ativo" e "EBI ativo" | Produto + DPO | RF-14, M-01, M-09 | resolvida: "< 5" para contagens de 1 a 4; ativo = presença em 12 meses ou cadastro em 90 dias; EBI ativo = sessão em 90 dias | [ADR-0020](ADR-0020-supressao-e-definicao-de-ativo.md) |
 | D-16 | Avaliação de atividade: uma nota por utilização ou por usuário e versão | Produto | RF-12 | resolvida: por utilização | [ADR-0014](ADR-0014-avaliacao-por-utilizacao.md) |
 | D-17 | Cadastro assistido pela coordenadora para famílias sem e-mail ou com pouca familiaridade digital | CCB + DPO | RF-02, FL-01 | resolvida: permitido; evidência de consentimento com o DPO | [ADR-0015](ADR-0015-cadastro-assistido.md) |
 
@@ -47,5 +47,6 @@ Duas listas: **decisões em aberto** (D-nn), que precisam de aprovação da CCB,
 | [ADR-0017](ADR-0017-hierarquia-e-ministerios.md) | Hierarquia da CCB e ministérios por nível | aceito |
 | [ADR-0018](ADR-0018-comprovacao-de-responsavel.md) | Comprovação de responsável só em caso de dúvida | aceito |
 | [ADR-0019](ADR-0019-base-normativa-lgpd.md) | Base normativa de privacidade | aceito em parte |
+| [ADR-0020](ADR-0020-supressao-e-definicao-de-ativo.md) | Supressão em relatórios e definição de "ativo" | aceito |
 
 Para criar um ADR, copie o [modelo](ADR-0001-registro-de-decisoes.md#modelo) e use o próximo número.

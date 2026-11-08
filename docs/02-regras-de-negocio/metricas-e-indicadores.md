@@ -19,13 +19,13 @@ Definições únicas para todos os relatórios. A regra mais importante: **parti
 - Todo relatório declara período, fuso, abrangência, filtros, critérios de exclusão e data de atualização.
 - M-02 de uma unidade superior é recalculado sobre as presenças, nunca somado a partir das unidades inferiores ([CA-14](../01-requisitos/criterios-de-aceite.md#ca-14)).
 - Sessões são atribuídas à igreja, ao setor e à regional gravados na própria sessão ([RN-09](regras-de-negocio.md#rn-09)).
-- **Supressão:** contagens identificáveis abaixo de um limiar são exibidas como "< N". Ponto de partida sugerido: N = 5 ([D-15](../06-arquitetura/decisoes/README.md)).
+- **Supressão:** contagens de 1 a 4 são exibidas como "< 5" fora da equipe do EBI (ver abaixo).
 
-## Definições pendentes (D-15)
+## Supressão e definição de "ativo"
 
-Três números deixam os relatórios corretos e seguros. Os valores abaixo são sugestões e aguardam confirmação ([D-15](../06-arquitetura/decisoes/README.md)).
+Três regras deixam os relatórios corretos e seguros ([ADR-0020](../06-arquitetura/decisoes/ADR-0020-supressao-e-definicao-de-ativo.md)).
 
-| Definição | Para que serve | Valor sugerido | Exemplo |
+| Definição | Para que serve | Valor | Exemplo |
 |---|---|---|---|
 | Limiar de supressão | Evitar que um número pequeno identifique uma criança | Contagens de 1 a 4 aparecem como "< 5" em relatórios de quem não é da equipe do EBI | Uma igreja com 2 crianças com exceção inclusiva mostraria "2"; quem conhece a igreja saberia quem são. O relatório mostra "< 5" |
 | Participante ativo | Separar quem frequenta de cadastros antigos | Pelo menos uma presença nos últimos 12 meses, ou cadastro feito nos últimos 90 dias | Criança que veio em março e não voltou continua ativa até março do ano seguinte |

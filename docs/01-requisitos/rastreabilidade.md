@@ -22,4 +22,4 @@ Liga cada requisito funcional às regras, fluxos, critérios de aceite e épico.
 | RF-16 | RN-10, RN-11 | — | CA-03, CA-13 | E05 | | |
 | Autenticação | — | — | CA-15 | E01 | | |
 
-**Lacunas visíveis na matriz:** RF-06 e RF-15 não têm critério de aceite próprio; RF-14 não tem regra para o limiar de supressão ([D-15](../06-arquitetura/decisoes/README.md)).
+**Lacunas visíveis na matriz:** RF-06 e RF-15 não têm critério de aceite próprio.
