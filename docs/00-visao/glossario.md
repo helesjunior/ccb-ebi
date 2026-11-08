@@ -21,7 +21,7 @@ Termos em ordem alfabética. Use estes termos em telas, documentos e código.
 | LGPD | Lei Geral de Proteção de Dados Pessoais (Lei nº 13.709/2018). |
 | Matrícula | Identificador nacional único e imutável do participante. Não é segredo de acesso. |
 | MFA | Autenticação multifator. |
-| Ministério Regional / Setorial | Ministério responsável por uma regional ou por um setor; acompanha os EBIs do seu nível. |
+| Ministério da Central / Regional / Setorial | Ministério responsável pela Central (visão nacional), por uma regional ou por um setor; acompanha os EBIs do seu nível. |
 | Ministério Local | Irmão do ministério da igreja responsável pelo EBI; modera os feedbacks antes de chegarem aos responsáveis. |
 | Participante | Pessoa atendida pelo EBI, de qualquer idade. Termo padrão do sistema. |
 | Presença | Registro de que um participante esteve em uma sessão. |

@@ -1,6 +1,6 @@
 # Perfis e atores
 
-O sistema tem 14 perfis de acesso, todos limitados a uma unidade territorial ou aos dependentes vinculados. A matriz detalhada de permissões está em [matriz de autorização](../05-seguranca-e-privacidade/matriz-de-autorizacao.md).
+O sistema tem 15 perfis de acesso, todos limitados a uma unidade territorial ou aos dependentes vinculados. A matriz detalhada de permissões está em [matriz de autorização](../05-seguranca-e-privacidade/matriz-de-autorizacao.md).
 
 ## Perfis
 
@@ -10,8 +10,9 @@ O sistema tem 14 perfis de acesso, todos limitados a uma unidade territorial ou 
 | Administrador de Regional | Regional designada | Gerir setores/igrejas, equipes, relatórios e parâmetros regionais | Obrigatório |
 | Administrador de Setor | Setor designado | Gerir igrejas/EBIs, equipes e relatórios do setor | Obrigatório |
 | Administrador de Igreja | Igreja designada | Gerir EBI, horários, equipe, escalas e dados operacionais locais | Obrigatório |
-| Ministério Regional | Regional designada | Acompanhar indicadores e consultas autorizadas da regional (proposta, [ADR-0017](../06-arquitetura/decisoes/ADR-0017-hierarquia-e-ministerios.md)) | Obrigatório |
-| Ministério Setorial | Setor designado | Acompanhar indicadores e consultas autorizadas do setor (proposta, [ADR-0017](../06-arquitetura/decisoes/ADR-0017-hierarquia-e-ministerios.md)) | Obrigatório |
+| Ministério da Central | Nacional | Acompanhar indicadores e consultas autorizadas de todo o país ([ADR-0017](../06-arquitetura/decisoes/ADR-0017-hierarquia-e-ministerios.md)) | Obrigatório |
+| Ministério Regional | Regional designada | Acompanhar indicadores e consultas autorizadas da regional ([ADR-0017](../06-arquitetura/decisoes/ADR-0017-hierarquia-e-ministerios.md)) | Obrigatório |
+| Ministério Setorial | Setor designado | Acompanhar indicadores e consultas autorizadas do setor ([ADR-0017](../06-arquitetura/decisoes/ADR-0017-hierarquia-e-ministerios.md)) | Obrigatório |
 | Ministério Local | Igreja designada | Moderar e liberar feedbacks dos EBIs da igreja ([ADR-0008](../06-arquitetura/decisoes/ADR-0008-moderacao-de-feedback.md)) | Obrigatório |
 | Coordenadora EBI | EBI(s) autorizados | Planejar sessões, registrar presenças, feedbacks, atividades e escalas locais; cadastro assistido; mesclar e corrigir cadastros ([ADR-0007](../06-arquitetura/decisoes/ADR-0007-cadastro-e-correcao-de-participantes.md)); decidir exceção inclusiva com o responsável ([ADR-0012](../06-arquitetura/decisoes/ADR-0012-excecao-decidida-pela-coordenadora.md)) | Obrigatório |
 | Auxiliar EBI | EBI(s) autorizados | Consultar escalas, registrar presenças, contribuir com atividades e feedbacks conforme autorização | Obrigatório |
@@ -23,7 +24,7 @@ O sistema tem 14 perfis de acesso, todos limitados a uma unidade territorial ou 
 
 O perfil "Consulta Todas Regionais" da versão anterior passou a se chamar **Consulta Nacional**, alinhado ao nível "Central Nacional" da hierarquia.
 
-**Ministérios.** A hierarquia confirmada ([ADR-0017](../06-arquitetura/decisoes/ADR-0017-hierarquia-e-ministerios.md)) tem um ministério em cada nível: Regional, Setorial e Local. As visões "Regional" e "Setorial" do app único são as desses ministérios. A confirmar: se os perfis de Administrador e de Consulta de cada nível são as mesmas pessoas do ministério (e podem ser unificados) e se a Central (Brás) tem ministério próprio com visão nacional.
+**Ministérios.** A hierarquia confirmada ([ADR-0017](../06-arquitetura/decisoes/ADR-0017-hierarquia-e-ministerios.md)) tem um ministério em cada nível: Regional, Setorial e Local. As visões "Nacional", "Regional" e "Setorial" do app único são as desses ministérios; a Central também tem ministério próprio. Administradores podem ser as mesmas pessoas do ministério: nesse caso o usuário acumula os dois papéis.
 
 ## Atribuições
 

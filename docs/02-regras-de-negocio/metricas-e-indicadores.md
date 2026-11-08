@@ -9,7 +9,7 @@ Definições únicas para todos os relatórios. A regra mais importante: **parti
 | M-03 | Total de presenças | Presenças com status `valida` no período |
 | M-04 | Média por sessão | M-03 ÷ M-05 |
 | M-05 | Sessões realizadas | Sessões `encerrada` com `realizada = sim` no período |
-| M-06 | Cobertura da escala | Sessões com equipe mínima confirmada ÷ sessões previstas (equipe mínima em [D-09](../06-arquitetura/decisoes/README.md)) |
+| M-06 | Cobertura da escala | Sessões com equipe mínima confirmada ÷ sessões previstas. Equipe mínima = 1 coordenadora + ⌈participantes esperados ÷ 4⌉ auxiliares ([ADR-0010](../06-arquitetura/decisoes/ADR-0010-equipe-minima-e-aprovacao-de-escala.md)) |
 | M-07 | Utilizações de atividade | Pares únicos (sessão, versão da atividade) confirmados |
 | M-08 | Avaliação média | Soma de estrelas válidas ÷ quantidade de avaliações válidas |
 | M-09 | Igrejas com EBI ativo | Igrejas com ao menos um EBI com status `ativo` |

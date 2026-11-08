@@ -44,7 +44,7 @@ erDiagram
 | `setor` | id, regional_id, nome, código, status |
 | `igreja` | id, nome, endereço, latitude, longitude, timezone, status |
 | `igreja_vinculacao` | id, igreja_id, setor_id, inicio, fim *(novo: histórico de transferências, RF-01)* |
-| `ebi` | id, igreja_id, nome, status, coordenadora_chefe_id, equipe_minima (parâmetro) |
+| `ebi` | id, igreja_id, nome, status, coordenadora_chefe_id, participantes_por_auxiliar (parâmetro, padrão 4) |
 
 ### Identidade e acesso
 | Entidade | Campos-chave |

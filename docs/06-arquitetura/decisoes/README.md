@@ -14,7 +14,7 @@ Duas listas: **decisões em aberto** (D-nn), que precisam de aprovação da CCB,
 | D-06 | Política editorial, direitos autorais e publicação nacional dos PDFs | CCB + jurídico | RF-10 | aberta | — |
 | D-07 | Um ou dois apps; quem tem a conta de desenvolvedor nas lojas | CCB + TI | RF-13, E11 | em parte: um app único; titular das lojas em aberto | [ADR-0009](ADR-0009-aplicativo-unico.md) |
 | D-08 | Funcionamento offline e sincronização | Produto | E13 | resolvida: offline só para presença, com o app | [ADR-0016](ADR-0016-offline-para-presenca.md) |
-| D-09 | Equipe mínima por sessão e aprovação de escalas | CCB | RF-07, M-06 | em parte: aprovação pela Coordenadora chefe; tamanho da equipe em aberto | [ADR-0010](ADR-0010-equipe-minima-e-aprovacao-de-escala.md) |
+| D-09 | Equipe mínima por sessão e aprovação de escalas | CCB | RF-07, M-06 | resolvida: 1 coordenadora + 1 auxiliar a cada 4 participantes; aprovação pela coordenadora chefe | [ADR-0010](ADR-0010-equipe-minima-e-aprovacao-de-escala.md) |
 | D-10 | Exportação e acesso a dados identificáveis em níveis superiores | CCB + DPO | RF-14, matriz | aberta | — |
 | D-11 | Infraestrutura, padrões tecnológicos e metas finais de SLA/RPO/RTO | TI CCB | RNF-03, arquitetura | aberta; proposta para o piloto nos ADRs 0004 a 0006 | [ADR-0004](ADR-0004-conteineres-e-orquestracao.md) |
 | D-12 | Confirmar a faixa de 3 a menos de 12 anos e aprovar o fluxo de autorização e revisão das exceções inclusivas | CCB | RN-13, RN-14, FL-06 | resolvida | [ADR-0011](ADR-0011-faixa-etaria-confirmada.md), [ADR-0012](ADR-0012-excecao-decidida-pela-coordenadora.md) |
