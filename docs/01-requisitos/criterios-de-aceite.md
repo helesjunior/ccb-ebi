@@ -1,0 +1,28 @@
+# Critérios de aceite
+
+Cenários essenciais que precisam passar antes do piloto. Cada critério tem ID estável e aponta para o requisito ou regra que valida. Na versão anterior a numeração repetia 6 e 7; a correspondência está na última coluna.
+
+| ID | Cenário | Valida | Era (v1) |
+|---|---|---|---|
+| <a id="ca-01"></a>CA-01 | **Cadastro único:** participante já cadastrado frequenta outra igreja; o sistema reutiliza a mesma matrícula e não cria outro registro. | RF-02, RN-01 | 1 |
+| <a id="ca-02"></a>CA-02 | **Presença idempotente:** dois envios simultâneos para o mesmo participante e sessão resultam em uma só presença válida. | RF-08, RN-03 | 2 |
+| <a id="ca-03"></a>CA-03 | **Escopo:** administrador da igreja A não consegue consultar participantes ou feedbacks da igreja B fora das permissões e finalidades autorizadas. | RF-05, RF-16, RN-11 | 3 |
+| <a id="ca-04"></a>CA-04 | **Responsável:** usuário sem vínculo validado não acessa dados do participante, mesmo conhecendo matrícula ou URL. | RF-03, RF-13, RN-05 | 4 |
+| <a id="ca-05"></a>CA-05 | **Idade:** participante sem exceção ativa registra presença até a véspera do 12º aniversário; no dia do 12º aniversário a presença é bloqueada. Com exceção aprovada e vigente, a presença é permitida em qualquer idade. | RF-08, RN-13, RN-14 | 5 |
+| <a id="ca-06"></a>CA-06 | **Privacidade da exceção:** usuário sem autorização específica não acessa diagnóstico, laudo ou justificativa sensível. | RF-02, RN-14 | 6 |
+| <a id="ca-07"></a>CA-07 | **Localização:** com GPS desabilitado, a auxiliar seleciona a igreja manualmente e registra presença normalmente. | RF-08, RN-04 | 7 |
+| <a id="ca-08"></a>CA-08 | **Biblioteca:** PDF enviado passa por validação; material bloqueado não fica disponível. | RF-10 | 6 (repetido) |
+| <a id="ca-09"></a>CA-09 | **Reutilização:** baixar PDF não altera o contador; vincular uma versão a sessão realizada soma uma utilização. | RF-11, RN-06, RN-07 | 7 (repetido) |
+| <a id="ca-10"></a>CA-10 | **Avaliação:** usuário habilitado avalia de 1 a 5; mudar a nota não cria uma segunda avaliação ativa. | RF-12, RN-08 | 8 |
+| <a id="ca-11"></a>CA-11 | **Feedback:** responsável só vê observação de dependente vinculado e liberada conforme a política. | RF-09, RF-13 | 9 |
+| <a id="ca-12"></a>CA-12 | **Escalas:** conflito de horários é sinalizado antes da confirmação. | RF-07 | 10 |
+| <a id="ca-13"></a>CA-13 | **Auditoria:** estorno de presença preserva o registro original, motivo, autor e data. | RF-08, RF-16, RN-10 | 11 |
+| <a id="ca-14"></a>CA-14 | **Relatório nacional:** participante presente em duas igrejas conta como um participante distinto no total nacional e como duas presenças. | RF-14, M-02, M-03 | 12 |
+| <a id="ca-15"></a>CA-15 | **MFA:** usuário de equipe ou administração sem segundo fator validado não acessa a área operacional. | Autenticação §2 | 13 |
+| <a id="ca-16"></a>CA-16 | **Consentimento:** versão do termo e evidência de manifestação podem ser recuperadas por operador autorizado. | RF-04 | 14 |
+| <a id="ca-17"></a>CA-17 | **Exceção revogada ou expirada:** participante com 12 anos ou mais, cuja exceção foi revogada ou passou de `vigente_ate`, tem nova presença bloqueada; presenças anteriores continuam visíveis no histórico. | RF-02, RF-08, RN-15 | novo |
+| <a id="ca-18"></a>CA-18 | **Transferência de igreja:** depois que a igreja muda de setor, relatórios de períodos anteriores continuam atribuindo as sessões antigas ao setor original. | RF-01, RN-09 | novo |
+
+## A definir
+- Critério para menores de 3 anos, depois de [D-14](../06-arquitetura/decisoes/README.md).
+- Critério para participante adulto, depois de [D-13](../06-arquitetura/decisoes/README.md).
