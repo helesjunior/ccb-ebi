@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\ForceJsonResponse;
+use App\Http\Middleware\ResolveActingScope;
 use App\Support\ProblemDetails;
 use App\Support\ProblemException;
 use Illuminate\Auth\AuthenticationException;
@@ -23,6 +24,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->api(prepend: [
             ForceJsonResponse::class,
+        ]);
+
+        $middleware->api(append: [
+            ResolveActingScope::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

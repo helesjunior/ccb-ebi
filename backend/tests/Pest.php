@@ -1,7 +1,13 @@
 <?php
 
+use App\Domain\Identidade\Models\Papel;
+use App\Domain\Identidade\Models\Usuario;
+use App\Domain\Identidade\Models\VinculoAcesso;
+use Database\Seeders\PapelSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 pest()->extend(TestCase::class)
@@ -13,3 +19,33 @@ pest()->extend(TestCase::class)
 beforeEach(function () {
     Cache::clear();
 })->in('Feature');
+
+/**
+ * Cria um usuario com um vinculo de acesso vigente (papel + escopo) e devolve
+ * o token Sanctum pronto para uso. Helper compartilhado pelas features de
+ * identidade e autorizacao.
+ */
+function criarUsuarioComPapel(
+    string $papelCodigo,
+    string $tipoEscopo = 'central',
+    ?string $escopoId = null,
+    string $senha = 'senha-bem-longa-123',
+): Usuario {
+    if (Papel::query()->where('codigo', $papelCodigo)->doesntExist()) {
+        test()->seed(PapelSeeder::class);
+    }
+
+    $usuario = Usuario::factory()->create([
+        'senha' => Hash::make($senha),
+        'email_verificado_em' => now(),
+    ]);
+
+    VinculoAcesso::factory()->create([
+        'usuario_id' => $usuario->id,
+        'papel_id' => Papel::query()->where('codigo', $papelCodigo)->value('id'),
+        'tipo_escopo' => $tipoEscopo,
+        'escopo_id' => $escopoId ?? (string) Str::ulid(),
+    ]);
+
+    return $usuario;
+}
