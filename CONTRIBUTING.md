@@ -50,6 +50,11 @@ npm run lint       # oxlint
 npm run build      # tsc + vite
 ```
 
+O `gen:api` roda o `openapi-typescript` com um TypeScript 5 isolado (dep apelidada
+`typescript5` + loader em `tools/`), porque o `openapi-typescript` ainda não suporta
+o TypeScript 7 usado no build. O `frontend/.npmrc` tolera esse peer desatualizado no
+`npm ci`. Ao atualizar o `openapi-typescript`, remover ambos.
+
 OpenAPI e alinhamento de endpoints:
 
 ```bash

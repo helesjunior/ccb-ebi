@@ -2,6 +2,17 @@
 
 Formato: versão, data, autor e mudanças. Itens mais recentes primeiro.
 
+## 2.9 — 09/11/2026
+
+Correção do build do portal (CI e imagem) após o bump do TypeScript para 7.
+
+- O Dependabot subiu `typescript` para `~7.0.2`, mas `openapi-typescript@7.13.0` (última versão) ainda exige `typescript@^5.x` e usa a API de compilador (`ts.factory.*`) que o TypeScript 7 removeu. Isso fazia o `npm ci` falhar com `ERESOLVE` no CI (`Frontend (lint, build)`) e no build da imagem (`Publish / ccb-ebi-web`).
+- `frontend/.npmrc`: `legacy-peer-deps=true`, para o `npm ci` tolerar o peer desatualizado do `openapi-typescript`. A fonte do conflito é metadata do pacote; o código de produção (que usa `openapi-fetch`) não depende do TypeScript 7.
+- `frontend/package.json`: dependência apelidada `typescript5` (`npm:typescript@^5.9.0`), isolando um TypeScript 5 só para o codegen.
+- `frontend/tools/gen-api.mjs` + `tools/ts5-loader.mjs`: o `npm run gen:api` passa a rodar o `openapi-typescript` com o TypeScript 5 via um loader de resolução, mantendo o TypeScript 7 no build e no lint. O `schema.d.ts` regenerado é idêntico ao versionado.
+- `frontend/Dockerfile`: copia o `.npmrc` antes do `npm ci`, para o build da imagem respeitar o peer tolerado.
+- Remover a tolerância quando o `openapi-typescript` suportar o TypeScript 7.
+
 ## 2.8 — 09/11/2026
 
 Regra territorial da Organização (Etapa 2).
