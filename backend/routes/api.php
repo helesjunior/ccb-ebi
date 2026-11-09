@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\EbiController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MfaController;
+use App\Http\Controllers\Api\V1\PasswordController;
 use App\Http\Controllers\Api\V1\RegionController;
 use App\Http\Controllers\Api\V1\RegisterController;
 use App\Http\Controllers\Api\V1\SectorController;
@@ -24,6 +25,10 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
     Route::post('auth/register-guardian', [RegisterController::class, 'register'])->name('auth.register-guardian');
     Route::post('auth/verify-email', [RegisterController::class, 'verify'])->name('auth.verify-email');
     Route::post('auth/email/resend', [RegisterController::class, 'resend'])->name('auth.email.resend');
+
+    // Recuperacao e redefinicao de senha (RF-03), sem enumeracao de contas.
+    Route::post('auth/password/forgot', [PasswordController::class, 'forgot'])->name('auth.password.forgot');
+    Route::post('auth/password/reset', [PasswordController::class, 'reset'])->name('auth.password.reset');
 
     // Segundo fator do login: autenticado pelo token de desafio, escopo restrito.
     Route::middleware(['auth:sanctum', 'abilities:'.DesafioMfa::ABILITY])
