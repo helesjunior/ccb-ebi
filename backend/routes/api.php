@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\ChurchController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\MeController;
 use Illuminate\Support\Facades\Route;
@@ -13,5 +14,16 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
     Route::middleware('auth:sanctum')->group(function (): void {
         Route::post('auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
         Route::get('me', [MeController::class, 'me'])->name('me');
+
+        // Organizacao - leitura autenticada
+        Route::get('churches', [ChurchController::class, 'index'])->name('churches.index');
+        Route::get('churches/{id}', [ChurchController::class, 'show'])->name('churches.show');
+
+        // Organizacao - escrita sob o gate provisorio
+        Route::middleware('can:gerir-organizacao')->group(function (): void {
+            Route::post('churches', [ChurchController::class, 'store'])->name('churches.store');
+            Route::patch('churches/{id}', [ChurchController::class, 'update'])->name('churches.update');
+            Route::post('churches/{id}/transfers', [ChurchController::class, 'transfer'])->name('churches.transfer');
+        });
     });
 });

@@ -7,8 +7,10 @@ use App\Domain\Auditoria\Services\RegistradorAuditoria;
 use App\Domain\Identidade\Contracts\AutenticarAtor;
 use App\Domain\Identidade\Services\AutenticadorFicticio;
 use App\Domain\Organizacao\Contracts\ConsultarOrganizacao;
+use App\Domain\Organizacao\Contracts\GerirOrganizacao;
 use App\Domain\Organizacao\Contracts\TransferirIgreja;
 use App\Domain\Organizacao\Services\ConsultaOrganizacao;
+use App\Domain\Organizacao\Services\GerenciadorOrganizacao;
 use App\Domain\Organizacao\Services\ServicoTransferencia;
 use Illuminate\Support\ServiceProvider;
 
@@ -20,5 +22,6 @@ class DomainServiceProvider extends ServiceProvider
         $this->app->bind(AutenticarAtor::class, AutenticadorFicticio::class);
         $this->app->bind(ConsultarOrganizacao::class, ConsultaOrganizacao::class);
         $this->app->bind(TransferirIgreja::class, ServicoTransferencia::class);
+        $this->app->bind(GerirOrganizacao::class, GerenciadorOrganizacao::class);
     }
 }
