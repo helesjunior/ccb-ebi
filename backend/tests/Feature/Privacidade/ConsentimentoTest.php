@@ -5,6 +5,7 @@ use App\Domain\Privacidade\Contracts\ConsultarConsentimentos;
 use App\Domain\Privacidade\Contracts\RegistrarConsentimento;
 use App\Domain\Privacidade\Models\TermoVersao;
 use App\Support\EvidenciaAceite;
+use App\Support\ProblemException;
 use Illuminate\Support\Facades\Hash;
 
 it('registra um aceite com evidencia e permite recuperar a versao do termo', function () {
@@ -33,4 +34,12 @@ it('retirar cria uma manifestacao de retirada', function () {
     $m = app(RegistrarConsentimento::class)->retirar($u->id, $termo->id, new EvidenciaAceite('1.1.1.1', 'phpunit'));
 
     expect($m->decisao)->toBe('retirado');
+});
+
+it('rejeita registro com termo inexistente via ProblemException', function () {
+    $u = Usuario::factory()->create(['senha' => Hash::make('senha-bem-longa-123'), 'email_verificado_em' => now()]);
+
+    expect(fn () => app(RegistrarConsentimento::class)->registrar(
+        $u->id, 'id-inexistente', 'aceito', 'proprio', new EvidenciaAceite('1.1.1.1', 'phpunit'),
+    ))->toThrow(ProblemException::class);
 });

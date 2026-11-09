@@ -7,6 +7,7 @@ use App\Domain\Privacidade\Contracts\RegistrarConsentimento;
 use App\Domain\Privacidade\Models\ManifestacaoPrivacidade;
 use App\Domain\Privacidade\Models\TermoVersao;
 use App\Support\EvidenciaAceite;
+use App\Support\ProblemException;
 
 class GerenciadorConsentimento implements ConsultarConsentimentos, RegistrarConsentimento
 {
@@ -17,7 +18,13 @@ class GerenciadorConsentimento implements ConsultarConsentimentos, RegistrarCons
         string $origem,
         EvidenciaAceite $evidencia,
     ): ManifestacaoPrivacidade {
-        $termo = TermoVersao::query()->findOrFail($termoVersaoId);
+        $termo = TermoVersao::query()->find($termoVersaoId)
+            ?? throw new ProblemException(
+                'termo_inexistente',
+                'Termo inválido',
+                422,
+                'Versão de termo inexistente.',
+            );
 
         return ManifestacaoPrivacidade::query()->create([
             'usuario_id' => $usuarioId,
