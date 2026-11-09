@@ -40,3 +40,16 @@ it('nao revoga sessao de outro usuario', function () {
         ->assertOk()
         ->assertJsonPath('data.0.id', $idOutro);
 });
+
+it('logout encerra a sessao e ela nao volta a aparecer na listagem', function () {
+    $u = Usuario::factory()->create(['senha' => Hash::make('senha-bem-longa-123'), 'email_verificado_em' => now()]);
+    $token = app(GerenciarSessao::class)->abrir($u, 'Chrome/Windows');
+    $auth = ['Authorization' => "Bearer {$token}"];
+
+    $this->postJson('/api/v1/auth/logout', [], $auth)->assertNoContent();
+
+    // O token foi invalidado e a sessão saiu da listagem (sem fantasma vigente).
+    $this->app['auth']->forgetGuards();
+    $this->getJson('/api/v1/me', $auth)->assertStatus(401);
+    $this->assertDatabaseMissing('sessao_login', ['usuario_id' => $u->id, 'revogada_em' => null]);
+});

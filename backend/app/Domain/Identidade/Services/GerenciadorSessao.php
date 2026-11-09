@@ -77,6 +77,24 @@ class GerenciadorSessao implements GerenciarSessao
         $sessao->forceFill(['revogada_em' => now()])->save();
     }
 
+    public function revogarPorToken(Authenticatable $usuario, int|string $tokenId): void
+    {
+        $usuario = $this->comoUsuario($usuario);
+
+        $sessao = SessaoLogin::query()
+            ->where('usuario_id', $usuario->id)
+            ->where('token_id', $tokenId)
+            ->whereNull('revogada_em')
+            ->first();
+
+        if ($sessao === null) {
+            return;
+        }
+
+        $usuario->tokens()->whereKey($tokenId)->delete();
+        $sessao->forceFill(['revogada_em' => now()])->save();
+    }
+
     private function horasDeSessao(Usuario $usuario): int
     {
         $codigos = $usuario->vinculosVigentes()

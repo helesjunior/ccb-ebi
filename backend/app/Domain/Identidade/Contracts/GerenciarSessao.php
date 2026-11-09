@@ -32,4 +32,10 @@ interface GerenciarSessao
      * Revoga a sessao do usuario (idempotente; ignorada se nao for dele).
      */
     public function revogar(Authenticatable $usuario, string $id): void;
+
+    /**
+     * Revoga a sessao vinculada ao token Sanctum informado (usado no logout),
+     * marcando `revogada_em` e deletando o token. Idempotente.
+     */
+    public function revogarPorToken(Authenticatable $usuario, int|string $tokenId): void;
 }

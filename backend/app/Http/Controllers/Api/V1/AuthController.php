@@ -44,7 +44,13 @@ class AuthController
 
     public function logout(Request $request): Response
     {
-        $request->user()?->currentAccessToken()?->delete();
+        $usuario = $request->user();
+        $token = $usuario?->currentAccessToken();
+
+        if ($usuario !== null && $token !== null) {
+            // Marca a sessao como revogada (some da listagem) e invalida o token.
+            $this->sessoes->revogarPorToken($usuario, $token->getKey());
+        }
 
         return response()->noContent();
     }

@@ -4,6 +4,7 @@ namespace App\Domain\Identidade\Services;
 
 use App\Domain\Auditoria\Contracts\RegistrarEvento;
 use App\Domain\Identidade\Contracts\GerirUsuario;
+use App\Domain\Identidade\Models\SessaoLogin;
 use App\Domain\Identidade\Models\Usuario;
 use App\Domain\Identidade\Models\VinculoAcesso;
 use App\Support\ProblemException;
@@ -47,8 +48,13 @@ class GerenciadorUsuario implements GerirUsuario
 
         if (array_key_exists('status', $dados) && $statusAnterior !== $usuario->status) {
             if ($usuario->status === 'suspenso') {
-                // Suspensao revoga as sessoes (tokens Sanctum) — RN-10 / RF-05.
+                // Suspensao revoga as sessoes (tokens Sanctum) e as marca como
+                // encerradas, para nao aparecerem como vigentes — RN-10 / RF-05.
                 $usuario->tokens()->delete();
+                SessaoLogin::query()
+                    ->where('usuario_id', $usuario->id)
+                    ->whereNull('revogada_em')
+                    ->update(['revogada_em' => now()]);
             }
 
             $this->auditoria->registrar([
