@@ -33,5 +33,5 @@ Classificação de sensibilidade e retenção por entidade. O detalhamento campo
 
 | Campo | Tipo | Obrigatório | Classe | Validação | Origem | Observação |
 |---|---|---|---|---|---|---|
-| `participante.matricula` | texto (opaco) | sim | Pessoal de criança | gerada pelo sistema, não sequencial | sistema | imutável |
+| `participante.matricula` | texto (opaco) | sim | Pessoal de criança | 8 caracteres em base32 Crockford + 1 dígito verificador, nunca derivados de sequência, data ou dado pessoal; unicidade nacional ([RF-02](../01-requisitos/funcionais/RF-02-cadastro-de-participantes.md), [CA-25](../01-requisitos/criterios-de-aceite.md#ca-25)) | sistema | imutável; nunca serve como credencial |
 | `participante.data_nascimento` | data | sim | Pessoal de criança | não futura | responsável ou operador | base da RN-13 |
