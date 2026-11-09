@@ -26,19 +26,24 @@ class ResolveActingScope
         $usuario = $request->user('sanctum');
 
         if ($usuario !== null) {
-            // Token de desafio de MFA (escopo restrito) nao alcanca a area
-            // operacional: exige a ability `*` da sessao plena (CA-15).
-            if (! $usuario->tokenCan('*')) {
-                throw new ProblemException('mfa_pendente', 'Verificação em duas etapas pendente', 403, 'Conclua o segundo fator antes de acessar a área operacional.');
-            }
+            // A rota de verificacao do segundo fator e o unico lugar onde o
+            // token de desafio (`mfa:pendente`) e legitimo; ela mesma protege
+            // via `auth:sanctum` + `abilities:mfa:pendente`.
+            if (! $request->routeIs('auth.mfa.verify')) {
+                // Token de desafio de MFA (escopo restrito) nao alcanca a area
+                // operacional: exige a ability `*` da sessao plena (CA-15).
+                if (! $usuario->tokenCan('*')) {
+                    throw new ProblemException('mfa_pendente', 'Verificação em duas etapas pendente', 403, 'Conclua o segundo fator antes de acessar a área operacional.');
+                }
 
-            $contexto = $this->resolver->resolver(
-                $usuario,
-                $request->header('X-Acting-Scope'),
-            );
+                $contexto = $this->resolver->resolver(
+                    $usuario,
+                    $request->header('X-Acting-Scope'),
+                );
 
-            if ($contexto !== null) {
-                $request->attributes->set('contexto_atuacao', $contexto);
+                if ($contexto !== null) {
+                    $request->attributes->set('contexto_atuacao', $contexto);
+                }
             }
         }
 

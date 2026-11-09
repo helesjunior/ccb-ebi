@@ -30,8 +30,10 @@ class Autenticador implements Autenticar
             throw new ProblemException('unauthorized', 'Não autenticado', 401, 'Credenciais inválidas');
         }
 
-        $precisaSegundoFator = $this->exigirMfa->exige($usuario)
-            && ! $this->exigirMfa->temFatorValidado($usuario);
+        // CA-15: todo perfil que exige MFA so conclui o login apos o segundo
+        // fator. O desafio cobre dois casos: usuario com fator (valida em
+        // /auth/mfa/verify) e usuario sem fator (inscreve o TOTP primeiro).
+        $precisaSegundoFator = $this->exigirMfa->exige($usuario);
 
         if ($precisaSegundoFator) {
             return new ResultadoLogin($usuario, mfaPendente: true, tokenDesafio: $this->desafioMfa->emitir($usuario));
