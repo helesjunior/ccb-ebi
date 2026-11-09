@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Domain\Auditoria\Contracts\RegistrarEvento;
 use App\Domain\Auditoria\Services\RegistradorAuditoria;
+use App\Domain\Identidade\Contracts\AceitarConvite;
 use App\Domain\Identidade\Contracts\Autenticar;
 use App\Domain\Identidade\Contracts\AutorizarOperacao;
 use App\Domain\Identidade\Contracts\ConsultarUsuarios;
@@ -17,6 +18,7 @@ use App\Domain\Identidade\Contracts\RegistrarConta;
 use App\Domain\Identidade\Contracts\ResolverContextoAtuacao;
 use App\Domain\Identidade\Contracts\ResolverEscopo;
 use App\Domain\Identidade\Contracts\VerificarEmail;
+use App\Domain\Identidade\Services\AceitadorConvite;
 use App\Domain\Identidade\Services\Autenticador;
 use App\Domain\Identidade\Services\AutorizadorOperacao;
 use App\Domain\Identidade\Services\ConsultaUsuarios;
@@ -53,6 +55,7 @@ class DomainServiceProvider extends ServiceProvider
         $this->app->bind(ConsultarUsuarios::class, ConsultaUsuarios::class);
         $this->app->bind(GerirUsuario::class, GerenciadorUsuario::class);
         $this->app->bind(GerirConvite::class, GerenciadorConvite::class);
+        $this->app->bind(AceitarConvite::class, AceitadorConvite::class);
         $this->app->bind(ResolverContextoAtuacao::class, ResolvedorContextoAtuacao::class);
         $this->app->bind(RegistrarConta::class, GerenciadorConta::class);
         $this->app->bind(VerificarEmail::class, GerenciadorConta::class);

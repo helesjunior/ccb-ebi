@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\CentralController;
 use App\Http\Controllers\Api\V1\ChurchController;
 use App\Http\Controllers\Api\V1\EbiController;
 use App\Http\Controllers\Api\V1\HealthController;
+use App\Http\Controllers\Api\V1\InvitationAcceptController;
 use App\Http\Controllers\Api\V1\InvitationController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MfaController;
@@ -31,6 +32,9 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
     // Recuperacao e redefinicao de senha (RF-03), sem enumeracao de contas.
     Route::post('auth/password/forgot', [PasswordController::class, 'forgot'])->name('auth.password.forgot');
     Route::post('auth/password/reset', [PasswordController::class, 'reset'])->name('auth.password.reset');
+
+    // Aceite de convite: rota publica; o token secreto do convite e a credencial.
+    Route::post('invitations/{id}/accept', [InvitationAcceptController::class, 'accept'])->name('invitations.accept');
 
     // Segundo fator do login: autenticado pelo token de desafio, escopo restrito.
     Route::middleware(['auth:sanctum', 'abilities:'.DesafioMfa::ABILITY])
