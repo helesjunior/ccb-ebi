@@ -2,12 +2,14 @@
 
 namespace App\Providers;
 
+use App\Domain\Auditoria\Contracts\RegistrarEvento;
+use App\Domain\Auditoria\Services\RegistradorAuditoria;
 use Illuminate\Support\ServiceProvider;
 
 class DomainServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        // Serviços de domínio serão registrados aqui nas próximas etapas.
+        $this->app->bind(RegistrarEvento::class, RegistradorAuditoria::class);
     }
 }
