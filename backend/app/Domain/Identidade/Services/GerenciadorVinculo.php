@@ -12,10 +12,17 @@ use Illuminate\Support\Facades\DB;
 /**
  * Concessao/revogacao direta de vinculos de acesso. Preserva o historico via
  * vigencia `[inicio, fim)`; encerrar significa `fim = hoje`.
+ *
+ * Autorizacao por recurso: o ator so concede (papel, escopo) dentro da sua
+ * autoridade e subarvore, e so encerra vinculos que ele cobre — mesma regra dos
+ * convites, evitando escalada vertical via /access-grants.
  */
 class GerenciadorVinculo implements GerirVinculo
 {
-    public function __construct(private readonly RegistrarEvento $auditoria) {}
+    public function __construct(
+        private readonly RegistrarEvento $auditoria,
+        private readonly AutoridadeDePapel $autoridade,
+    ) {}
 
     public function conceder(
         ContextoAtuacao $contexto,
@@ -28,6 +35,11 @@ class GerenciadorVinculo implements GerirVinculo
 
         if ($papel === null) {
             throw new ProblemException('papel_invalido', 'Concessão inválida', 422, 'Papel inexistente.');
+        }
+
+        if (! $this->autoridade->podeSobrePapel($contexto, $papelCodigo)
+            || ! $this->autoridade->cobre($contexto, $tipoEscopo, $escopoId)) {
+            throw new ProblemException('vinculo_fora_autoridade', 'Acesso negado', 403, 'Concessão fora da sua autoridade.');
         }
 
         $vinculo = DB::transaction(function () use ($usuarioId, $papel, $tipoEscopo, $escopoId): VinculoAcesso {
@@ -76,6 +88,11 @@ class GerenciadorVinculo implements GerirVinculo
 
         if ($vinculo === null || $vinculo->fim !== null) {
             return;
+        }
+
+        if (! $this->autoridade->podeSobrePapel($contexto, (string) $vinculo->papel?->codigo)
+            || ! $this->autoridade->cobre($contexto, (string) $vinculo->tipo_escopo, (string) $vinculo->escopo_id)) {
+            throw new ProblemException('vinculo_fora_autoridade', 'Acesso negado', 403, 'Vínculo fora da sua autoridade.');
         }
 
         $vinculo->forceFill(['fim' => now()->toDateString(), 'status' => 'encerrado'])->save();

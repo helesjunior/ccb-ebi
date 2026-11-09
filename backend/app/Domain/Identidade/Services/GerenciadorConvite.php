@@ -3,7 +3,6 @@
 namespace App\Domain\Identidade\Services;
 
 use App\Domain\Identidade\Contracts\GerirConvite;
-use App\Domain\Identidade\Contracts\ResolverEscopo;
 use App\Domain\Identidade\Models\Convite;
 use App\Domain\Identidade\Models\Papel;
 use App\Domain\Identidade\Models\Usuario;
@@ -21,27 +20,7 @@ class GerenciadorConvite implements GerirConvite
 {
     private const DIAS_VALIDADE = 7;
 
-    /**
-     * Autoridade por papel (maior = mais poder). O convidante so convida para
-     * papeis de autoridade menor ou igual a sua.
-     *
-     * @var array<string, int>
-     */
-    private const AUTORIDADE = [
-        'super_admin' => 100,
-        'adm_regional' => 80,
-        'adm_setor' => 60,
-        'adm_igreja' => 40,
-        'coordenadora' => 30,
-        'ministerio_central' => 20,
-        'ministerio_regional' => 20,
-        'ministerio_setorial' => 20,
-        'ministerio_local' => 20,
-        'auxiliar' => 10,
-        'responsavel' => 0,
-    ];
-
-    public function __construct(private readonly ResolverEscopo $escopo) {}
+    public function __construct(private readonly AutoridadeDePapel $autoridade) {}
 
     public function criar(
         ContextoAtuacao $contexto,
@@ -116,29 +95,17 @@ class GerenciadorConvite implements GerirConvite
 
     private function garantirAutoridade(ContextoAtuacao $contexto, string $papelCodigo, string $tipoEscopo, string $escopoId): void
     {
-        $autoridadeConvidante = self::AUTORIDADE[$contexto->papelCodigo] ?? -1;
-        $autoridadeConvidado = self::AUTORIDADE[$papelCodigo] ?? -1;
-
-        if ($autoridadeConvidado > $autoridadeConvidante || $autoridadeConvidado < 0) {
+        if (! $this->autoridade->podeSobrePapel($contexto, $papelCodigo)) {
             throw new ProblemException('convite_sem_autoridade', 'Convite negado', 403, 'O papel excede a sua autoridade.');
         }
 
-        if (! $this->cobre($contexto, $tipoEscopo, $escopoId)) {
+        if (! $this->autoridade->cobre($contexto, $tipoEscopo, $escopoId)) {
             throw new ProblemException('convite_fora_escopo', 'Convite negado', 403, 'O escopo está fora da sua subárvore.');
         }
     }
 
     private function cobre(ContextoAtuacao $contexto, string $tipoEscopo, string $escopoId): bool
     {
-        try {
-            return $this->escopo->cobre(
-                $contexto->tipoEscopo,
-                $contexto->escopoId,
-                $tipoEscopo,
-                $escopoId,
-            );
-        } catch (\RuntimeException) {
-            return false;
-        }
+        return $this->autoridade->cobre($contexto, $tipoEscopo, $escopoId);
     }
 }

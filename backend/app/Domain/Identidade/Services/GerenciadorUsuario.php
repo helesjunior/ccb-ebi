@@ -5,14 +5,23 @@ namespace App\Domain\Identidade\Services;
 use App\Domain\Auditoria\Contracts\RegistrarEvento;
 use App\Domain\Identidade\Contracts\GerirUsuario;
 use App\Domain\Identidade\Models\Usuario;
+use App\Domain\Identidade\Models\VinculoAcesso;
+use App\Support\ProblemException;
 
 /**
  * Atualiza dados da equipe (nome, status). Toda mudanca de status e auditada
  * (RN-10); suspender invalida as sessoes do usuario (forca re-login).
+ *
+ * Autorizacao por recurso: o ator so gere um alvo cujos vinculos vigentes
+ * estejam integralmente dentro da sua autoridade (papel) e subarvore (escopo).
+ * Sem isso, um adm_igreja suspenderia um super_admin (escalada vertical).
  */
 class GerenciadorUsuario implements GerirUsuario
 {
-    public function __construct(private readonly RegistrarEvento $auditoria) {}
+    public function __construct(
+        private readonly RegistrarEvento $auditoria,
+        private readonly AutoridadeDePapel $autoridade,
+    ) {}
 
     public function atualizar(ContextoAtuacao $contexto, string $id, array $dados): ?object
     {
@@ -21,6 +30,8 @@ class GerenciadorUsuario implements GerirUsuario
         if ($usuario === null) {
             return null;
         }
+
+        $this->garantirAutoridadeSobreUsuario($contexto, $usuario);
 
         $statusAnterior = $usuario->status;
 
@@ -57,5 +68,26 @@ class GerenciadorUsuario implements GerirUsuario
         }
 
         return $usuario;
+    }
+
+    /**
+     * O ator so age sobre alvo com ao menos um vinculo vigente, todos cobertos
+     * pela sua subarvore e com papel dentro da sua autoridade.
+     */
+    private function garantirAutoridadeSobreUsuario(ContextoAtuacao $contexto, Usuario $usuario): void
+    {
+        $vinculos = $usuario->vinculosVigentes()->with('papel')->get();
+
+        if ($vinculos->isEmpty()) {
+            throw new ProblemException('usuario_fora_escopo', 'Acesso negado', 403, 'Usuário fora da sua autoridade.');
+        }
+
+        foreach ($vinculos as $vinculo) {
+            /** @var VinculoAcesso $vinculo */
+            if (! $this->autoridade->podeSobrePapel($contexto, (string) $vinculo->papel?->codigo)
+                || ! $this->autoridade->cobre($contexto, (string) $vinculo->tipo_escopo, (string) $vinculo->escopo_id)) {
+                throw new ProblemException('usuario_fora_escopo', 'Acesso negado', 403, 'Usuário fora da sua autoridade.');
+            }
+        }
     }
 }
