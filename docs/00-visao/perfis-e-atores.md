@@ -34,7 +34,7 @@ Funções que se somam a um perfil existente, com escopo próprio.
 |---|---|---|---|
 | Coordenadora chefe | [RF-07](../01-requisitos/funcionais/RF-07-escalas.md) | Uma por EBI; aprova escalas | Aceito ([ADR-0010](../06-arquitetura/decisoes/ADR-0010-equipe-minima-e-aprovacao-de-escala.md)) |
 | Avaliador de exceção inclusiva | [RF-02](../01-requisitos/funcionais/RF-02-cadastro-de-participantes.md) | Não é atribuição separada: a coordenadora do dia decide com o responsável | Aceito ([ADR-0012](../06-arquitetura/decisoes/ADR-0012-excecao-decidida-pela-coordenadora.md)) |
-| Moderador editorial | [RF-10](../01-requisitos/funcionais/RF-10-biblioteca-de-atividades.md), [RF-12](../01-requisitos/funcionais/RF-12-avaliacao-de-atividades.md) | Atribuição regional ou nacional; aprova e retira materiais | Pendente de [D-06](../06-arquitetura/decisoes/README.md) |
+| Moderador editorial | [RF-10](../01-requisitos/funcionais/RF-10-biblioteca-de-atividades.md), [RF-12](../01-requisitos/funcionais/RF-12-avaliacao-de-atividades.md) | Atribuição regional ou nacional; aprova e retira materiais | Moderador regional aprova na Regional; publicação nacional pelo Ministério da Central (proposta em [ADR-0028](../06-arquitetura/decisoes/ADR-0028-politica-editorial-dos-pdfs.md)) |
 | Moderador de feedback | [RF-09](../01-requisitos/funcionais/RF-09-feedback.md) | Perfil Ministério Local da igreja | Aceito ([ADR-0008](../06-arquitetura/decisoes/ADR-0008-moderacao-de-feedback.md)) |
 | Encarregado (DPO) | [RF-16](../01-requisitos/funcionais/RF-16-administracao-e-auditoria.md) | Atribuição nacional; atende solicitações LGPD com acesso registrado | Pendente de [D-04](../06-arquitetura/decisoes/README.md) |
 | Suporte | [RF-16](../01-requisitos/funcionais/RF-16-administracao-e-auditoria.md) | Sem acesso a dados de participantes por padrão; acesso temporário com justificativa | Proposto |
@@ -48,4 +48,4 @@ Funções que se somam a um perfil existente, com escopo próprio.
 
 ## Linguagem de gênero
 
-Os perfis "Coordenadora" e "Auxiliar" estão no feminino, como na versão anterior. Decisão pendente em [D-18](../06-arquitetura/decisoes/README.md). Proposta: manter o feminino, se o EBI for conduzido só por irmãs; caso contrário, a tela mostra "Coordenadora" ou "Coordenador" conforme o cadastro da pessoa.
+O papel é guardado sem gênero. Ao se referir a uma pessoa, a tela mostra "Coordenadora" ou "Coordenador" conforme o cadastro dela; menus e textos genéricos usam "Coordenação" e "Auxiliar". Os documentos mantêm "coordenadora" como nome do papel ([ADR-0023](../06-arquitetura/decisoes/ADR-0023-linguagem-de-genero.md)).

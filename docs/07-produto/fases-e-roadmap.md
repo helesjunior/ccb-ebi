@@ -12,7 +12,7 @@ flowchart LR
 
 | Fase | Entregáveis | Épicos | Critério de passagem |
 |---|---|---|---|
-| 0 — Descoberta e governança | Validação da hierarquia, política de dados, fluxos de legitimidade, perfis, arquitetura, protótipos; autorização da CCB, itens jurídicos do ADR-0019 (D-04), infraestrutura (D-11) e decisões D-18 a D-22 | — | Aprovação institucional, jurídica e de segurança |
+| 0 — Descoberta e governança | Validação da hierarquia, política de dados, fluxos de legitimidade, perfis, arquitetura, protótipos; autorização da CCB, itens jurídicos do ADR-0019 (D-04), infraestrutura (D-11) e validação das propostas de D-06 e D-10 | — | Aprovação institucional, jurídica e de segurança |
 | 1 — MVP Brasília | Estrutura, login/MFA, participantes/responsáveis, consentimento, elegibilidade etária, agenda, sessões, presença (Web responsivo), dashboards básicos | E01–E06 | Piloto com igrejas selecionadas e controles de acesso aprovados |
 | 2 — Operação EBI | Escalas, feedback, biblioteca PDF, reutilização, estrelas, relatórios ampliados | E07–E10 | Testes de aceitação e moderação concluídos |
 | 3 — Aplicativos e escala | App Android/iOS único, push, sugestão por GPS, presença offline, desempenho, implantação regional | E11–E13 | Publicação nas contas oficiais e suporte preparado |

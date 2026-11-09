@@ -11,11 +11,11 @@ Duas listas: **decisões em aberto** (D-nn), que precisam de aprovação da CCB,
 | D-03 | Como comprovar legitimidade de responsáveis, inclusive guarda compartilhada ou restrita | CCB + jurídico | RF-03, FL-01 | resolvida: certidão ou documento judicial, pedido pela coordenadora só em caso de dúvida | [ADR-0018](ADR-0018-comprovacao-de-responsavel.md) |
 | D-04 | Bases legais, termos, retenção, descarte e procedimento de incidentes | Jurídico / DPO | RF-04, RNF-07, fase 1 | em parte: segue as normas de instituição filantrópica; itens para o jurídico listados no ADR | [ADR-0019](ADR-0019-base-normativa-lgpd.md) |
 | D-05 | Quais feedbacks os responsáveis veem e quem modera | CCB | RF-09 | resolvida: só após moderação do Ministério Local | [ADR-0008](ADR-0008-moderacao-de-feedback.md) |
-| D-06 | Política editorial, direitos autorais e publicação nacional dos PDFs | CCB + jurídico | RF-10 | aberta | — |
+| D-06 | Política editorial, direitos autorais e publicação nacional dos PDFs | CCB + jurídico | RF-10 | em parte: regra conservadora aprovada pelo produto; aguarda CCB e jurídico | [ADR-0028](ADR-0028-politica-editorial-dos-pdfs.md) |
 | D-07 | Um ou dois apps; quem tem a conta de desenvolvedor nas lojas | CCB + TI | RF-13, E11 | em parte: um app único; titular das lojas em aberto | [ADR-0009](ADR-0009-aplicativo-unico.md) |
 | D-08 | Funcionamento offline e sincronização | Produto | E13 | resolvida: offline só para presença, com o app | [ADR-0016](ADR-0016-offline-para-presenca.md) |
 | D-09 | Equipe mínima por sessão e aprovação de escalas | CCB | RF-07, M-06 | resolvida: 1 coordenadora + 1 auxiliar a cada 4 participantes; aprovação pela coordenadora chefe | [ADR-0010](ADR-0010-equipe-minima-e-aprovacao-de-escala.md) |
-| D-10 | Exportação e acesso a dados identificáveis em níveis superiores | CCB + DPO | RF-14, matriz | aberta | — |
+| D-10 | Exportação e acesso a dados identificáveis em níveis superiores | CCB + DPO | RF-14, matriz | em parte: só agregados acima da igreja, sem exportação com nomes no MVP; aguarda CCB e DPO | [ADR-0029](ADR-0029-dados-identificaveis-acima-da-igreja.md) |
 | D-11 | Infraestrutura, padrões tecnológicos e metas finais de SLA/RPO/RTO | TI CCB | RNF-03, arquitetura | aberta; proposta para o piloto nos ADRs 0004 a 0006 | [ADR-0004](ADR-0004-conteineres-e-orquestracao.md) |
 | D-12 | Confirmar a faixa de 3 a menos de 12 anos e aprovar o fluxo de autorização e revisão das exceções inclusivas | CCB | RN-13, RN-14, FL-06 | resolvida | [ADR-0011](ADR-0011-faixa-etaria-confirmada.md), [ADR-0012](ADR-0012-excecao-decidida-pela-coordenadora.md) |
 | D-13 | Participante adulto com deficiência; adolescentes de 12 a 17 anos | CCB + jurídico | RF-02, RF-03, LGPD | em parte: regra de produto aprovada (sem limite de idade, coordenadora do dia decide com o responsável); concordância do participante adulto pendente no jurídico ([ADR-0019](ADR-0019-base-normativa-lgpd.md)) | [ADR-0012](ADR-0012-excecao-decidida-pela-coordenadora.md) |
@@ -23,11 +23,11 @@ Duas listas: **decisões em aberto** (D-nn), que precisam de aprovação da CCB,
 | D-15 | Limiar de supressão em relatórios e definição de "participante ativo" e "EBI ativo" | Produto + DPO | RF-14, M-01, M-09 | resolvida: "< 5" para contagens de 1 a 4; ativo = presença em 12 meses ou cadastro em 90 dias; EBI ativo = sessão em 90 dias | [ADR-0020](ADR-0020-supressao-e-definicao-de-ativo.md) |
 | D-16 | Avaliação de atividade: uma nota por utilização ou por usuário e versão | Produto | RF-12 | resolvida: por utilização | [ADR-0014](ADR-0014-avaliacao-por-utilizacao.md) |
 | D-17 | Cadastro assistido pela coordenadora para famílias sem e-mail ou com pouca familiaridade digital | CCB + DPO | RF-02, FL-01 | resolvida: permitido; evidência de consentimento com o DPO | [ADR-0015](ADR-0015-cadastro-assistido.md) |
-| D-18 | Linguagem de gênero nos perfis (Coordenadora/Auxiliar) | Produto | Telas | aberta; proposta em [perfis](../../00-visao/perfis-e-atores.md#linguagem-de-gênero) | — |
-| D-19 | Escala de participação no feedback | Produto | RF-09 | aberta; proposta de 3 níveis em [RF-09](../../01-requisitos/funcionais/RF-09-feedback.md) | — |
-| D-20 | Mínimo de avaliações para mostrar a média de uma atividade | Produto | RF-12 | aberta; proposta: 5, em [RF-12](../../01-requisitos/funcionais/RF-12-avaliacao-de-atividades.md) | — |
-| D-21 | Confirmações pendentes do bloco de idade: RN-15, RN-16, cadastro antecipado de menores de 3 anos, validade da exceção entre sessões | Produto | E04 | aberta; propostas em [elegibilidade etária](../../02-regras-de-negocio/elegibilidade-etaria.md#status-do-bloco) | — |
-| D-22 | Escopo da coordenadora para mesclar e corrigir cadastros | Produto | RF-02 | aberta; proposta em [ADR-0007](ADR-0007-cadastro-e-correcao-de-participantes.md) | — |
+| D-18 | Linguagem de gênero nos perfis (Coordenadora/Auxiliar) | Produto | Telas | resolvida: papel sem gênero; tela segue o cadastro da pessoa | [ADR-0023](ADR-0023-linguagem-de-genero.md) |
+| D-19 | Escala de participação no feedback | Produto | RF-09 | resolvida: 3 níveis | [ADR-0024](ADR-0024-escala-de-participacao.md) |
+| D-20 | Mínimo de avaliações para mostrar a média de uma atividade | Produto | RF-12 | resolvida: 5 avaliações | [ADR-0025](ADR-0025-minimo-de-avaliacoes.md) |
+| D-21 | Confirmações pendentes do bloco de idade: RN-15, RN-16, cadastro antecipado de menores de 3 anos, validade da exceção entre sessões | Produto | E04 | resolvida: as quatro propostas aprovadas | [ADR-0026](ADR-0026-confirmacoes-do-bloco-de-idade.md) |
+| D-22 | Escopo da coordenadora para mesclar e corrigir cadastros | Produto | RF-02 | resolvida: só participantes ligados aos EBIs da coordenadora | [ADR-0027](ADR-0027-escopo-de-mesclagem.md) |
 
 ## ADRs
 
@@ -55,5 +55,12 @@ Duas listas: **decisões em aberto** (D-nn), que precisam de aprovação da CCB,
 | [ADR-0020](ADR-0020-supressao-e-definicao-de-ativo.md) | Supressão em relatórios e definição de "ativo" | aceito |
 | [ADR-0021](ADR-0021-portal-web-react.md) | Portal Web em React com TypeScript | aceito |
 | [ADR-0022](ADR-0022-identidade-e-acesso.md) | Identidade e acesso (Etapa 3): escopo e dívidas | aceito |
+| [ADR-0023](ADR-0023-linguagem-de-genero.md) | Linguagem de gênero nos perfis | aceito |
+| [ADR-0024](ADR-0024-escala-de-participacao.md) | Escala de participação no feedback | aceito |
+| [ADR-0025](ADR-0025-minimo-de-avaliacoes.md) | Mínimo de avaliações para exibir a média | aceito |
+| [ADR-0026](ADR-0026-confirmacoes-do-bloco-de-idade.md) | Confirmações do bloco de idade | aceito |
+| [ADR-0027](ADR-0027-escopo-de-mesclagem.md) | Escopo da coordenadora para mesclar e corrigir cadastros | aceito |
+| [ADR-0028](ADR-0028-politica-editorial-dos-pdfs.md) | Política editorial e direitos dos PDFs | proposto pelo produto; aguarda CCB e jurídico |
+| [ADR-0029](ADR-0029-dados-identificaveis-acima-da-igreja.md) | Dados identificáveis acima da igreja | proposto pelo produto; aguarda CCB e DPO |
 
 Para criar um ADR, copie o [modelo](ADR-0001-registro-de-decisoes.md#modelo) e use o próximo número.

@@ -2,6 +2,17 @@
 
 Formato: versão, data, autor e mudanças. Itens mais recentes primeiro.
 
+## 2.11 — 09/11/2026
+
+Decisões D-06, D-10 e D-18 a D-22 respondidas pelo responsável do produto.
+
+- D-18 ([ADR-0023](06-arquitetura/decisoes/ADR-0023-linguagem-de-genero.md)): papel sem gênero; a tela segue o cadastro da pessoa.
+- D-19 ([ADR-0024](06-arquitetura/decisoes/ADR-0024-escala-de-participacao.md)): escala de participação com 3 níveis.
+- D-20 ([ADR-0025](06-arquitetura/decisoes/ADR-0025-minimo-de-avaliacoes.md)): média só a partir de 5 avaliações.
+- D-21 ([ADR-0026](06-arquitetura/decisoes/ADR-0026-confirmacoes-do-bloco-de-idade.md)): RN-15, RN-16, cadastro antecipado e validade da exceção aprovados; bloco de idade pronto para implementar. Novo CA-26.
+- D-22 ([ADR-0027](06-arquitetura/decisoes/ADR-0027-escopo-de-mesclagem.md)): coordenadora só mescla e corrige participantes dos seus EBIs. Novo CA-27.
+- D-06 ([ADR-0028](06-arquitetura/decisoes/ADR-0028-politica-editorial-dos-pdfs.md)) e D-10 ([ADR-0029](06-arquitetura/decisoes/ADR-0029-dados-identificaveis-acima-da-igreja.md)): regra conservadora aprovada pelo produto; aguardam CCB, jurídico e DPO.
+
 ## 2.10 — 09/11/2026
 
 Etapa 3 — Identidade e acesso (E01).

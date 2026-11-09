@@ -45,6 +45,5 @@ Cada operação é um gate `can:<operacao>` nas rotas, decidido por **papel × o
 Notas: o `*` (finalidade registrada) ainda não é aplicado — fora do escopo da Etapa 3 ([ADR-0022](../06-arquitetura/decisoes/ADR-0022-identidade-e-acesso.md)). A listagem de `/users` já filtra por subárvore; as demais listagens de organização ainda são apenas por papel (dívida registrada).
 
 ## A validar
-- A matriz é uma proposta para revisão; os níveis de acesso a dados identificáveis acima da igreja dependem de [D-10](../06-arquitetura/decisoes/README.md).
+- A matriz é uma proposta para revisão. Acima da igreja, só dados agregados; acesso identificado só por exceção com finalidade, prazo e aprovação do DPO ([ADR-0029](../06-arquitetura/decisoes/ADR-0029-dados-identificaveis-acima-da-igreja.md), aguarda CCB e DPO).
 - Acesso da coordenadora ao laudo, quando existir: proposta de leitura só com finalidade registrada.
-- Escopo da coordenadora para mesclar e corrigir cadastros (ADR-0007).

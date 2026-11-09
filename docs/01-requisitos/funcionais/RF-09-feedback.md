@@ -4,7 +4,7 @@
 
 ## Requisitos
 1. Coordenadora ou auxiliar autorizada pode registrar observações pedagógicas objetivas, respeitosas e pertinentes à participação na sessão.
-2. Campos: participação (opcional, escala de 3 níveis: "participou com apoio", "participou", "participou e contribuiu" — proposto), atividade realizada, observação breve (até 500 caracteres, proposto), autor, data e visibilidade.
+2. Campos: participação (opcional, escala de 3 níveis: "participou com apoio", "participou", "participou e contribuiu", [ADR-0024](../../06-arquitetura/decisoes/ADR-0024-escala-de-participacao.md)), atividade realizada, observação breve (até 500 caracteres, proposto), autor, data e visibilidade.
 3. Proibidos: rótulos diagnósticos, avaliações vexatórias, dados sensíveis desnecessários e comparações públicas entre participantes.
 4. Moderação antes de chegar ao responsável, conforme [ADR-0008](../../06-arquitetura/decisoes/ADR-0008-moderacao-de-feedback.md); correção e contestação auditadas.
 5. Responsáveis veem apenas feedbacks liberados dos próprios dependentes. Registros internos de proteção/salvaguarda, se existirem, ficam em processo separado e não fazem parte do feedback comum.

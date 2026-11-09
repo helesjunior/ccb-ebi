@@ -5,7 +5,7 @@
 ## Requisitos
 1. Avaliação de **1 a 5 estrelas** por usuário habilitado, após utilização confirmada em sessão.
 2. Uma avaliação ativa **por usuário e utilização**; nova nota substitui a anterior, com auditoria ([ADR-0014](../../06-arquitetura/decisoes/ADR-0014-avaliacao-por-utilizacao.md)).
-3. Exibir média aritmética e quantidade de avaliações, separadas do número de utilizações. Atividade com **menos de 5 avaliações** mostra "poucas avaliações" no lugar da média e não entra em ordenação por avaliação (proposto; parâmetro configurável).
+3. Exibir média aritmética e quantidade de avaliações, separadas do número de utilizações. Atividade com **menos de 5 avaliações** mostra "poucas avaliações" no lugar da média e não entra em ordenação por avaliação (parâmetro configurável, [ADR-0025](../../06-arquitetura/decisoes/ADR-0025-minimo-de-avaliacoes.md)).
 4. Denúncia e moderação de conteúdo inadequado. Não existem avaliações de crianças ou pessoas.
 
 ## Relacionados
