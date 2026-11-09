@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Domain\Identidade\Support\Operacoes;
+use App\Policies\ConvitePolicy;
 use App\Policies\OrganizacaoPolicy;
 use App\Policies\UsuarioPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -25,5 +26,6 @@ class ApiServiceProvider extends ServiceProvider
         Gate::define(Operacoes::ORGANIZACAO_GERENCIAR, [OrganizacaoPolicy::class, 'gerenciar']);
         Gate::define(Operacoes::USUARIO_LER, [UsuarioPolicy::class, 'ler']);
         Gate::define(Operacoes::USUARIO_GERENCIAR, [UsuarioPolicy::class, 'gerenciar']);
+        Gate::define(Operacoes::CONVITE_GERENCIAR, [ConvitePolicy::class, 'gerenciar']);
     }
 }

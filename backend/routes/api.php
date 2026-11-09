@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\CentralController;
 use App\Http\Controllers\Api\V1\ChurchController;
 use App\Http\Controllers\Api\V1\EbiController;
 use App\Http\Controllers\Api\V1\HealthController;
+use App\Http\Controllers\Api\V1\InvitationController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MfaController;
 use App\Http\Controllers\Api\V1\PasswordController;
@@ -57,6 +58,13 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         Route::middleware(IdempotenciaMiddleware::class)->group(function (): void {
             Route::patch('users/{id}', [UserController::class, 'update'])
                 ->middleware('can:usuario.gerenciar')->name('users.update');
+        });
+
+        // Convites para a equipe (RF-05).
+        Route::middleware('can:convite.gerenciar')->group(function (): void {
+            Route::get('invitations', [InvitationController::class, 'index'])->name('invitations.index');
+            Route::post('invitations', [InvitationController::class, 'store'])->name('invitations.store');
+            Route::delete('invitations/{id}', [InvitationController::class, 'destroy'])->name('invitations.destroy');
         });
 
         // Organizacao - leitura (autorizacao por operacao; matriz).
