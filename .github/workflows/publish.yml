@@ -31,7 +31,7 @@ jobs:
 
       - name: Metadados da imagem
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/ccb-ebi-api
           tags: |
@@ -78,7 +78,7 @@ jobs:
 
       - name: Metadados da imagem
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/ccb-ebi-web
           tags: |
