@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Domain\Identidade\Contracts\ResolverContextoAtuacao;
+use App\Support\ProblemException;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -25,6 +26,12 @@ class ResolveActingScope
         $usuario = $request->user('sanctum');
 
         if ($usuario !== null) {
+            // Token de desafio de MFA (escopo restrito) nao alcanca a area
+            // operacional: exige a ability `*` da sessao plena (CA-15).
+            if (! $usuario->tokenCan('*')) {
+                throw new ProblemException('mfa_pendente', 'Verificação em duas etapas pendente', 403, 'Conclua o segundo fator antes de acessar a área operacional.');
+            }
+
             $contexto = $this->resolver->resolver(
                 $usuario,
                 $request->header('X-Acting-Scope'),

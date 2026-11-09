@@ -4,7 +4,9 @@ use App\Domain\Organizacao\Models\Igreja;
 use App\Domain\Organizacao\Models\Setor;
 
 beforeEach(function () {
-    $this->usuario = criarUsuarioComPapel('coordenadora', 'central', 'c1');
+    // Papel autorizado a gerir a estrutura organizacional (matriz). super_admin
+    // ignora escopo territorial, entao escreve em qualquer no.
+    $this->usuario = criarUsuarioComPapel('super_admin', 'central', 'c1');
     $this->token = $this->usuario->createToken('t')->plainTextToken;
     $this->auth = ['Authorization' => "Bearer {$this->token}"];
 });

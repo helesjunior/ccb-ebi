@@ -48,28 +48,39 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         Route::get('me/sessions', [SessionController::class, 'index'])->name('me.sessions.index');
         Route::delete('me/sessions/{id}', [SessionController::class, 'destroy'])->name('me.sessions.destroy');
 
-        // Organizacao - leitura autenticada
-        Route::get('churches', [ChurchController::class, 'index'])->name('churches.index');
-        Route::get('churches/{id}', [ChurchController::class, 'show'])->name('churches.show');
-        Route::get('regions', [RegionController::class, 'index'])->name('regions.index');
-        Route::get('regions/{id}/sectors', [RegionController::class, 'sectors'])->name('regions.sectors');
-        Route::get('sectors', [SectorController::class, 'index'])->name('sectors.index');
-        Route::get('ebis', [EbiController::class, 'index'])->name('ebis.index');
-        Route::get('central', [CentralController::class, 'show'])->name('central.show');
-
-        // Organizacao - escrita (autorizacao real por operacao na etapa de identidade).
-        // Escritas de criacao/transferencia sob idempotencia (Idempotency-Key).
-        Route::middleware(IdempotenciaMiddleware::class)->group(function (): void {
-            Route::post('churches', [ChurchController::class, 'store'])->name('churches.store');
-            Route::post('churches/{id}/transfers', [ChurchController::class, 'transfer'])->name('churches.transfer');
-            Route::post('regions', [RegionController::class, 'store'])->name('regions.store');
-            Route::post('sectors', [SectorController::class, 'store'])->name('sectors.store');
-            Route::post('ebis', [EbiController::class, 'store'])->name('ebis.store');
+        // Organizacao - leitura (autorizacao por operacao; matriz).
+        Route::middleware('can:organizacao.ler')->group(function (): void {
+            Route::get('churches', [ChurchController::class, 'index'])->name('churches.index');
+            Route::get('churches/{id}', [ChurchController::class, 'show'])->name('churches.show');
+            Route::get('regions', [RegionController::class, 'index'])->name('regions.index');
+            Route::get('regions/{id}/sectors', [RegionController::class, 'sectors'])->name('regions.sectors');
+            Route::get('sectors', [SectorController::class, 'index'])->name('sectors.index');
+            Route::get('ebis', [EbiController::class, 'index'])->name('ebis.index');
+            Route::get('central', [CentralController::class, 'show'])->name('central.show');
         });
 
-        Route::patch('churches/{id}', [ChurchController::class, 'update'])->name('churches.update');
-        Route::patch('regions/{id}', [RegionController::class, 'update'])->name('regions.update');
-        Route::patch('sectors/{id}', [SectorController::class, 'update'])->name('sectors.update');
-        Route::patch('ebis/{id}', [EbiController::class, 'update'])->name('ebis.update');
+        // Organizacao - escrita (autorizacao por operacao + escopo territorial).
+        // Escritas de criacao/transferencia sob idempotencia (Idempotency-Key).
+        Route::middleware(IdempotenciaMiddleware::class)->group(function (): void {
+            Route::post('churches', [ChurchController::class, 'store'])
+                ->middleware('can:organizacao.gerenciar,igreja')->name('churches.store');
+            Route::post('churches/{id}/transfers', [ChurchController::class, 'transfer'])
+                ->middleware('can:organizacao.gerenciar,igreja,{id}')->name('churches.transfer');
+            Route::post('regions', [RegionController::class, 'store'])
+                ->middleware('can:organizacao.gerenciar,regional')->name('regions.store');
+            Route::post('sectors', [SectorController::class, 'store'])
+                ->middleware('can:organizacao.gerenciar,setor')->name('sectors.store');
+            Route::post('ebis', [EbiController::class, 'store'])
+                ->middleware('can:organizacao.gerenciar,ebi')->name('ebis.store');
+        });
+
+        Route::patch('churches/{id}', [ChurchController::class, 'update'])
+            ->middleware('can:organizacao.gerenciar,igreja,{id}')->name('churches.update');
+        Route::patch('regions/{id}', [RegionController::class, 'update'])
+            ->middleware('can:organizacao.gerenciar,regional,{id}')->name('regions.update');
+        Route::patch('sectors/{id}', [SectorController::class, 'update'])
+            ->middleware('can:organizacao.gerenciar,setor,{id}')->name('sectors.update');
+        Route::patch('ebis/{id}', [EbiController::class, 'update'])
+            ->middleware('can:organizacao.gerenciar,ebi,{id}')->name('ebis.update');
     });
 });
