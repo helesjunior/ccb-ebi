@@ -51,6 +51,11 @@ class GerenciadorOrganizacao implements GerirOrganizacao
 
     public function criarRegional(array $dados): Regional
     {
+        if (empty($dados['central_nacional_id'])) {
+            $central = $this->central();
+            $dados['central_nacional_id'] = ($central ?? CentralNacional::query()->create(['nome' => 'Central (Brás)']))->id;
+        }
+
         return Regional::query()->create($dados);
     }
 
