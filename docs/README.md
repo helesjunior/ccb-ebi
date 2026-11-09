@@ -2,7 +2,7 @@
 
 Especificação da Plataforma de Gestão do Espaço Bíblico Infantil (EBI) da CCB, dividida por assunto para que cada área (produto, jurídico/DPO, segurança, desenvolvimento, institucional) revise a parte que lhe cabe.
 
-**Versão:** 2.11 — proposta para validação · **Data:** 09/11/2026 · **Abrangência prevista:** nacional, com piloto na Regional de Brasília
+**Versão:** 2.12 — proposta para validação · **Data:** 09/11/2026 · **Abrangência prevista:** nacional, com piloto na Regional de Brasília
 
 > Documento de trabalho. Os requisitos dependem de aprovação institucional e não substituem validação jurídica, pastoral/institucional, de segurança ou de proteção de dados.
 

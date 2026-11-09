@@ -23,4 +23,4 @@ flowchart TD
   G -. depois .-> H[Responsável cria conta e reivindica vínculo]
 ```
 
-**Pendências:** forma de evidência do consentimento sem aceite digital (D-04).
+**Pendências:** a evidência (termo em papel assinado, fotografado e anexado) é padrão provisório do [ADR-0019](../../06-arquitetura/decisoes/ADR-0019-base-normativa-lgpd.md) e aguarda o jurídico/DPO.

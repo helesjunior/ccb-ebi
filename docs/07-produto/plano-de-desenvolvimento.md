@@ -12,7 +12,7 @@ Sim, com uma condição: **dá para desenvolver, mas não dá para colocar dados
 
 | Pendência | Por que não bloqueia | Como o código lida |
 |---|---|---|
-| Itens jurídicos do [ADR-0019](../06-arquitetura/decisoes/ADR-0019-base-normativa-lgpd.md) (bases legais, art. 14, retenção) | O sistema precisa do *mecanismo*; o *texto* pode chegar depois | Termos versionados (RF-04), prazos de retenção como configuração, textos provisórios marcados como rascunho |
+| Itens jurídicos do [ADR-0019](../06-arquitetura/decisoes/ADR-0019-base-normativa-lgpd.md) (bases legais, art. 14, retenção) | O produto adotou um padrão provisório conservador; o *texto* final pode chegar depois | Termos versionados (RF-04), prazos de retenção do padrão provisório como configuração, textos marcados como rascunho; desenvolvimento só com dados fictícios |
 | Destino dos backups fora da VM ([ADR-0006](../06-arquitetura/decisoes/ADR-0006-segredos-backups-e-observabilidade.md)) | Só existe backup quando existe produção | WAL-G configurado e testado contra um MinIO local; destino definitivo entra na etapa 8 |
 | D-11 — infraestrutura e SLA finais | O Compose roda em qualquer VM com Docker | Desenvolvimento e CI não dependem da VM da CCB |
 | D-10 — dados identificáveis em níveis superiores | O MVP nasce com a regra mais restritiva, já aprovada pelo produto ([ADR-0029](../06-arquitetura/decisoes/ADR-0029-dados-identificaveis-acima-da-igreja.md)) | Relatórios acima da igreja só agregados e com supressão (ADR-0020); exportação identificável desligada até a validação da CCB e do DPO |
@@ -24,7 +24,7 @@ Sim, com uma condição: **dá para desenvolver, mas não dá para colocar dados
 
 | Pendência | Bloqueia | Precisa estar resolvida até |
 |---|---|---|
-| Itens jurídicos do ADR-0019 | Uso de dados reais | Etapa 8 (piloto) |
+| Parecer do jurídico e do DPO sobre o padrão provisório do ADR-0019 ([pacote para o jurídico](../05-seguranca-e-privacidade/pacote-para-o-juridico.md)) | Uso de dados reais: **nenhum dado real entra antes do parecer** | Etapa 8 (piloto) |
 | Destino dos backups e VMs de homologação e produção | Ir ao ar | Etapa 8 |
 | Indicação do encarregado (DPO) e canal do titular | Tela de privacidade e RF-16 | Etapa 8 |
 | Autorização formal da CCB e lista das igrejas do piloto | Piloto | Etapa 8 |

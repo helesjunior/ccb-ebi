@@ -27,4 +27,4 @@ stateDiagram-v2
   revogada --> [*]
 ```
 
-**Pendências:** como colher a concordância do próprio participante adulto: item aberto do jurídico em [D-04](../../06-arquitetura/decisoes/README.md) ([ADR-0019](../../06-arquitetura/decisoes/ADR-0019-base-normativa-lgpd.md)). Validade da exceção entre sessões: proposta em [elegibilidade etária](../../02-regras-de-negocio/elegibilidade-etaria.md#status-do-bloco).
+**Pendências:** como colher a concordância do próprio participante adulto: item aberto do jurídico em [D-04](../../06-arquitetura/decisoes/README.md) ([ADR-0019](../../06-arquitetura/decisoes/ADR-0019-base-normativa-lgpd.md)).
