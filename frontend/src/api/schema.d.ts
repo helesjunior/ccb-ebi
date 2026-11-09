@@ -60,7 +60,7 @@ export interface paths {
         put?: never;
         /**
          * Autenticar
-         * @description Valida e-mail e senha. Perfis que exigem MFA e ainda não validaram o segundo fator recebem `mfa_required` + `token_desafio` (escopo restrito, sem sessão plena). Responsável (quando não exige MFA) recebe a sessão.
+         * @description Valida e-mail e senha. Perfis que exigem MFA (todo perfil ≠ Responsável) sempre recebem `mfa_required` + `token_desafio` (escopo restrito, sem sessão plena); a sessão só sai após `POST /auth/mfa/verify`. Responsável (perfil que não exige MFA) recebe a sessão direto.
          */
         post: {
             parameters: {
@@ -80,13 +80,22 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Autenticado ou desafio de MFA emitido */
+                /** @description Desafio de MFA emitido (perfil exige segundo fator) */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
                         "application/json": components["schemas"]["LoginResponse"];
+                    };
+                };
+                /** @description Sessão plena emitida (perfil que não exige MFA) */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SessaoEmitida"];
                     };
                 };
                 401: components["responses"]["Problem"];
@@ -128,8 +137,8 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Sessão plena emitida */
-                200: {
+                /** @description Sessão plena emitida (token de dispositivo) */
+                201: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -448,7 +457,10 @@ export interface paths {
         get: {
             parameters: {
                 query?: never;
-                header?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                };
                 path?: never;
                 cookie?: never;
             };
@@ -687,7 +699,10 @@ export interface paths {
                     limit?: components["parameters"]["Limit"];
                     status?: "ativo" | "suspenso";
                 };
-                header?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                };
                 path?: never;
                 cookie?: never;
             };
@@ -959,12 +974,14 @@ export interface paths {
         put?: never;
         /**
          * Conceder vínculo de acesso
-         * @description Encerra o vínculo vigente do mesmo par e abre um novo (histórico por vigência); auditado.
+         * @description Encerra o vínculo vigente do mesmo par e abre um novo (histórico por vigência); auditado. Exige autoridade sobre o papel e o escopo-alvo.
          */
         post: {
             parameters: {
                 query?: never;
                 header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
                     "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
                 };
                 path?: never;
@@ -1902,6 +1919,8 @@ export interface components {
     parameters: {
         SessionId: string;
         IdempotencyKey: string;
+        /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+        XActingScope: string;
         Cursor: string;
         Limit: number;
         IgrejaId: string;

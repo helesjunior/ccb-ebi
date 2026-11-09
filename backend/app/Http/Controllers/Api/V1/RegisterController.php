@@ -6,6 +6,7 @@ use App\Domain\Identidade\Contracts\RegistrarConta;
 use App\Domain\Identidade\Contracts\VerificarEmail;
 use App\Http\Requests\Identidade\RegistrarRequest;
 use App\Http\Resources\UsuarioResource;
+use App\Support\ProblemException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -30,7 +31,14 @@ class RegisterController
 
     public function verify(Request $request): Response
     {
-        $request->validate(['usuario' => ['required', 'string']]);
+        $request->validate([
+            'usuario' => ['required', 'string'],
+            'signature' => ['required', 'string'],
+        ]);
+
+        if (! $request->hasValidSignature()) {
+            throw new ProblemException('assinatura_invalida', 'Link inválido', 403, 'Assinatura inválida ou expirada.');
+        }
 
         $this->verificarEmail->verificar($request->string('usuario')->toString());
 

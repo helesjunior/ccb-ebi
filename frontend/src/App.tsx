@@ -135,7 +135,7 @@ function App() {
 }
 
 function chaveEscopo(e: ContextoAtuacao): string {
-  return `${e.tipo_escopo}::${e.escopo_id}`
+  return `${e.papel}@${e.tipo_escopo}:${e.escopo_id}`
 }
 
 export default App

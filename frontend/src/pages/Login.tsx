@@ -2,7 +2,11 @@ import { useState, type FormEvent } from 'react'
 
 import { api } from '../api/client'
 import { lerErro } from '../api/erro'
+import type { components } from '../api/schema'
 import type { Usuario } from '../api/sessao'
+
+/** Resposta 200 do login: desafio de MFA (sem sessão plena). */
+type LoginDesafio = components['schemas']['LoginResponse']
 
 interface LoginProps {
   onEntrar: (token: string, usuario: Usuario) => void
@@ -26,7 +30,7 @@ export function Login({ onEntrar }: LoginProps) {
     setErro(null)
     setEnviando(true)
 
-    const { data, error } = await api.POST('/auth/login', {
+    const { data, error, response } = await api.POST('/auth/login', {
       body: { email, password: senha },
     })
 
@@ -37,8 +41,12 @@ export function Login({ onEntrar }: LoginProps) {
       return
     }
 
-    if (data.mfa_required && data.token_desafio) {
-      setDesafio(data.token_desafio)
+    // 200 = desafio de MFA (sessão plena bloqueada); 201 = sessão emitida.
+    if (response.status === 200) {
+      const desafioResp = data as LoginDesafio
+      if (desafioResp.token_desafio) {
+        setDesafio(desafioResp.token_desafio)
+      }
       return
     }
 

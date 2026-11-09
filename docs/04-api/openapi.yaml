@@ -40,9 +40,10 @@ paths:
       tags: [auth]
       summary: Autenticar
       description: >-
-        Valida e-mail e senha. Perfis que exigem MFA e ainda não validaram o
-        segundo fator recebem `mfa_required` + `token_desafio` (escopo restrito,
-        sem sessão plena). Responsável (quando não exige MFA) recebe a sessão.
+        Valida e-mail e senha. Perfis que exigem MFA (todo perfil ≠ Responsável)
+        sempre recebem `mfa_required` + `token_desafio` (escopo restrito, sem
+        sessão plena); a sessão só sai após `POST /auth/mfa/verify`. Responsável
+        (perfil que não exige MFA) recebe a sessão direto.
       security: []
       requestBody:
         required: true
@@ -56,10 +57,15 @@ paths:
                 password: { type: string, format: password }
       responses:
         '200':
-          description: Autenticado ou desafio de MFA emitido
+          description: Desafio de MFA emitido (perfil exige segundo fator)
           content:
             application/json:
               schema: { $ref: '#/components/schemas/LoginResponse' }
+        '201':
+          description: Sessão plena emitida (perfil que não exige MFA)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SessaoEmitida' }
         '401': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/Problem' }
         '429': { $ref: '#/components/responses/Problem' }
@@ -82,8 +88,8 @@ paths:
               properties:
                 codigo: { type: string }
       responses:
-        '200':
-          description: Sessão plena emitida
+        '201':
+          description: Sessão plena emitida (token de dispositivo)
           content:
             application/json:
               schema: { $ref: '#/components/schemas/SessaoEmitida' }
@@ -199,6 +205,8 @@ paths:
       tags: [identity]
       summary: Contextos de atuação disponíveis
       description: Vínculos vigentes do usuário, para o seletor de contexto (`X-Acting-Scope`).
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
       responses:
         '200':
           description: Lista de contextos
@@ -285,6 +293,7 @@ paths:
       summary: Listar usuários da equipe
       description: Restrito ao escopo de atuação (subárvore do vínculo).
       parameters:
+        - $ref: '#/components/parameters/XActingScope'
         - $ref: '#/components/parameters/Cursor'
         - $ref: '#/components/parameters/Limit'
         - name: status
@@ -411,8 +420,9 @@ paths:
     post:
       tags: [team]
       summary: Conceder vínculo de acesso
-      description: Encerra o vínculo vigente do mesmo par e abre um novo (histórico por vigência); auditado.
+      description: Encerra o vínculo vigente do mesmo par e abre um novo (histórico por vigência); auditado. Exige autoridade sobre o papel e o escopo-alvo.
       parameters:
+        - $ref: '#/components/parameters/XActingScope'
         - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
@@ -732,6 +742,15 @@ components:
       in: header
       required: false
       schema: { type: string, maxLength: 128 }
+    XActingScope:
+      name: X-Acting-Scope
+      in: header
+      required: false
+      description: >-
+        Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>`
+        (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor
+        revalida contra os vínculos vigentes (nunca é aceito sem revalidação).
+      schema: { type: string, example: "papel=adm_setor;escopo=setor:01H..." }
     Cursor:
       name: cursor
       in: query

@@ -39,8 +39,9 @@ export function lerEscopo(): ContextoAtuacao | null {
 
 /**
  * Cabeçalhos de autenticação. Quando há contexto de atuação selecionado, o
- * servidor recebe `X-Acting-Scope` no formato `<tipo>::<id>` para revalidar o
- * escopo (RN-11). O token vem do parâmetro (para o desafio de MFA) ou da sessão.
+ * servidor recebe `X-Acting-Scope` no formato `papel=<codigo>;escopo=<tipo>:<id>`
+ * para revalidar o escopo (RN-11). O token vem do parâmetro (para o desafio de
+ * MFA) ou da sessão.
  */
 export function cabecalhos(token?: string, escopo?: ContextoAtuacao | null): Record<string, string> {
   const cabecalhos: Record<string, string> = {}
@@ -49,8 +50,8 @@ export function cabecalhos(token?: string, escopo?: ContextoAtuacao | null): Rec
     cabecalhos.Authorization = `Bearer ${efetivo}`
   }
   const contexto = escopo ?? lerEscopo()
-  if (contexto?.tipo_escopo && contexto.escopo_id) {
-    cabecalhos['X-Acting-Scope'] = `${contexto.tipo_escopo}::${contexto.escopo_id}`
+  if (contexto?.papel && contexto.tipo_escopo && contexto.escopo_id) {
+    cabecalhos['X-Acting-Scope'] = `papel=${contexto.papel};escopo=${contexto.tipo_escopo}:${contexto.escopo_id}`
   }
   return cabecalhos
 }
