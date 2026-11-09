@@ -22,10 +22,17 @@ Proposta inicial, prefixo `/api/v1`. Rotas marcadas *novo* não existiam na vers
 ## Organização
 | Método | Rota | Finalidade | RF |
 |---|---|---|---|
-| GET | `/regions/{id}/sectors` | Setores autorizados | RF-01 |
-| GET/POST/PATCH | `/churches`, `/churches/{id}` | Igrejas *novo* | RF-01 |
-| POST | `/churches/{id}/transfers` | Transferir igreja de setor *novo* | RF-01 |
-| GET/POST/PATCH | `/ebis`, `/ebis/{id}` | EBIs *novo* | RF-01 |
+| GET | `/regions/{id}/sectors` | Setores de uma regional (`no OpenAPI`) | RF-01 |
+| GET/POST | `/regions` | Listar e criar regional (`no OpenAPI`) | RF-01 |
+| PATCH | `/regions/{id}` | Atualizar regional (`no OpenAPI`) | RF-01 |
+| GET/POST | `/sectors` | Listar e criar setor (`no OpenAPI`) | RF-01 |
+| PATCH | `/sectors/{id}` | Atualizar setor (`no OpenAPI`) | RF-01 |
+| GET | `/central` | Central Nacional (`no OpenAPI`) | RF-01 |
+| GET/POST | `/churches` | Listar e criar igreja (`no OpenAPI`) | RF-01 |
+| GET/PATCH | `/churches/{id}` | Ver e atualizar igreja (`no OpenAPI`) | RF-01 |
+| POST | `/churches/{id}/transfers` | Transferir igreja de setor (`no OpenAPI`) | RF-01 |
+| GET/POST | `/ebis` | Listar e criar EBI (`no OpenAPI`) | RF-01 |
+| PATCH | `/ebis/{id}` | Atualizar EBI (`no OpenAPI`) | RF-01 |
 | GET | `/churches/nearby?lat=&lon=` | Sugerir igrejas próximas, com limites de uso | RF-08 |
 
 ## Usuários e equipe

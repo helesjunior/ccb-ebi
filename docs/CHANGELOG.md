@@ -2,6 +2,14 @@
 
 Formato: versão, data, autor e mudanças. Itens mais recentes primeiro.
 
+## 2.8 — 09/11/2026
+
+Regra territorial da Organização (Etapa 2).
+
+- [RN-09](02-regras-de-negocio/regras-de-negocio.md): reescrita. Transferências organizacionais **não criam data de corte**: o território (setor e regional) de uma igreja é sempre o vigente atual. Ao transferir, todos os dados da igreja — inclusive de períodos anteriores — passam a ser atribuídos ao novo setor; o vínculo com vigência preserva o histórico de transferências (RF-01), não a atribuição territorial dos dados.
+- [CA-18](01-requisitos/criterios-de-aceite.md): reescrito para refletir a mesma regra (a igreja é a âncora; o setor é sempre o vigente).
+- [Modelo conceitual](03-dados/modelo-conceitual.md): `sessao` deixa de gravar `setor_id`/`regional_id` próprios; setor e regional derivam do vínculo vigente da igreja.
+
 ## 2.7 — 09/11/2026
 
 Correções residuais da avaliação externa.

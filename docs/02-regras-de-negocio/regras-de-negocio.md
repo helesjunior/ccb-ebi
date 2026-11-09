@@ -26,7 +26,7 @@ Regras agrupadas por domínio. Os IDs são os mesmos da versão anterior e não 
 | <a id="rn-02"></a>RN-02 | A presença exige sessão existente e autorização do operador para o EBI correspondente. | proposto |
 | <a id="rn-03"></a>RN-03 | Um registro ativo de presença por participante e sessão. Estorno não apaga o registro; ele passa a `estornada` e permite novo registro ativo. | proposto |
 | <a id="rn-04"></a>RN-04 | Igreja sugerida por GPS precisa ser confirmada pelo operador, junto com o EBI e a sessão; a seleção manual está sempre disponível. Proximidade não é prova de presença. | proposto |
-| <a id="rn-09"></a>RN-09 | Transferências organizacionais não mudam a igreja, o setor nem a regional históricos da sessão. | proposto |
+| <a id="rn-09"></a>RN-09 | Transferências organizacionais não criam data de corte: o território (setor e regional) de uma igreja é sempre o vigente atual. Ao transferir, todos os dados daquela igreja — inclusive de períodos anteriores — passam a ser atribuídos ao novo setor. O vínculo com vigência preserva o histórico de transferências (RF-01), não a atribuição territorial dos dados. | proposto |
 
 ## Atividades
 
@@ -45,6 +45,6 @@ Regras agrupadas por domínio. Os IDs são os mesmos da versão anterior e não 
 
 ## Mudanças em relação à versão anterior
 - RN-03: termo "criança" trocado por "participante" e explicitado o efeito do estorno.
-- RN-09: incluídos setor e regional, além da igreja.
+- RN-09: reescrita — o território da igreja é sempre o vigente atual, sem data de corte; transferências reatribuem todos os dados ao novo setor e o vínculo preserva o histórico de transferências.
 - RN-10: incluídas as exceções inclusivas.
 - RN-16: nova.

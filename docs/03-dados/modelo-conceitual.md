@@ -78,7 +78,7 @@ erDiagram
 |---|---|
 | `agenda_ebi` | id, ebi_id, dia_semana, hora_inicio, hora_fim, vigência |
 | `agenda_excecao` | id, agenda_ebi_id ou ebi_id, data, tipo (feriado, cancelamento, horário especial), motivo *(novo, RF-06)* |
-| `sessao` | id, ebi_id, agenda_ebi_id, igreja_id, setor_id, regional_id, inicio_previsto, fim_previsto, inicio_real, fim_real, tema, passagem_biblica, status, realizada *(unidade territorial gravada na data — RN-09; previsto/real separados)* |
+| `sessao` | id, ebi_id, agenda_ebi_id, igreja_id, inicio_previsto, fim_previsto, inicio_real, fim_real, tema, passagem_biblica, status, realizada *(setor e regional derivam do vínculo vigente da igreja — a igreja é a âncora e o setor é sempre o atual, RN-09; previsto/real separados)* |
 | `escala` | id, sessao_id, usuario_id, função, horário, status, aprovado_por, aprovado_em, confirmado_em, presente *(aprovação pela coordenadora chefe, ADR-0010)* |
 | `solicitacao_troca_escala` | id, escala_id, solicitante_id, substituto_id, status, aprovado_por *(novo, RF-07)* |
 | `presenca` | id, sessao_id, participante_id, registrado_por, registrado_em, origem (web, app), status, estornado_por, estornado_em, motivo_estorno *(origem e estorno novos, RF-08)* |

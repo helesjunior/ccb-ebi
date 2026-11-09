@@ -18,7 +18,7 @@ class AutenticadorFicticio implements AutenticarAtor
         $ator = Ator::query()->where('email', $email)->first();
 
         if ($ator === null || ! Hash::check($senha, $ator->senha)) {
-            throw new ProblemException('unauthorized', 'Credenciais inválidas', 401);
+            throw new ProblemException('unauthorized', 'Não autenticado', 401, 'Credenciais inválidas');
         }
 
         return $ator;
