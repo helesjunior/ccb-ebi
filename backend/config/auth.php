@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Identidade\Models\Ator;
 use App\Models\User;
 
 return [
@@ -42,6 +43,10 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        'sanctum' => [
+            'driver' => 'sanctum',
+            'provider' => 'atores',
+        ],
     ],
 
     /*
@@ -65,6 +70,10 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
+        ],
+        'atores' => [
+            'driver' => 'eloquent',
+            'model' => Ator::class,
         ],
 
         // 'users' => [
