@@ -1,5 +1,25 @@
 <?php
 
+// Ambiente de teste determinístico: o container recebe CACHE_STORE/QUEUE/SESSION
+// via env_file (.env) como variáveis de ambiente reais, e o Dotenv do Laravel é
+// imutável — o <env force> do phpunit.xml não sobrescreve chaves já presentes no
+// ambiente. Forçamos aqui, antes de qualquer boot, para que os testes não
+// compartilhem o Redis (o rate limiter acumulava entre execuções e virava 429).
+foreach ([
+    'APP_ENV' => 'testing',
+    'CACHE_STORE' => 'array',
+    'QUEUE_CONNECTION' => 'sync',
+    'SESSION_DRIVER' => 'array',
+    'BROADCAST_CONNECTION' => 'null',
+    'MAIL_MAILER' => 'array',
+    'DB_CONNECTION' => 'sqlite',
+    'DB_DATABASE' => ':memory:',
+] as $chave => $valor) {
+    putenv("{$chave}={$valor}");
+    $_ENV[$chave] = $valor;
+    $_SERVER[$chave] = $valor;
+}
+
 use App\Domain\Identidade\Models\Papel;
 use App\Domain\Identidade\Models\Usuario;
 use App\Domain\Identidade\Models\VinculoAcesso;

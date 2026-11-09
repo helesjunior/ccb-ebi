@@ -29,6 +29,18 @@ class ConsultaHierarquia implements ConsultarHierarquia
         };
     }
 
+    public function centralId(): ?string
+    {
+        return CentralNacional::query()->value('id');
+    }
+
+    public function garantirCentralId(): string
+    {
+        $central = CentralNacional::query()->firstOrCreate(['nome' => 'Central (Brás)']);
+
+        return $central->id;
+    }
+
     /** @return array<string, string> */
     private function central(string $id): array
     {

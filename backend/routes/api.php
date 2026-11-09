@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\EbiController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\RegionController;
+use App\Http\Controllers\Api\V1\RegisterController;
 use App\Http\Controllers\Api\V1\SectorController;
 use App\Http\Middleware\IdempotenciaMiddleware;
 use Illuminate\Support\Facades\Route;
@@ -15,6 +16,11 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
     Route::get('health', [HealthController::class, 'health'])->name('health');
 
     Route::post('auth/login', [AuthController::class, 'login'])->name('auth.login');
+
+    // Identidade - rotas publicas (sem sessao)
+    Route::post('auth/register-guardian', [RegisterController::class, 'register'])->name('auth.register-guardian');
+    Route::post('auth/verify-email', [RegisterController::class, 'verify'])->name('auth.verify-email');
+    Route::post('auth/email/resend', [RegisterController::class, 'resend'])->name('auth.email.resend');
 
     Route::middleware('auth:sanctum')->group(function (): void {
         Route::post('auth/logout', [AuthController::class, 'logout'])->name('auth.logout');

@@ -23,4 +23,16 @@ interface ConsultarHierarquia
      * @throws RuntimeException se o no nao existir.
      */
     public function ancestrais(string $tipo, string $id): array;
+
+    /**
+     * ID da Central Nacional (unica). Devolve null quando ainda nao existe.
+     * Superficie opaca (so o id) para outros modulos (ADR-0002).
+     */
+    public function centralId(): ?string;
+
+    /**
+     * ID da Central Nacional, criando-a se ainda nao existir (idempotente).
+     * Usado no cadastro publico, que nao pode depender do seed organizacional.
+     */
+    public function garantirCentralId(): string;
 }
