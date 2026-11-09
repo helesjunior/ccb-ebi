@@ -30,6 +30,7 @@ class AuthController
         if ($resultado->mfaPendente) {
             return new JsonResponse([
                 'mfa_required' => true,
+                'mfa_inscricao_pendente' => $resultado->mfaInscricaoPendente,
                 'token_desafio' => $resultado->tokenDesafio,
             ], 200);
         }

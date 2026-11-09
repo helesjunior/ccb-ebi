@@ -42,8 +42,11 @@ paths:
       description: >-
         Valida e-mail e senha. Perfis que exigem MFA (todo perfil ≠ Responsável)
         sempre recebem `mfa_required` + `token_desafio` (escopo restrito, sem
-        sessão plena); a sessão só sai após `POST /auth/mfa/verify`. Responsável
-        (perfil que não exige MFA) recebe a sessão direto.
+        sessão plena); a sessão só sai após `POST /auth/mfa/verify`. Quando o
+        perfil ainda não tem fator inscrito, `mfa_inscricao_pendente` vem `true`
+        e o mesmo `token_desafio` autoriza `POST /me/mfa/totp` e
+        `POST /me/mfa/totp/confirm` para inscrever o TOTP antes de verificar.
+        Responsável (perfil que não exige MFA) recebe a sessão direto.
       security: []
       requestBody:
         required: true
@@ -831,6 +834,7 @@ components:
       type: object
       properties:
         mfa_required: { type: boolean }
+        mfa_inscricao_pendente: { type: boolean }
         token: { type: [string, 'null'] }
         token_desafio: { type: [string, 'null'] }
         usuario: { $ref: '#/components/schemas/Usuario' }

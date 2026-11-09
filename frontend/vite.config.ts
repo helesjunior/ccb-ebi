@@ -5,10 +5,18 @@ import { defineConfig } from 'vite'
 // O destino do build é configurável por VITE_OUT_DIR: localmente o portal é
 // servido pelo Laravel/FrankenPHP (backend/public/spa); na imagem web (nginx),
 // o Dockerfile usa "dist".
+//
+// O `base` acompanha o destino: o Laravel serve os arquivos a partir de
+// `public/spa`, então os assets precisam de URLs sob `/spa/` (senão o catch-all
+// do Laravel devolve o index.html no lugar do JS — tela em branco). A imagem
+// nginx serve o conteúdo na raiz, então o base é `/`.
+const outDir = process.env.VITE_OUT_DIR ?? '../backend/public/spa'
+
 export default defineConfig({
   plugins: [react()],
+  base: outDir.endsWith('dist') ? '/' : '/spa/',
   build: {
-    outDir: process.env.VITE_OUT_DIR ?? '../backend/public/spa',
+    outDir,
     emptyOutDir: true,
   },
 })

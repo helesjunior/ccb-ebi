@@ -19,6 +19,18 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class ResolveActingScope
 {
+    /**
+     * Rotas que o token de desafio de MFA (`mfa:pendente`) pode alcancar alem da
+     * propria verificacao do segundo fator: a inscricao/confirmacao do TOTP, para
+     * que um usuario ainda sem fator conclua o login (CA-15). Todo o restante da
+     * area operacional — inclusive os codigos de recuperacao — exige sessao plena.
+     */
+    private const ROTAS_DO_DESAFIO = [
+        'auth.mfa.verify',
+        'me.mfa.totp',
+        'me.mfa.totp.confirm',
+    ];
+
     public function __construct(private readonly ResolverContextoAtuacao $resolver) {}
 
     public function handle(Request $request, Closure $next): Response
@@ -26,10 +38,9 @@ class ResolveActingScope
         $usuario = $request->user('sanctum');
 
         if ($usuario !== null) {
-            // A rota de verificacao do segundo fator e o unico lugar onde o
-            // token de desafio (`mfa:pendente`) e legitimo; ela mesma protege
-            // via `auth:sanctum` + `abilities:mfa:pendente`.
-            if (! $request->routeIs('auth.mfa.verify')) {
+            // O token de desafio (`mfa:pendente`) so vale nas rotas do fluxo de
+            // segundo fator; elas mesmas protegem via `auth:sanctum` + abilities.
+            if (! $request->routeIs(self::ROTAS_DO_DESAFIO)) {
                 // Token de desafio de MFA (escopo restrito) nao alcanca a area
                 // operacional: exige a ability `*` da sessao plena (CA-15).
                 if (! $usuario->tokenCan('*')) {

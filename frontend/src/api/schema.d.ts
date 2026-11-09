@@ -60,7 +60,7 @@ export interface paths {
         put?: never;
         /**
          * Autenticar
-         * @description Valida e-mail e senha. Perfis que exigem MFA (todo perfil ≠ Responsável) sempre recebem `mfa_required` + `token_desafio` (escopo restrito, sem sessão plena); a sessão só sai após `POST /auth/mfa/verify`. Responsável (perfil que não exige MFA) recebe a sessão direto.
+         * @description Valida e-mail e senha. Perfis que exigem MFA (todo perfil ≠ Responsável) sempre recebem `mfa_required` + `token_desafio` (escopo restrito, sem sessão plena); a sessão só sai após `POST /auth/mfa/verify`. Quando o perfil ainda não tem fator inscrito, `mfa_inscricao_pendente` vem `true` e o mesmo `token_desafio` autoriza `POST /me/mfa/totp` e `POST /me/mfa/totp/confirm` para inscrever o TOTP antes de verificar. Responsável (perfil que não exige MFA) recebe a sessão direto.
          */
         post: {
             parameters: {
@@ -1731,6 +1731,7 @@ export interface components {
         };
         LoginResponse: {
             mfa_required?: boolean;
+            mfa_inscricao_pendente?: boolean;
             token?: string | null;
             token_desafio?: string | null;
             usuario?: components["schemas"]["Usuario"];

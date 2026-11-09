@@ -15,5 +15,6 @@ class ResultadoLogin
         public readonly Usuario $usuario,
         public readonly bool $mfaPendente,
         public readonly ?string $tokenDesafio = null,
+        public readonly bool $mfaInscricaoPendente = false,
     ) {}
 }
