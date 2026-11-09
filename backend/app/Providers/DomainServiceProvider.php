@@ -42,6 +42,8 @@ use App\Domain\Organizacao\Services\ConsultaHierarquia;
 use App\Domain\Organizacao\Services\ConsultaOrganizacao;
 use App\Domain\Organizacao\Services\GerenciadorOrganizacao;
 use App\Domain\Organizacao\Services\ServicoTransferencia;
+use App\Domain\Privacidade\Contracts\GerirTermos;
+use App\Domain\Privacidade\Services\GerenciadorTermos;
 use Illuminate\Support\ServiceProvider;
 
 class DomainServiceProvider extends ServiceProvider
@@ -69,5 +71,6 @@ class DomainServiceProvider extends ServiceProvider
         $this->app->bind(ConsultarOrganizacao::class, ConsultaOrganizacao::class);
         $this->app->bind(TransferirIgreja::class, ServicoTransferencia::class);
         $this->app->bind(GerirOrganizacao::class, GerenciadorOrganizacao::class);
+        $this->app->bind(GerirTermos::class, GerenciadorTermos::class);
     }
 }
