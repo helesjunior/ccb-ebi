@@ -11,10 +11,27 @@ security:
   - bearerAuth: []
 tags:
   - name: auth
+  - name: health
   - name: participants
   - name: sessions
   - name: activities
 paths:
+  /health:
+    get:
+      tags: [health]
+      summary: Estado dos serviços
+      security: []
+      responses:
+        '200':
+          description: Todos os serviços respondem
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Health' }
+        '503':
+          description: Alguma dependência está degradada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Health' }
   /auth/login:
     post:
       tags: [auth]
@@ -31,9 +48,32 @@ paths:
                 email: { type: string, format: email }
                 password: { type: string, format: password }
       responses:
-        '200': { description: Autenticado ou MFA pendente }
+        '201':
+          description: Autenticado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoginResponse' }
         '401': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
         '429': { $ref: '#/components/responses/Problem' }
+  /auth/logout:
+    post:
+      tags: [auth]
+      summary: Encerrar a sessão atual
+      responses:
+        '204': { description: Sessão encerrada }
+        '401': { $ref: '#/components/responses/Problem' }
+  /me:
+    get:
+      tags: [auth]
+      summary: Ator autenticado
+      responses:
+        '200':
+          description: Ator autenticado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Ator' }
+        '401': { $ref: '#/components/responses/Problem' }
   /sessions/{sessionId}/attendance:
     post:
       tags: [sessions]
@@ -92,6 +132,28 @@ components:
         status: { type: integer }
         detail: { type: string }
         code: { type: string }
+    Ator:
+      type: object
+      properties:
+        id: { type: integer }
+        nome: { type: string }
+        email: { type: string, format: email }
+        papel: { type: string }
+    LoginResponse:
+      type: object
+      required: [token, ator]
+      properties:
+        token: { type: string }
+        ator: { $ref: '#/components/schemas/Ator' }
+    Health:
+      type: object
+      properties:
+        status: { type: string, enum: [ok, degraded] }
+        checks:
+          type: object
+          properties:
+            database: { type: string, enum: [ok, fail] }
+            redis: { type: string, enum: [ok, fail] }
     Attendance:
       type: object
       properties:

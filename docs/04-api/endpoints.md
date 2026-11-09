@@ -12,10 +12,12 @@ Proposta inicial, prefixo `/api/v1`. Rotas marcadas *novo* não existiam na vers
 | POST | `/auth/login` | Autenticar (`no OpenAPI`) | — |
 | POST | `/auth/mfa/verify` | Validar MFA | — |
 | POST | `/auth/refresh` | Renovar sessão *novo* | — |
-| POST | `/auth/logout` | Encerrar sessão *novo* | — |
+| POST | `/auth/logout` | Encerrar sessão *novo* (`no OpenAPI`) | — |
 | POST | `/auth/password/forgot` | Pedir recuperação *novo* | — |
 | POST | `/auth/password/reset` | Redefinir senha *novo* | — |
 | GET | `/me/scopes` | Contextos de atuação disponíveis *novo* | RN-11 |
+| GET | `/me` | Ator autenticado (`no OpenAPI`) | — |
+| GET | `/health` | Estado dos serviços (`no OpenAPI`) | — |
 
 ## Organização
 | Método | Rota | Finalidade | RF |
