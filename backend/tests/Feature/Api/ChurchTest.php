@@ -1,12 +1,12 @@
 <?php
 
-use App\Domain\Identidade\Models\Ator;
+use App\Domain\Identidade\Models\Usuario;
 use App\Domain\Organizacao\Models\Igreja;
 use App\Domain\Organizacao\Models\Setor;
 
 beforeEach(function () {
-    $this->ator = Ator::factory()->create(['papel' => 'coordenadora']);
-    $this->token = $this->ator->createToken('t')->plainTextToken;
+    $this->usuario = Usuario::factory()->create();
+    $this->token = $this->usuario->createToken('t')->plainTextToken;
     $this->auth = ['Authorization' => "Bearer {$this->token}"];
 });
 
@@ -24,12 +24,8 @@ it('rejeita escrita sem token', function () {
         ->assertStatus(401);
 });
 
-it('rejeita escrita com papel sem permissao', function () {
-    $ator = Ator::factory()->create(['papel' => 'responsavel']);
-    $token = $ator->createToken('t')->plainTextToken;
-    $this->postJson('/api/v1/churches', ['codigo' => '1', 'nome' => 'x', 'timezone' => 'America/Sao_Paulo', 'status' => 'ativo'], ['Authorization' => "Bearer $token"])
-        ->assertStatus(403);
-});
+// A negacao de escrita a papel sem permissao e restaurada na task da matriz
+// (tests/Feature/Identidade/AutorizacaoOperacaoTest.php).
 
 it('lista igrejas paginado', function () {
     Igreja::factory()->count(3)->create();

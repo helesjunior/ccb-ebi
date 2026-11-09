@@ -3,24 +3,26 @@
 namespace App\Domain\Identidade\Services;
 
 use App\Domain\Identidade\Contracts\AutenticarAtor;
-use App\Domain\Identidade\Models\Ator;
+use App\Domain\Identidade\Models\Usuario;
 use App\Support\ProblemException;
 use Illuminate\Support\Facades\Hash;
 
 /**
- * Autenticação fictícia da Etapa 1: valida contra o ator semeado.
- * Substituída pelo login real em etapa posterior.
+ * Autenticacao provisoria da fundacao: valida e-mail e senha contra o usuario.
+ * O login real (MFA, e-mail verificado) entra na etapa de identidade.
  */
 class AutenticadorFicticio implements AutenticarAtor
 {
-    public function autenticar(string $email, string $senha): Ator
+    public function autenticar(string $email, string $senha): Usuario
     {
-        $ator = Ator::query()->where('email', $email)->first();
+        $usuario = Usuario::query()
+            ->where('email_normalizado', Usuario::emailNormalizado($email))
+            ->first();
 
-        if ($ator === null || ! Hash::check($senha, $ator->senha)) {
+        if ($usuario === null || ! Hash::check($senha, (string) $usuario->senha)) {
             throw new ProblemException('unauthorized', 'Não autenticado', 401, 'Credenciais inválidas');
         }
 
-        return $ator;
+        return $usuario;
     }
 }

@@ -29,21 +29,19 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         Route::get('ebis', [EbiController::class, 'index'])->name('ebis.index');
         Route::get('central', [CentralController::class, 'show'])->name('central.show');
 
-        // Organizacao - escrita sob o gate provisorio
-        Route::middleware('can:gerir-organizacao')->group(function (): void {
-            // Escritas de criacao/transferencia sob idempotencia (Idempotency-Key).
-            Route::middleware(IdempotenciaMiddleware::class)->group(function (): void {
-                Route::post('churches', [ChurchController::class, 'store'])->name('churches.store');
-                Route::post('churches/{id}/transfers', [ChurchController::class, 'transfer'])->name('churches.transfer');
-                Route::post('regions', [RegionController::class, 'store'])->name('regions.store');
-                Route::post('sectors', [SectorController::class, 'store'])->name('sectors.store');
-                Route::post('ebis', [EbiController::class, 'store'])->name('ebis.store');
-            });
-
-            Route::patch('churches/{id}', [ChurchController::class, 'update'])->name('churches.update');
-            Route::patch('regions/{id}', [RegionController::class, 'update'])->name('regions.update');
-            Route::patch('sectors/{id}', [SectorController::class, 'update'])->name('sectors.update');
-            Route::patch('ebis/{id}', [EbiController::class, 'update'])->name('ebis.update');
+        // Organizacao - escrita (autorizacao real por operacao na etapa de identidade).
+        // Escritas de criacao/transferencia sob idempotencia (Idempotency-Key).
+        Route::middleware(IdempotenciaMiddleware::class)->group(function (): void {
+            Route::post('churches', [ChurchController::class, 'store'])->name('churches.store');
+            Route::post('churches/{id}/transfers', [ChurchController::class, 'transfer'])->name('churches.transfer');
+            Route::post('regions', [RegionController::class, 'store'])->name('regions.store');
+            Route::post('sectors', [SectorController::class, 'store'])->name('sectors.store');
+            Route::post('ebis', [EbiController::class, 'store'])->name('ebis.store');
         });
+
+        Route::patch('churches/{id}', [ChurchController::class, 'update'])->name('churches.update');
+        Route::patch('regions/{id}', [RegionController::class, 'update'])->name('regions.update');
+        Route::patch('sectors/{id}', [SectorController::class, 'update'])->name('sectors.update');
+        Route::patch('ebis/{id}', [EbiController::class, 'update'])->name('ebis.update');
     });
 });

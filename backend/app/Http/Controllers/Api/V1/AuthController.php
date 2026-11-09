@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Identidade\Contracts\AutenticarAtor;
-use App\Http\Resources\AtorResource;
+use App\Http\Resources\UsuarioResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -19,13 +19,13 @@ class AuthController
             'password' => ['required', 'string'],
         ]);
 
-        $ator = $this->autenticador->autenticar($dados['email'], $dados['password']);
+        $usuario = $this->autenticador->autenticar($dados['email'], $dados['password']);
 
-        $token = $ator->createToken('web')->plainTextToken;
+        $token = $usuario->createToken('web')->plainTextToken;
 
         return new JsonResponse([
             'token' => $token,
-            'ator' => AtorResource::make($ator)->resolve(),
+            'usuario' => UsuarioResource::make($usuario)->resolve(),
         ], 201);
     }
 

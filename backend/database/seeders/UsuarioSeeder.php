@@ -2,20 +2,21 @@
 
 namespace Database\Seeders;
 
-use App\Domain\Identidade\Models\Ator;
+use App\Domain\Identidade\Models\Usuario;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
-class AtorSeeder extends Seeder
+class UsuarioSeeder extends Seeder
 {
     public function run(): void
     {
-        Ator::query()->updateOrCreate(
-            ['email' => 'coordenadora@ebi.test'],
+        Usuario::query()->updateOrCreate(
+            ['email_normalizado' => 'coordenadora@ebi.test'],
             [
                 'nome' => 'Coordenadora EBI (fictícia)',
-                'papel' => 'coordenadora',
+                'email_verificado_em' => now(),
                 'senha' => Hash::make('senha'),
+                'status' => 'ativo',
             ],
         );
     }

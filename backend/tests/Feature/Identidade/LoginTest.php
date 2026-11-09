@@ -2,15 +2,15 @@
 
 use App\Domain\Identidade\Contracts\AutenticarAtor;
 use App\Support\ProblemException;
-use Database\Seeders\AtorSeeder;
+use Database\Seeders\UsuarioSeeder;
 
 beforeEach(function () {
-    $this->seed(AtorSeeder::class);
+    $this->seed(UsuarioSeeder::class);
 });
 
-it('autentica o ator semeado', function () {
-    $ator = app(AutenticarAtor::class)->autenticar('coordenadora@ebi.test', 'senha');
-    expect($ator)->not->toBeNull();
+it('autentica o usuario semeado', function () {
+    $usuario = app(AutenticarAtor::class)->autenticar('coordenadora@ebi.test', 'senha');
+    expect($usuario)->not->toBeNull();
 });
 
 it('rejeita credenciais invalidas sem criar sessao', function () {

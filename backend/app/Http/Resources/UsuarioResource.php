@@ -6,10 +6,10 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Formata o ator autenticado para a API. Não importa o modelo do módulo
+ * Formata o usuario autenticado para a API. Não importa o modelo do módulo
  * (fronteira modular); lê os atributos do recurso subjacente.
  */
-class AtorResource extends JsonResource
+class UsuarioResource extends JsonResource
 {
     /**
      * @return array<string, mixed>
@@ -19,8 +19,9 @@ class AtorResource extends JsonResource
         return [
             'id' => $this->resource->id,
             'nome' => $this->resource->nome,
-            'email' => $this->resource->email,
-            'papel' => $this->resource->papel,
+            'email' => $this->resource->email_normalizado,
+            'email_verificado' => $this->resource->email_verificado_em !== null,
+            'status' => $this->resource->status,
         ];
     }
 }

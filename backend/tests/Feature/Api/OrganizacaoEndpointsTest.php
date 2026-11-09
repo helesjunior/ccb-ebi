@@ -1,12 +1,12 @@
 <?php
 
-use App\Domain\Identidade\Models\Ator;
+use App\Domain\Identidade\Models\Usuario;
 use App\Domain\Organizacao\Models\Igreja;
 use App\Domain\Organizacao\Models\Regional;
 
 beforeEach(function () {
-    $this->ator = Ator::factory()->create(['papel' => 'coordenadora']);
-    $this->token = $this->ator->createToken('t')->plainTextToken;
+    $this->usuario = Usuario::factory()->create();
+    $this->token = $this->usuario->createToken('t')->plainTextToken;
     $this->auth = ['Authorization' => "Bearer {$this->token}"];
 });
 
@@ -40,9 +40,6 @@ it('expoe a central nacional', function () {
     $this->getJson('/api/v1/central', $this->auth)->assertOk();
 });
 
-it('rejeita escrita de regional sem permissao', function () {
-    $ator = Ator::factory()->create(['papel' => 'responsavel']);
-    $token = $ator->createToken('t')->plainTextToken;
-    $this->postJson('/api/v1/regions', ['nome' => 'X', 'codigo' => '9', 'status' => 'ativo'], ['Authorization' => "Bearer $token"])
-        ->assertStatus(403);
-});
+// A verificacao de autorizacao por operacao (negar escrita a papel sem
+// permissao) e restaurada na task da matriz; aqui a identidade ainda nao tem
+// papeis vinculados. Ver tests/Feature/Identidade/AutorizacaoOperacaoTest.php.
