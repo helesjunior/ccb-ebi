@@ -2,6 +2,12 @@
 
 Formato: versão, data, autor e mudanças. Itens mais recentes primeiro.
 
+## 2.6 — 09/11/2026
+
+- Novo script [`scripts/check-endpoints.py`](../scripts/check-endpoints.py): confere se toda operação do OpenAPI está marcada `no OpenAPI` em endpoints.md e vice-versa. O Spectral valida só o OpenAPI, então sem essa conferência os dois podiam divergir.
+- Plano de desenvolvimento: o script entra no CI da etapa 0 e na definição de pronto.
+- endpoints.md e convenções da API citam a conferência.
+
 ## 2.5 — 08/11/2026
 
 Correções a partir de uma avaliação externa da documentação.

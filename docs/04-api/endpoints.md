@@ -1,6 +1,6 @@
 # Catálogo de endpoints
 
-> **Fonte da verdade:** a partir do desenvolvimento, o contrato é o [openapi.yaml](openapi.yaml) (*contract-first*, ver [plano](../07-produto/plano-de-desenvolvimento.md)). Esta página é o mapa de planejamento: cada rota que entra no OpenAPI é marcada aqui como `no OpenAPI`, e rotas novas entram primeiro no OpenAPI.
+> **Fonte da verdade:** a partir do desenvolvimento, o contrato é o [openapi.yaml](openapi.yaml) (*contract-first*, ver [plano](../07-produto/plano-de-desenvolvimento.md)). Esta página é o mapa de planejamento: cada rota que entra no OpenAPI é marcada aqui como `no OpenAPI`, e rotas novas entram primeiro no OpenAPI. O script [`scripts/check-endpoints.py`](../../scripts/check-endpoints.py) roda no CI e falha se uma operação do OpenAPI não estiver marcada aqui, ou se uma rota marcada não existir no OpenAPI. Quando todas as rotas estiverem no OpenAPI, esta página pode ser aposentada ou gerada a partir dele.
 
 Proposta inicial, prefixo `/api/v1`. Rotas marcadas *novo* não existiam na versão anterior e cobrem requisitos que não tinham rota.
 

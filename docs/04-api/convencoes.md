@@ -13,7 +13,7 @@
 - Escritas críticas (presença, utilização, avaliação, consentimento) aceitam `Idempotency-Key`.
 - Upload de PDF por URL pré-assinada; o antivírus confirma por callback antes da publicação.
 - Rate limit por usuário e por IP, com `429` e `Retry-After`.
-- Especificação em [openapi.yaml](openapi.yaml) (OpenAPI 3.1), validada no CI e com testes de contrato. O OpenAPI é a fonte da verdade; [endpoints.md](endpoints.md) é só o mapa de planejamento.
+- Especificação em [openapi.yaml](openapi.yaml) (OpenAPI 3.1), validada no CI e com testes de contrato. O OpenAPI é a fonte da verdade; [endpoints.md](endpoints.md) é só o mapa de planejamento, e o CI confere o alinhamento entre os dois com [`scripts/check-endpoints.py`](../../scripts/check-endpoints.py).
 
 ## Tradução de termos
 
