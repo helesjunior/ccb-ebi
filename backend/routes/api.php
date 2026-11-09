@@ -1,7 +1,10 @@
 <?php
 
+use App\Http\Controllers\Api\V1\HealthController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
-    // Rotas da API v1 entram aqui (Task 9 em diante).
+    Route::get('health', [HealthController::class, 'health'])->name('health');
+
+    // Rotas de autenticação entram na Task 10.
 });
