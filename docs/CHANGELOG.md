@@ -2,6 +2,13 @@
 
 Formato: versão, data, autor e mudanças. Itens mais recentes primeiro.
 
+## 2.7 — 09/11/2026
+
+Correções residuais da avaliação externa.
+
+- [`scripts/check-endpoints.py`](../scripts/check-endpoints.py): documentadas no cabeçalho as premissas de layout do catálogo das quais o parser depende, para que uma mudança de formato não faça a conferência falhar em silêncio.
+- [Dicionário de dados](03-dados/dicionario-de-dados.md): campo `participante.matricula` passa a registrar o formato definido em RF-02 e CA-25 (8 caracteres base32 Crockford + dígito verificador).
+
 ## 2.6 — 09/11/2026
 
 - Novo script [`scripts/check-endpoints.py`](../scripts/check-endpoints.py): confere se toda operação do OpenAPI está marcada `no OpenAPI` em endpoints.md e vice-versa. O Spectral valida só o OpenAPI, então sem essa conferência os dois podiam divergir.

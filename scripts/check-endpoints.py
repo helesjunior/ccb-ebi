@@ -7,6 +7,15 @@ Regras:
 - Toda linha marcada `no OpenAPI` precisa existir no OpenAPI.
 Nomes de parâmetros são ignorados na comparação ({id} == {sessionId}).
 Sai com código 1 se houver divergência.
+
+Premissas de layout do catálogo (endpoints.md), das quais a leitura depende:
+- Uma linha por operação, começando com `|` (linha de tabela Markdown).
+- A string exata `no OpenAPI` marca a linha; sem ela, a linha é ignorada.
+- Coluna 1 = método(s), separados por `/` (ex.: `GET/POST/PATCH`); cada método
+  vale para todos os caminhos da linha.
+- Coluna 2 = finalidade, com o(s) caminho(s) entre crases; vários caminhos na
+  mesma linha geram o produto cartesiano método × caminho.
+Se o formato da tabela mudar, ajuste o parser de `operacoes_marcadas`.
 """
 import re
 import sys
