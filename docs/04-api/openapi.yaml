@@ -12,6 +12,7 @@ security:
 tags:
   - name: auth
   - name: health
+  - name: organization
   - name: participants
   - name: sessions
   - name: activities
@@ -102,6 +103,258 @@ paths:
         '403': { $ref: '#/components/responses/Problem' }
         '422':
           description: 'Participante inelegível pela idade, ou sessão não aberta'
+  /churches:
+    get:
+      tags: [organization]
+      summary: Listar igrejas (paginado por cursor)
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+        - name: codigo
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { type: string, enum: [ativo, inativo] }
+      responses:
+        '200':
+          description: Página de igrejas
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ChurchPage' }
+        '401': { $ref: '#/components/responses/Problem' }
+    post:
+      tags: [organization]
+      summary: Criar igreja
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ChurchInput' }
+      responses:
+        '201':
+          description: Igreja criada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Church' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /churches/{id}:
+    get:
+      tags: [organization]
+      summary: Ver igreja
+      parameters:
+        - $ref: '#/components/parameters/IgrejaId'
+      responses:
+        '200':
+          description: Igreja
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Church' }
+        '404': { $ref: '#/components/responses/Problem' }
+    patch:
+      tags: [organization]
+      summary: Atualizar igreja
+      parameters:
+        - $ref: '#/components/parameters/IgrejaId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ChurchInput' }
+      responses:
+        '200':
+          description: Igreja atualizada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Church' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /churches/{id}/transfers:
+    post:
+      tags: [organization]
+      summary: Transferir igreja de setor
+      description: Fecha o vínculo vigente e abre um novo. Sem data de corte; o setor vigente é sempre o atual.
+      parameters:
+        - $ref: '#/components/parameters/IgrejaId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sector_id, date]
+              properties:
+                sector_id: { type: string }
+                date: { type: string, format: date }
+                reason: { type: string }
+      responses:
+        '201':
+          description: Igreja transferida
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Church' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /regions:
+    get:
+      tags: [organization]
+      summary: Listar regionais
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200': { description: Página de regionais }
+        '401': { $ref: '#/components/responses/Problem' }
+    post:
+      tags: [organization]
+      summary: Criar regional
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegionInput' }
+      responses:
+        '201':
+          description: Regional criada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Region' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /regions/{id}:
+    patch:
+      tags: [organization]
+      summary: Atualizar regional
+      parameters:
+        - $ref: '#/components/parameters/RegionalId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegionInput' }
+      responses:
+        '200':
+          description: Regional atualizada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Region' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /regions/{id}/sectors:
+    get:
+      tags: [organization]
+      summary: Setores de uma regional
+      parameters:
+        - $ref: '#/components/parameters/RegionalId'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200': { description: Página de setores }
+        '401': { $ref: '#/components/responses/Problem' }
+  /sectors:
+    get:
+      tags: [organization]
+      summary: Listar setores
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200': { description: Página de setores }
+        '401': { $ref: '#/components/responses/Problem' }
+    post:
+      tags: [organization]
+      summary: Criar setor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SectorInput' }
+      responses:
+        '201':
+          description: Setor criado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Sector' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /sectors/{id}:
+    patch:
+      tags: [organization]
+      summary: Atualizar setor
+      parameters:
+        - $ref: '#/components/parameters/SetorId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SectorInput' }
+      responses:
+        '200':
+          description: Setor atualizado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Sector' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /ebis:
+    get:
+      tags: [organization]
+      summary: Listar EBIs
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200': { description: Página de EBIs }
+        '401': { $ref: '#/components/responses/Problem' }
+    post:
+      tags: [organization]
+      summary: Criar EBI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EbiInput' }
+      responses:
+        '201':
+          description: EBI criada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Ebi' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /ebis/{id}:
+    patch:
+      tags: [organization]
+      summary: Atualizar EBI
+      parameters:
+        - $ref: '#/components/parameters/EbiId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EbiInput' }
+      responses:
+        '200':
+          description: EBI atualizada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Ebi' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /central:
+    get:
+      tags: [organization]
+      summary: Central Nacional
+      responses:
+        '200': { description: Central Nacional (ou null) }
+        '401': { $ref: '#/components/responses/Problem' }
 components:
   securitySchemes:
     bearerAuth:
@@ -118,6 +371,36 @@ components:
       in: header
       required: false
       schema: { type: string, maxLength: 128 }
+    Cursor:
+      name: cursor
+      in: query
+      required: false
+      schema: { type: string }
+    Limit:
+      name: limit
+      in: query
+      required: false
+      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+    IgrejaId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+    RegionalId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+    SetorId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+    EbiId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
   responses:
     Problem:
       description: Erro no formato RFC 9457
@@ -164,3 +447,87 @@ components:
         status: { type: string, enum: [valid, reversed] }
         origin: { type: string, enum: [web, app] }
         recordedAt: { type: string, format: date-time }
+    Church:
+      type: object
+      properties:
+        id: { type: string }
+        codigo: { type: string }
+        nome: { type: string }
+        endereco: { type: [string, 'null'] }
+        latitude: { type: [number, 'null'] }
+        longitude: { type: [number, 'null'] }
+        timezone: { type: string }
+        status: { type: string, enum: [ativo, inativo] }
+        setor:
+          oneOf:
+            - $ref: '#/components/schemas/Sector'
+            - type: 'null'
+    ChurchInput:
+      type: object
+      required: [codigo, nome]
+      properties:
+        codigo: { type: string }
+        nome: { type: string }
+        endereco: { type: string }
+        latitude: { type: number }
+        longitude: { type: number }
+        timezone: { type: string }
+        status: { type: string, enum: [ativo, inativo] }
+    ChurchPage:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/Church' }
+        meta:
+          type: object
+          properties:
+            proximo_cursor: { type: [string, 'null'] }
+    Region:
+      type: object
+      properties:
+        id: { type: string }
+        codigo: { type: string }
+        nome: { type: string }
+        central_nacional_id: { type: string }
+        status: { type: string, enum: [ativo, inativo] }
+    RegionInput:
+      type: object
+      required: [codigo, nome]
+      properties:
+        codigo: { type: string }
+        nome: { type: string }
+        central_nacional_id: { type: string }
+        status: { type: string, enum: [ativo, inativo] }
+    Sector:
+      type: object
+      properties:
+        id: { type: string }
+        codigo: { type: string }
+        nome: { type: string }
+        regional_id: { type: string }
+        status: { type: string, enum: [ativo, inativo] }
+    SectorInput:
+      type: object
+      required: [codigo, nome, regional_id]
+      properties:
+        codigo: { type: string }
+        nome: { type: string }
+        regional_id: { type: string }
+        status: { type: string, enum: [ativo, inativo] }
+    Ebi:
+      type: object
+      properties:
+        id: { type: string }
+        nome: { type: string }
+        igreja_id: { type: string }
+        participantes_por_auxiliar: { type: integer }
+        status: { type: string, enum: [ativo, inativo] }
+    EbiInput:
+      type: object
+      required: [nome, igreja_id]
+      properties:
+        nome: { type: string }
+        igreja_id: { type: string }
+        participantes_por_auxiliar: { type: integer }
+        status: { type: string, enum: [ativo, inativo] }
