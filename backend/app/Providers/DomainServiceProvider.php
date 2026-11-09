@@ -4,12 +4,14 @@ namespace App\Providers;
 
 use App\Domain\Auditoria\Contracts\RegistrarEvento;
 use App\Domain\Auditoria\Services\RegistradorAuditoria;
-use App\Domain\Identidade\Contracts\AutenticarAtor;
+use App\Domain\Identidade\Contracts\Autenticar;
+use App\Domain\Identidade\Contracts\ExigirMfa;
 use App\Domain\Identidade\Contracts\RegistrarConta;
 use App\Domain\Identidade\Contracts\ResolverContextoAtuacao;
 use App\Domain\Identidade\Contracts\ResolverEscopo;
 use App\Domain\Identidade\Contracts\VerificarEmail;
-use App\Domain\Identidade\Services\AutenticadorFicticio;
+use App\Domain\Identidade\Services\Autenticador;
+use App\Domain\Identidade\Services\ExigenciaMfaPadrao;
 use App\Domain\Identidade\Services\GerenciadorConta;
 use App\Domain\Identidade\Services\ResolvedorContextoAtuacao;
 use App\Domain\Identidade\Services\ResolvedorEscopo;
@@ -28,7 +30,8 @@ class DomainServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(RegistrarEvento::class, RegistradorAuditoria::class);
-        $this->app->bind(AutenticarAtor::class, AutenticadorFicticio::class);
+        $this->app->bind(Autenticar::class, Autenticador::class);
+        $this->app->bind(ExigirMfa::class, ExigenciaMfaPadrao::class);
         $this->app->bind(ResolverEscopo::class, ResolvedorEscopo::class);
         $this->app->bind(ResolverContextoAtuacao::class, ResolvedorContextoAtuacao::class);
         $this->app->bind(RegistrarConta::class, GerenciadorConta::class);

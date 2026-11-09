@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Domain\Identidade\Contracts\AutenticarAtor;
+use App\Domain\Identidade\Contracts\Autenticar;
 use App\Http\Resources\UsuarioResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -10,7 +10,7 @@ use Illuminate\Http\Response;
 
 class AuthController
 {
-    public function __construct(private readonly AutenticarAtor $autenticador) {}
+    public function __construct(private readonly Autenticar $autenticador) {}
 
     public function login(Request $request): JsonResponse
     {
@@ -19,13 +19,20 @@ class AuthController
             'password' => ['required', 'string'],
         ]);
 
-        $usuario = $this->autenticador->autenticar($dados['email'], $dados['password']);
+        $resultado = $this->autenticador->executar($dados['email'], $dados['password']);
 
-        $token = $usuario->createToken('web')->plainTextToken;
+        if ($resultado->mfaPendente) {
+            return new JsonResponse([
+                'mfa_required' => true,
+                'token_desafio' => $resultado->tokenDesafio,
+            ], 200);
+        }
+
+        $token = $resultado->usuario->createToken('web')->plainTextToken;
 
         return new JsonResponse([
             'token' => $token,
-            'usuario' => UsuarioResource::make($usuario)->resolve(),
+            'usuario' => UsuarioResource::make($resultado->usuario)->resolve(),
         ], 201);
     }
 
