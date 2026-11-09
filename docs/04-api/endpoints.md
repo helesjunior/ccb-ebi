@@ -7,15 +7,21 @@ Proposta inicial, prefixo `/api/v1`. Rotas marcadas *novo* não existiam na vers
 ## Autenticação
 | Método | Rota | Finalidade | RF |
 |---|---|---|---|
-| POST | `/auth/register-guardian` | Criar conta de responsável (era `register-parent`) | RF-03 |
-| POST | `/auth/verify-email` | Verificar e-mail | RF-03 |
+| POST | `/auth/register-guardian` | Criar conta de responsável (`no OpenAPI`) | RF-03 |
+| POST | `/auth/verify-email` | Verificar e-mail (`no OpenAPI`) | RF-03 |
+| POST | `/auth/email/resend` | Reenviar verificação de e-mail (`no OpenAPI`) | RF-03 |
 | POST | `/auth/login` | Autenticar (`no OpenAPI`) | — |
-| POST | `/auth/mfa/verify` | Validar MFA | — |
+| POST | `/auth/mfa/verify` | Validar MFA (`no OpenAPI`) | — |
 | POST | `/auth/refresh` | Renovar sessão *novo* | — |
 | POST | `/auth/logout` | Encerrar sessão *novo* (`no OpenAPI`) | — |
-| POST | `/auth/password/forgot` | Pedir recuperação *novo* | — |
-| POST | `/auth/password/reset` | Redefinir senha *novo* | — |
-| GET | `/me/scopes` | Contextos de atuação disponíveis *novo* | RN-11 |
+| POST | `/auth/password/forgot` | Pedir recuperação *novo* (`no OpenAPI`) | — |
+| POST | `/auth/password/reset` | Redefinir senha *novo* (`no OpenAPI`) | — |
+| POST | `/me/mfa/totp` | Inscrever TOTP *novo* (`no OpenAPI`) | RF-05 |
+| POST | `/me/mfa/totp/confirm` | Confirmar inscrição TOTP *novo* (`no OpenAPI`) | RF-05 |
+| POST | `/me/mfa/recovery-codes` | Gerar códigos de recuperação *novo* (`no OpenAPI`) | RF-05 |
+| GET | `/me/sessions` | Listar dispositivos *novo* (`no OpenAPI`) | RF-05 |
+| DELETE | `/me/sessions/{id}` | Revogar dispositivo *novo* (`no OpenAPI`) | RF-05 |
+| GET | `/me/scopes` | Contextos de atuação disponíveis *novo* (`no OpenAPI`) | RN-11 |
 | GET | `/me` | Ator autenticado (`no OpenAPI`) | — |
 | GET | `/health` | Estado dos serviços (`no OpenAPI`) | — |
 
@@ -38,9 +44,13 @@ Proposta inicial, prefixo `/api/v1`. Rotas marcadas *novo* não existiam na vers
 ## Usuários e equipe
 | Método | Rota | Finalidade | RF |
 |---|---|---|---|
-| GET/POST | `/users` | Usuários *novo* | RF-05 |
-| POST | `/invitations` | Convidar *novo* | RF-05 |
-| POST/DELETE | `/access-grants` | Conceder e revogar vínculo de acesso *novo* | RF-05 |
+| GET | `/users` | Listar usuários da equipe *novo* (`no OpenAPI`) | RF-05 |
+| GET/PATCH | `/users/{id}` | Ver e atualizar usuário *novo* (`no OpenAPI`) | RF-05 |
+| GET/POST | `/invitations` | Listar e convidar *novo* (`no OpenAPI`) | RF-05 |
+| DELETE | `/invitations/{id}` | Cancelar convite *novo* (`no OpenAPI`) | RF-05 |
+| POST | `/invitations/{id}/accept` | Aceitar convite (público, token único) *novo* (`no OpenAPI`) | RF-05 |
+| POST | `/access-grants` | Conceder vínculo de acesso *novo* (`no OpenAPI`) | RF-05 |
+| DELETE | `/access-grants/{id}` | Revogar vínculo de acesso *novo* (`no OpenAPI`) | RF-05 |
 
 ## Participantes e responsáveis
 | Método | Rota | Finalidade | RF |

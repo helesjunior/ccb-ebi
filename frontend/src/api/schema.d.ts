@@ -58,7 +58,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Autenticar */
+        /**
+         * Autenticar
+         * @description Valida e-mail e senha. Perfis que exigem MFA e ainda não validaram o segundo fator recebem `mfa_required` + `token_desafio` (escopo restrito, sem sessão plena). Responsável (quando não exige MFA) recebe a sessão.
+         */
         post: {
             parameters: {
                 query?: never;
@@ -77,8 +80,8 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Autenticado */
-                201: {
+                /** @description Autenticado ou desafio de MFA emitido */
+                200: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -89,6 +92,268 @@ export interface paths {
                 401: components["responses"]["Problem"];
                 422: components["responses"]["Problem"];
                 429: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/mfa/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Validar o segundo fator
+         * @description Autenticado pelo token de desafio (`mfa:pendente`). Valida o código TOTP ou um código de recuperação, revoga o desafio e emite a sessão plena.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        codigo: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Sessão plena emitida */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SessaoEmitida"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/register-guardian": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Criar conta de responsável */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["RegistroGuardiao"];
+                };
+            };
+            responses: {
+                /** @description Conta criada e verificação enviada por e-mail */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                422: components["responses"]["Problem"];
+                429: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/verify-email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Verificar e-mail */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        usuario: string;
+                        signature: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description E-mail verificado */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                403: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/email/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reenviar verificação de e-mail */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: email */
+                        email: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Pedido aceito (resposta idêntica exista ou não o e-mail) */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                429: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/password/forgot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Pedir recuperação de senha
+         * @description Sem enumeração de contas; a resposta é idêntica exista ou não o e-mail.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: email */
+                        email: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Pedido aceito */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                429: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/password/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Redefinir senha */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: email */
+                        email: string;
+                        token: string;
+                        /** Format: password */
+                        password: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Senha redefinida; sessões anteriores revogadas */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                422: components["responses"]["Problem"];
             };
         };
         delete?: never;
@@ -139,7 +404,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Ator autenticado */
+        /** Usuário autenticado */
         get: {
             parameters: {
                 query?: never;
@@ -149,13 +414,13 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Ator autenticado */
+                /** @description Usuário autenticado */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["Ator"];
+                        "application/json": components["schemas"]["Usuario"];
                     };
                 };
                 401: components["responses"]["Problem"];
@@ -164,6 +429,604 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/scopes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Contextos de atuação disponíveis
+         * @description Vínculos vigentes do usuário, para o seletor de contexto (`X-Acting-Scope`).
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Lista de contextos */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["ContextoAtuacao"][];
+                        };
+                    };
+                };
+                401: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/mfa/totp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Iniciar inscrição do TOTP */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Segredo e URI otpauth para o app autenticador */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["InscricaoTotp"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/mfa/totp/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirmar inscrição do TOTP */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        codigo: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Fator validado; códigos de recuperação gerados */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                422: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/mfa/recovery-codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Gerar códigos de recuperação */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Novos códigos de recuperação (mostrados uma única vez) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            codigos?: string[];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar dispositivos/sessões */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Sessões vigentes */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["SessaoLogin"][];
+                        };
+                    };
+                };
+                401: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/sessions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revogar dispositivo */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["SessaoId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Sessão revogada */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["Problem"];
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar usuários da equipe
+         * @description Restrito ao escopo de atuação (subárvore do vínculo).
+         */
+        get: {
+            parameters: {
+                query?: {
+                    cursor?: components["parameters"]["Cursor"];
+                    limit?: components["parameters"]["Limit"];
+                    status?: "ativo" | "suspenso";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Página de usuários */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UsuarioPage"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ver usuário */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["UsuarioId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Usuário */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Usuario"];
+                    };
+                };
+                404: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Atualizar usuário (nome, status)
+         * @description Suspender revoga as sessões do usuário e é auditado (RN-10).
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: {
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: components["parameters"]["UsuarioId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        nome?: string;
+                        /** @enum {string} */
+                        status?: "ativo" | "suspenso";
+                    };
+                };
+            };
+            responses: {
+                /** @description Usuário atualizado */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Usuario"];
+                    };
+                };
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        trace?: never;
+    };
+    "/invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar convites */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Convites dentro do escopo de atuação */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["Convite"][];
+                        };
+                    };
+                };
+                403: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        /**
+         * Convidar pessoa para a equipe
+         * @description O convidante só convida para papel/escopo dentro da sua autoridade.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ConviteInput"];
+                };
+            };
+            responses: {
+                /** @description Convite criado e e-mail enviado */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Convite"];
+                    };
+                };
+                403: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invitations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Cancelar convite */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["ConviteId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Convite cancelado */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                403: components["responses"]["Problem"];
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invitations/{id}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Aceitar convite (público)
+         * @description O token secreto do convite é a credencial. Cria a conta já vinculada e marca o convite como aceito (uso único). Replay ou token inválido: 410.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["ConviteId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        token: string;
+                        nome: string;
+                        /** Format: password */
+                        password: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Conta criada e vinculada */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ContaCriada"];
+                    };
+                };
+                410: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/access-grants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Conceder vínculo de acesso
+         * @description Encerra o vínculo vigente do mesmo par e abre um novo (histórico por vigência); auditado.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["VinculoInput"];
+                };
+            };
+            responses: {
+                /** @description Vínculo concedido */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Vinculo"];
+                    };
+                };
+                403: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/access-grants/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revogar vínculo de acesso */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["VinculoId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Vínculo revogado */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                403: components["responses"]["Problem"];
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -839,16 +1702,96 @@ export interface components {
             detail?: string;
             code?: string;
         };
-        Ator: {
-            id?: number;
+        Usuario: {
+            id?: string;
             nome?: string;
             /** Format: email */
             email?: string;
-            papel?: string;
+            email_verificado?: boolean;
+            /** @enum {string} */
+            status?: "ativo" | "suspenso";
+            papeis?: string[];
         };
         LoginResponse: {
-            token: string;
-            ator: components["schemas"]["Ator"];
+            mfa_required?: boolean;
+            token?: string | null;
+            token_desafio?: string | null;
+            usuario?: components["schemas"]["Usuario"];
+        };
+        SessaoEmitida: {
+            token?: string;
+            usuario?: components["schemas"]["Usuario"];
+        };
+        ContextoAtuacao: {
+            papel?: string;
+            /** @enum {string} */
+            tipo_escopo?: "central" | "regional" | "setor" | "igreja" | "ebi";
+            escopo_id?: string;
+        };
+        SessaoLogin: {
+            id?: string;
+            dispositivo?: string;
+            /** Format: date-time */
+            criada_em?: string;
+            /** Format: date-time */
+            expira_em?: string;
+        };
+        InscricaoTotp: {
+            segredo?: string;
+            uri?: string;
+        };
+        RegistroGuardiao: {
+            nome: string;
+            /** Format: email */
+            email: string;
+            /** Format: password */
+            password: string;
+        };
+        Convite: {
+            id?: string;
+            /** Format: email */
+            email?: string;
+            papel?: string;
+            /** @enum {string} */
+            tipo_escopo?: "central" | "regional" | "setor" | "igreja" | "ebi";
+            escopo_id?: string;
+            /** Format: date-time */
+            expira_em?: string;
+            pendente?: boolean;
+        };
+        ConviteInput: {
+            /** Format: email */
+            email: string;
+            papel: string;
+            /** @enum {string} */
+            tipo_escopo: "central" | "regional" | "setor" | "igreja" | "ebi";
+            escopo_id: string;
+        };
+        ContaCriada: {
+            id?: string;
+            /** Format: email */
+            email_normalizado?: string;
+            nome?: string;
+        };
+        Vinculo: {
+            id?: string;
+            usuario_id?: string;
+            /** @enum {string} */
+            tipo_escopo?: "central" | "regional" | "setor" | "igreja" | "ebi";
+            escopo_id?: string;
+        };
+        VinculoInput: {
+            usuario_id: string;
+            papel: string;
+            /** @enum {string} */
+            tipo_escopo: "central" | "regional" | "setor" | "igreja" | "ebi";
+            escopo_id: string;
+        };
+        UsuarioPage: {
+            data?: components["schemas"]["Usuario"][];
+            meta?: {
+                proximo_cursor?: string | null;
+            };
         };
         Health: {
             /** @enum {string} */
@@ -965,6 +1908,10 @@ export interface components {
         RegionalId: string;
         SetorId: string;
         EbiId: string;
+        SessaoId: string;
+        UsuarioId: string;
+        ConviteId: string;
+        VinculoId: string;
     };
     requestBodies: never;
     headers: never;

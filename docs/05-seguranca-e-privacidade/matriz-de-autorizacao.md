@@ -29,6 +29,21 @@ Legenda: **G** gerir · **R** registrar · **L** ler · **A** agregado (sem iden
 
 "Chefe" = atribuição de Coordenadora chefe ([ADR-0010](../06-arquitetura/decisoes/ADR-0010-equipe-minima-e-aprovacao-de-escala.md)). Mudanças da versão 2.2: coluna Ministério Local ([ADR-0008](../06-arquitetura/decisoes/ADR-0008-moderacao-de-feedback.md)); coordenadora mescla, corrige e faz cadastro assistido ([ADR-0007](../06-arquitetura/decisoes/ADR-0007-cadastro-e-correcao-de-participantes.md), [ADR-0015](../06-arquitetura/decisoes/ADR-0015-cadastro-assistido.md)); coordenadora decide a exceção com o responsável ([ADR-0012](../06-arquitetura/decisoes/ADR-0012-excecao-decidida-pela-coordenadora.md)). Versão 2.3: Ministério da Central, Regional e Setorial têm a mesma visão da Consulta do seu nível ([ADR-0017](../06-arquitetura/decisoes/ADR-0017-hierarquia-e-ministerios.md)).
 
+## Operações implementadas (Etapa 3)
+
+Cada operação é um gate `can:<operacao>` nas rotas, decidido por **papel × operação** (RBAC, derivado da matriz) **e** escopo territorial (ABAC: o recurso está na subárvore do vínculo). `super_admin` ignora o escopo territorial (bypass explícito). Operações de leitura de estrutura/equipe verificam o papel; as de escrita verificam também o escopo quando há recurso-alvo.
+
+| Operação (gate) | Papéis com acesso | Rotas | Escopo |
+|---|---|---|---|
+| `organizacao.ler` | super_admin, adm_regional, adm_setor, adm_igreja, coordenadora, auxiliar, ministerio_* | `GET /churches`, `/churches/{id}`, `/regions`, `/regions/{id}/sectors`, `/sectors`, `/ebis`, `/central` | papel |
+| `organizacao.gerenciar` | super_admin, adm_regional, adm_setor | `POST/PATCH` de igreja, regional, setor, EBI; `POST /churches/{id}/transfers` | papel + escopo (subárvore) |
+| `usuario.ler` | super_admin, adm_regional, adm_setor, adm_igreja, coordenadora | `GET /users`, `/users/{id}` | papel + listagem filtrada pela subárvore |
+| `usuario.gerenciar` | super_admin, adm_regional, adm_setor, adm_igreja | `PATCH /users/{id}` | papel |
+| `convite.gerenciar` | super_admin, adm_regional, adm_setor, adm_igreja | `GET/POST /invitations`, `DELETE /invitations/{id}` | papel + autoridade (papel e escopo do convite) |
+| `acesso.gerenciar` | super_admin, adm_regional, adm_setor, adm_igreja | `POST /access-grants`, `DELETE /access-grants/{id}` | papel |
+
+Notas: o `*` (finalidade registrada) ainda não é aplicado — fora do escopo da Etapa 3 ([ADR-0022](../06-arquitetura/decisoes/ADR-0022-identidade-e-acesso.md)). A listagem de `/users` já filtra por subárvore; as demais listagens de organização ainda são apenas por papel (dívida registrada).
+
 ## A validar
 - A matriz é uma proposta para revisão; os níveis de acesso a dados identificáveis acima da igreja dependem de [D-10](../06-arquitetura/decisoes/README.md).
 - Acesso da coordenadora ao laudo, quando existir: proposta de leitura só com finalidade registrada.

@@ -2,6 +2,20 @@
 
 Formato: versão, data, autor e mudanças. Itens mais recentes primeiro.
 
+## 2.10 — 09/11/2026
+
+Etapa 3 — Identidade e acesso (E01).
+
+- **Identidade in-place:** a tabela `atores` (andaime) vira `usuarios` com ULID; Sanctum passa a `ulidMorphs`. Cadastro de responsável com verificação de e-mail, login com desafio de MFA e sessão plena.
+- **MFA TOTP obrigatório** no primeiro acesso para todo perfil ≠ Responsável: inscrição/confirmação em `/me/mfa/totp`, códigos de recuperação, contingência. Token de desafio (`mfa:pendente`) não alcança a área operacional (CA-15).
+- **Sessões por dispositivo** (`/me/sessions`): expiração por perfil (12 h responsável, 8 h demais) e revogação individual.
+- **Recuperação de senha sem enumeração** (`/auth/password/forgot`, `/auth/password/reset`); redefinir revoga as sessões.
+- **Autorização por operação** (substitui o gate provisório `gerir-organizacao`): Policies como superfície delegando a um núcleo único de escopo (`ResolverEscopo`), com escopo por descendência, `super_admin` ignorando o território e `X-Acting-Scope` revalidado no servidor (RN-11, CA-03). Matriz de autorização vira a fonte da verdade papel × operação.
+- **Equipe (RF-05):** listagem/gestão de usuários restrita ao escopo, convites (criação/listagem/cancelamento com autoridade por papel e escopo) e aceite de convite sem login (token secreto de uso único). Concessões de acesso diretas (nomeação/afastamento) auditadas (RN-10).
+- **`/me` e `/me/scopes`** expõem o usuário e os contextos de atuação para o seletor do portal.
+- **OpenAPI e catálogo** atualizados: 42 operações alinhadas (`scripts/check-endpoints.py`). `frontend/src/api/schema.d.ts` regenerado.
+- **Fora do escopo (dívidas):** captura de finalidade (`*` da matriz), passkey/WebAuthn, federação real, WhatsApp, trilha de auditoria consultável/retenção (E05); testes de frontend (Vitest) ainda não existem — ver [ADR-0022](06-arquitetura/decisoes/ADR-0022-identidade-e-acesso.md).
+
 ## 2.9 — 09/11/2026
 
 Correção do build do portal (CI e imagem) após o bump do TypeScript para 7.
