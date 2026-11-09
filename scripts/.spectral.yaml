@@ -1,0 +1,32 @@
+# Configuração do Spectral para o OpenAPI da EBI.
+#
+# Estende o ruleset OAS oficial e desliga as regras que o spec v2.7 (esqueleto
+# inicial, aprovado) ainda não preenche — por exemplo, operationId, descrições de
+# tag/parâmetro e exemplos. Manter o CI verde sem inflar o spec de negócio fora do
+# escopo desta leva. Cada regra desligada aqui é dívida registrada: quando o spec
+# ganhar esses campos, a regra pode voltar a ser erro.
+extends: ['spectral:oas']
+
+rules:
+  # Sem impacto no contrato; o spec é um esqueleto sem metadados de contato/licença.
+  info-contact: off
+  info-description: off
+  info-license: off
+
+  # operationIds serão adicionados quando o codegen de servidor entrar em cena.
+  operation-operationId: off
+  operation-operationId-unique: off
+  operation-operationId-valid-in-url: off
+
+  # Descrições de tags e parâmetros: pendência de documentação, não de contrato.
+  openapi-tags: off
+  operation-tags: off
+  operation-description: off
+  operation-parameters: off
+
+  # Exemplos: o spec descreve schemas, mas ainda não publica exemplos.
+  oas3-valid-media-example: off
+  oas3-valid-schema-example: off
+
+  # Erros em problem+json não seguem o envelope de erro padrão do ruleset.
+  oas3-operation-security-defined: off
