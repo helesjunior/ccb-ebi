@@ -35,7 +35,7 @@ O framework do portal Web, que era a única pendência que bloqueava o início, 
 
 Não impedem o início, mas são completadas durante o desenvolvimento:
 
-- O [OpenAPI](../04-api/openapi.yaml) tem só dois caminhos. Cada épico descreve seus endpoints no OpenAPI antes de implementá-los (*contract-first*), e o CI valida.
+- O [OpenAPI](../04-api/openapi.yaml) tem só dois caminhos. Cada épico descreve seus endpoints no OpenAPI antes de implementá-los (*contract-first*). O CI valida o OpenAPI com Spectral e confere se o catálogo de rotas continua alinhado a ele, porque o Spectral sozinho não compara os dois.
 - Laudo anexo na exceção inclusiva (FL-06) exige MinIO e ClamAV já no MVP. Proposta: no MVP a exceção guarda decisão e justificativa em texto; o anexo de laudo entra junto com a biblioteca (E08), que já precisa da mesma infraestrutura. Precisa da sua confirmação.
 - Manuais e runbooks (`docs/08-operacao/`, entregáveis 7 e 8) são escritos na etapa 8.
 
@@ -62,7 +62,7 @@ flowchart LR
 - Estrutura do monorepo: `api/` (Laravel), `web/` (portal em React + TypeScript), `infra/`, `docs/`.
 - Proteção do `main`: só por PR, com CI verde e uma revisão.
 - Modelo de PR (com campo "RF/CA atendidos"), `CODEOWNERS`, Dependabot, secret scanning.
-- GitHub Actions: lint (Pint, PHPStan nível alto, ESLint), testes, validação do OpenAPI (Spectral), build das imagens e publicação no GHCR com digest.
+- GitHub Actions: lint (Pint, PHPStan nível alto, ESLint), testes, validação do OpenAPI (Spectral) e conferência do catálogo de rotas contra o OpenAPI ([`scripts/check-endpoints.py`](../../scripts/check-endpoints.py)), build das imagens e publicação no GHCR com digest.
 - Ambiente de desenvolvimento documentado em `CONTRIBUTING.md`: um `docker compose up` sobe tudo.
 
 **Pronto quando:** um PR de exemplo passa por lint, testes e build, e a imagem aparece no GHCR.
@@ -153,7 +153,7 @@ flowchart LR
 
 ## 4. Definição de pronto (vale para toda tarefa)
 
-- Endpoint descrito no OpenAPI antes do código; teste de contrato passando.
+- Endpoint descrito no OpenAPI antes do código e marcado `no OpenAPI` em [endpoints.md](../04-api/endpoints.md) (o CI confere); teste de contrato passando.
 - Testes automatizados da regra e da autorização (quem pode e quem não pode).
 - Escrita sensível gera registro de auditoria.
 - Nenhum dado pessoal em log.
