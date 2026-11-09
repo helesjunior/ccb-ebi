@@ -2,21 +2,24 @@
 
 namespace App\Domain\Identidade\Contracts;
 
-use App\Domain\Identidade\Models\SessaoLogin;
-use App\Domain\Identidade\Models\Usuario;
 use Illuminate\Contracts\Auth\Authenticatable;
 
 /**
  * Sessoes por dispositivo (RF-05): abertura no login, listagem e revogacao
- * pelo proprio usuario. A expiracao depende do perfil.
+ * pelo proprio usuario. A expiracao depende do perfil. A sessao e ligada ao
+ * token Sanctum correspondente, de modo que revogar invalida o token.
  */
 interface GerenciarSessao
 {
     /**
      * Abre uma sessao para o dispositivo informado, aplicando a expiracao do
-     * perfil (12 h para responsavel; 8 h para os demais).
+     * perfil (12 h para responsavel; 8 h para os demais), cria o token Sanctum
+     * de sessao plena vinculado e devolve o token em claro.
+     *
+     * Recebe `Authenticatable` (nao o modelo) para que `app/Http` nao precise
+     * importar o modelo do modulo (ADR-0002).
      */
-    public function abrir(Usuario $usuario, string $dispositivo): SessaoLogin;
+    public function abrir(Authenticatable $usuario, string $dispositivo): string;
 
     /**
      * Sessoes vigentes (nao revogadas e nao expiradas) do usuario.

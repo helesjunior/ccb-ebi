@@ -3,16 +3,21 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Identidade\Contracts\GerenciarMfa;
+use App\Domain\Identidade\Contracts\GerenciarSessao;
 use App\Http\Requests\Identidade\MfaConfirmarRequest;
 use App\Http\Resources\UsuarioResource;
 use App\Support\ProblemException;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class MfaController
 {
-    public function __construct(private readonly GerenciarMfa $mfa) {}
+    public function __construct(
+        private readonly GerenciarMfa $mfa,
+        private readonly GerenciarSessao $sessoes,
+    ) {}
 
     /**
      * Segundo fator do login: exige o token de desafio (`mfa:pendente`),
@@ -23,7 +28,15 @@ class MfaController
         $dados = $request->validate(['codigo' => ['required', 'string', 'max:64']]);
 
         $usuario = $this->usuario($request);
-        $token = $this->mfa->validarEConcluir($usuario, $dados['codigo']);
+
+        if (! $this->mfa->validar($usuario, $dados['codigo'])) {
+            throw new ProblemException('mfa_invalido', 'Código inválido', 422, 'O código de verificação não confere.');
+        }
+
+        // Revoga o desafio e abre a sessao de dispositivo (token pleno).
+        $usuario->currentAccessToken()->delete();
+        $dispositivo = Str::limit((string) $request->userAgent(), 255, '') ?: 'Desconhecido';
+        $token = $this->sessoes->abrir($usuario, $dispositivo);
 
         return new JsonResponse([
             'token' => $token,

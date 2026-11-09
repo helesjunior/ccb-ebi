@@ -3,14 +3,20 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Identidade\Contracts\Autenticar;
+use App\Domain\Identidade\Contracts\GerenciarSessao;
 use App\Http\Resources\UsuarioResource;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Str;
 
 class AuthController
 {
-    public function __construct(private readonly Autenticar $autenticador) {}
+    public function __construct(
+        private readonly Autenticar $autenticador,
+        private readonly GerenciarSessao $sessoes,
+    ) {}
 
     public function login(Request $request): JsonResponse
     {
@@ -28,7 +34,7 @@ class AuthController
             ], 200);
         }
 
-        $token = $resultado->usuario->createToken('web')->plainTextToken;
+        $token = $this->abrirSessao($request, $resultado->usuario);
 
         return new JsonResponse([
             'token' => $token,
@@ -41,5 +47,13 @@ class AuthController
         $request->user()?->currentAccessToken()?->delete();
 
         return response()->noContent();
+    }
+
+    /** Abre a sessao de dispositivo e devolve o token Sanctum de sessao plena. */
+    private function abrirSessao(Request $request, Authenticatable $usuario): string
+    {
+        $dispositivo = Str::limit((string) $request->userAgent(), 255, '') ?: 'Desconhecido';
+
+        return $this->sessoes->abrir($usuario, $dispositivo);
     }
 }

@@ -16,16 +16,24 @@ class GerenciadorSessao implements GerenciarSessao
     /** Demais perfis: 8 h. */
     private const HORAS_PADRAO = 8;
 
-    public function abrir(Usuario $usuario, string $dispositivo): SessaoLogin
+    public function abrir(Authenticatable $usuario, string $dispositivo): string
     {
-        $agora = now();
+        $usuario = $this->comoUsuario($usuario);
 
-        return SessaoLogin::query()->create([
+        $agora = now();
+        $expira = $agora->copy()->addHours($this->horasDeSessao($usuario));
+
+        $token = $usuario->createToken('web', ['*'], $expira);
+
+        SessaoLogin::query()->create([
             'usuario_id' => $usuario->id,
+            'token_id' => $token->accessToken->getKey(),
             'dispositivo' => $dispositivo,
             'criada_em' => $agora,
-            'expira_em' => $agora->copy()->addHours($this->horasDeSessao($usuario)),
+            'expira_em' => $expira,
         ]);
+
+        return $token->plainTextToken;
     }
 
     public function listar(Authenticatable $usuario): array
@@ -51,11 +59,22 @@ class GerenciadorSessao implements GerenciarSessao
     {
         $usuario = $this->comoUsuario($usuario);
 
-        SessaoLogin::query()
+        $sessao = SessaoLogin::query()
             ->where('usuario_id', $usuario->id)
             ->whereKey($id)
             ->whereNull('revogada_em')
-            ->update(['revogada_em' => now()]);
+            ->first();
+
+        if ($sessao === null) {
+            return;
+        }
+
+        // Revogar o dispositivo invalida de fato a sessao (token Sanctum).
+        if ($sessao->token_id !== null) {
+            $usuario->tokens()->whereKey($sessao->token_id)->delete();
+        }
+
+        $sessao->forceFill(['revogada_em' => now()])->save();
     }
 
     private function horasDeSessao(Usuario $usuario): int

@@ -50,7 +50,7 @@ class GerenciadorMfa implements GerenciarMfa
             $segredo,
         );
 
-        return ['segredo' => $segredo, 'otpauth_uri' => $uri];
+        return ['segredo' => $segredo, 'uri' => $uri];
     }
 
     public function confirmar(Authenticatable $usuario, string $codigo): void
@@ -102,19 +102,6 @@ class GerenciadorMfa implements GerenciarMfa
         }
 
         return $this->validarRecuperacao($usuario, $codigo);
-    }
-
-    public function validarEConcluir(Authenticatable $usuario, string $codigo): string
-    {
-        $usuario = $this->comoUsuario($usuario);
-
-        if (! $this->validar($usuario, $codigo)) {
-            throw new ProblemException('mfa_invalido', 'Código inválido', 422, 'O código de verificação não confere.');
-        }
-
-        $usuario->currentAccessToken()->delete();
-
-        return $usuario->createToken('web', ['*'])->plainTextToken;
     }
 
     private function validarTotp(Usuario $usuario, string $codigo): bool

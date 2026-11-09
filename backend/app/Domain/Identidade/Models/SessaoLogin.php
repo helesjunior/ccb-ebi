@@ -12,7 +12,7 @@ class SessaoLogin extends Model
 
     protected $table = 'sessao_login';
 
-    protected $fillable = ['usuario_id', 'dispositivo', 'criada_em', 'expira_em', 'revogada_em'];
+    protected $fillable = ['usuario_id', 'token_id', 'dispositivo', 'criada_em', 'expira_em', 'revogada_em'];
 
     protected $casts = [
         'criada_em' => 'datetime',

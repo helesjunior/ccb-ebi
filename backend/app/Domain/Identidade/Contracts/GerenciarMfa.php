@@ -19,7 +19,7 @@ interface GerenciarMfa extends ExigirMfa
     /**
      * Inicia a inscricao de TOTP: gera o segredo (base32) e a URI otpauth.
      *
-     * @return array{segredo: string, otpauth_uri: string}
+     * @return array{segredo: string, uri: string}
      */
     public function iniciarInscricao(Authenticatable $usuario): array;
 
@@ -43,12 +43,4 @@ interface GerenciarMfa extends ExigirMfa
      * como usado quando aceito).
      */
     public function validar(Authenticatable $usuario, string $codigo): bool;
-
-    /**
-     * Conclui o segundo fator: valida o codigo, revoga o token de desafio e
-     * emite um token de sessao plena (`*`). Devolve o token em claro.
-     *
-     * @throws ProblemException 422 quando o codigo e invalido.
-     */
-    public function validarEConcluir(Authenticatable $usuario, string $codigo): string;
 }
