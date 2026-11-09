@@ -12,6 +12,15 @@ it('encadeia os hashes', function () {
         ->and($a->hash_encadeado)->toHaveLength(64);
 });
 
+it('cadeia integra fecha', function () {
+    $svc = app(RegistrarEvento::class);
+    $svc->registrar(['acao' => 'a', 'recurso' => 'x', 'ator_id' => '1', 'origem' => 'web']);
+    $svc->registrar(['acao' => 'b', 'recurso' => 'x', 'ator_id' => '1', 'origem' => 'web']);
+    $svc->registrar(['acao' => 'c', 'recurso' => 'x', 'ator_id' => '1', 'origem' => 'web']);
+
+    expect(fn () => $svc->verificarIntegridade())->not->toThrow(RuntimeException::class);
+});
+
 it('detecta violacao da cadeia', function () {
     $svc = app(RegistrarEvento::class);
     $svc->registrar(['acao' => 'a', 'recurso' => 'x', 'ator_id' => '1', 'origem' => 'web']);

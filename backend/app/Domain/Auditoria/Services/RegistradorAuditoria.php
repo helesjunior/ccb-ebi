@@ -13,7 +13,15 @@ class RegistradorAuditoria implements RegistrarEvento
     public function registrar(array $evento): EventoAuditoria
     {
         return DB::transaction(function () use ($evento): EventoAuditoria {
-            $ultimo = EventoAuditoria::query()->orderByDesc('sequencia')->first();
+            // shortcut: lockForUpdate serializa leitores concorrentes quando já
+            // há eventos (o caso de operação). O primeiro evento concorrente ainda
+            // pode colidir em `sequencia` (unique) e falhar — o lock não trava uma
+            // tabela vazia. Sem fork silencioso da cadeia; resolver com advisory
+            // lock quando houver escrita de negócio concorrente (E02+).
+            $ultimo = EventoAuditoria::query()
+                ->orderByDesc('sequencia')
+                ->lockForUpdate()
+                ->first();
 
             $sequencia = ($ultimo->sequencia ?? 0) + 1;
             $hashAnterior = $ultimo?->hash_encadeado;

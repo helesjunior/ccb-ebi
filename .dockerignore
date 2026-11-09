@@ -1,0 +1,19 @@
+# Contexto de build da API (raiz do repositório).
+.git
+.github
+docs
+
+# Dependências e artefatos reconstruídos na imagem.
+backend/vendor
+backend/node_modules
+backend/public/spa
+backend/storage/logs/*.log
+backend/.env
+backend/.phpunit.result.cache
+frontend/node_modules
+frontend/dist
+
+# Infra e ferramentas locais.
+infra
+scripts
+.superpowers
