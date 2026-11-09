@@ -6,6 +6,12 @@ use RuntimeException;
 
 class ProblemException extends RuntimeException
 {
+    /**
+     * @param  string  $problemCode  Codigo estavel do problema (campo `code`).
+     * @param  string  $title  Resumo generico e estavel (RFC 9457).
+     * @param  int  $status  Codigo HTTP.
+     * @param  string|null  $detail  Explicacao especifica da ocorrencia.
+     */
     public function __construct(
         public readonly string $problemCode,
         public readonly string $title,
@@ -15,7 +21,7 @@ class ProblemException extends RuntimeException
         public readonly array $extra = [],
         public readonly string $type = 'about:blank',
     ) {
-        parent::__construct($title);
+        parent::__construct($detail ?? $title);
     }
 
     /**

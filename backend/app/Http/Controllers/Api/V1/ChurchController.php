@@ -9,7 +9,6 @@ use App\Domain\Organizacao\Exceptions\SobreposicaoVigenciaException;
 use App\Http\Requests\Organizacao\IgrejaRequest;
 use App\Http\Requests\Organizacao\TransferenciaRequest;
 use App\Http\Resources\ChurchResource;
-use App\Support\Idempotencia;
 use App\Support\PaginacaoCursor;
 use App\Support\ProblemException;
 use Illuminate\Http\JsonResponse;
@@ -31,28 +30,26 @@ class ChurchController
             PaginacaoCursor::limit($request),
         );
 
-        $igrejas = collect($pagina->items())->map(function ($igreja) {
-            $igreja->setRelation('setorVigente', $this->consulta->setorVigente($igreja->id));
-
-            return $igreja;
+        // O vinculo vigente + setor ja vieram eager-loaded (sem N+1); so
+        // projetamos o setor na relacao que o resource le.
+        collect($pagina->items())->each(function ($igreja): void {
+            $igreja->setRelation('setorVigente', $igreja->vinculacaoVigente?->setor);
         });
 
         return response()->json([
-            'data' => ChurchResource::collection($igrejas),
+            'data' => ChurchResource::collection($pagina->items()),
             'meta' => ['proximo_cursor' => $pagina->nextCursor()?->encode()],
         ]);
     }
 
     public function store(IgrejaRequest $request): Response
     {
-        return Idempotencia::executar($request, function () use ($request): Response {
-            $igreja = $this->gerir->criarIgreja($request->validated());
-            $igreja->setRelation('setorVigente', null);
+        $igreja = $this->gerir->criarIgreja($request->validated());
+        $igreja->setRelation('setorVigente', null);
 
-            return (new ChurchResource($igreja))
-                ->response()
-                ->setStatusCode(201);
-        });
+        return (new ChurchResource($igreja))
+            ->response()
+            ->setStatusCode(201);
     }
 
     public function show(Request $request, string $id): Response
@@ -60,7 +57,7 @@ class ChurchController
         $igreja = $this->gerir->encontrarIgreja($id);
 
         if ($igreja === null) {
-            throw new ProblemException('not_found', 'Igreja nao encontrada', 404);
+            throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Igreja não encontrada');
         }
 
         $igreja->setRelation('setorVigente', $this->consulta->setorVigente($igreja->id));
@@ -73,7 +70,7 @@ class ChurchController
         $igreja = $this->gerir->atualizarIgreja($id, $request->validated());
 
         if ($igreja === null) {
-            throw new ProblemException('not_found', 'Igreja nao encontrada', 404);
+            throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Igreja não encontrada');
         }
 
         $igreja->setRelation('setorVigente', $this->consulta->setorVigente($igreja->id));
@@ -83,27 +80,25 @@ class ChurchController
 
     public function transfer(TransferenciaRequest $request, string $id): Response
     {
-        return Idempotencia::executar($request, function () use ($request, $id): Response {
-            try {
-                $this->transferir->executar(
-                    $id,
-                    $request->string('sector_id')->toString(),
-                    new \DateTimeImmutable($request->string('date')->toString()),
-                    $request->input('reason'),
-                );
-            } catch (SobreposicaoVigenciaException $e) {
-                throw new ProblemException('transferencia_invalida', $e->getMessage(), 422);
-            }
+        try {
+            $this->transferir->executar(
+                $id,
+                $request->string('sector_id')->toString(),
+                new \DateTimeImmutable($request->string('date')->toString()),
+                $request->input('reason'),
+            );
+        } catch (SobreposicaoVigenciaException $e) {
+            throw new ProblemException('transferencia_invalida', 'Transferência inválida', 422, $e->getMessage());
+        }
 
-            $igreja = $this->gerir->encontrarIgreja($id);
+        $igreja = $this->gerir->encontrarIgreja($id);
 
-            if ($igreja === null) {
-                throw new ProblemException('not_found', 'Igreja nao encontrada', 404);
-            }
+        if ($igreja === null) {
+            throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Igreja não encontrada');
+        }
 
-            $igreja->setRelation('setorVigente', $this->consulta->setorVigente($igreja->id));
+        $igreja->setRelation('setorVigente', $this->consulta->setorVigente($igreja->id));
 
-            return (new ChurchResource($igreja))->response()->setStatusCode(201);
-        });
+        return (new ChurchResource($igreja))->response()->setStatusCode(201);
     }
 }

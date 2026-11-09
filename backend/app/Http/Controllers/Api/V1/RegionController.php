@@ -36,7 +36,7 @@ class RegionController
         $regional = $this->gerir->atualizarRegional($id, $request->validated());
 
         if ($regional === null) {
-            throw new ProblemException('not_found', 'Regional nao encontrada', 404);
+            throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Regional não encontrada');
         }
 
         return (new RegionResource($regional))->response();

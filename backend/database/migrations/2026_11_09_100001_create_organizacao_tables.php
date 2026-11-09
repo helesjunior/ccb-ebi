@@ -55,6 +55,12 @@ return new class extends Migration
             $table->index(['igreja_id', 'fim']);
         });
 
+        // Reforco no banco: no maximo um vinculo vigente (fim IS NULL) por igreja.
+        // Indice unico parcial, suportado por PostgreSQL e SQLite.
+        Schema::getConnection()->statement(
+            'CREATE UNIQUE INDEX igreja_vinculacao_vigente_unique ON igreja_vinculacao (igreja_id) WHERE fim IS NULL'
+        );
+
         Schema::create('ebis', function (Blueprint $table): void {
             $table->ulid('id')->primary();
             $table->foreignUlid('igreja_id')->constrained('igrejas');

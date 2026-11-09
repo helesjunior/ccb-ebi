@@ -35,7 +35,7 @@ class EbiController
         $ebi = $this->gerir->atualizarEbi($id, $request->validated());
 
         if ($ebi === null) {
-            throw new ProblemException('not_found', 'EBI nao encontrada', 404);
+            throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'EBI não encontrada');
         }
 
         return (new EbiResource($ebi))->response();

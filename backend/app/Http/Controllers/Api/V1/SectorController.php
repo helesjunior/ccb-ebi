@@ -35,7 +35,7 @@ class SectorController
         $setor = $this->gerir->atualizarSetor($id, $request->validated());
 
         if ($setor === null) {
-            throw new ProblemException('not_found', 'Setor nao encontrado', 404);
+            throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Setor não encontrado');
         }
 
         return (new SectorResource($setor))->response();

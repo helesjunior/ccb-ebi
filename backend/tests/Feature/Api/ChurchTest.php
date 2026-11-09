@@ -53,3 +53,13 @@ it('atualiza igreja', function () {
         ->assertOk()
         ->assertJsonPath('nome', 'Novo Nome');
 });
+
+it('replay de POST /churches com a mesma Idempotency-Key devolve 201 e nao duplica', function () {
+    $payload = ['codigo' => '240003', 'nome' => 'Núcleo Bandeirante', 'timezone' => 'America/Sao_Paulo', 'status' => 'ativo'];
+    $headers = $this->auth + ['Idempotency-Key' => 'teste-replay-'.uniqid()];
+
+    $this->postJson('/api/v1/churches', $payload, $headers)->assertStatus(201);
+    $this->postJson('/api/v1/churches', $payload, $headers)->assertStatus(201);
+
+    expect(Igreja::where('codigo', '240003')->count())->toBe(1);
+});

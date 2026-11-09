@@ -42,3 +42,22 @@ it('falha em linha sem codigo de igreja', function () use ($cabecalho) {
     $csv = csvTemp($cabecalho."01,Brasília,0110,Setor A,,Sem Codigo,America/Sao_Paulo\n");
     expect(fn () => app(ImportadorBrasilia::class)->importar($csv))->toThrow(RuntimeException::class);
 });
+
+it('nao grava nada quando uma linha e invalida (tudo-ou-nada)', function () use ($cabecalho) {
+    // Linha 1 valida; linha 2 sem igreja_codigo. Nada pode ser gravado.
+    $csv = csvTemp(
+        $cabecalho."01,Brasília,0110,Setor A,240003,Núcleo Bandeirante,America/Sao_Paulo\n".
+        $cabecalho."01,Brasília,0110,Setor A,,Sem Codigo,America/Sao_Paulo\n"
+    );
+
+    expect(fn () => app(ImportadorBrasilia::class)->importar($csv))->toThrow(RuntimeException::class);
+
+    expect(Igreja::count())->toBe(0)
+        ->and(Regional::count())->toBe(0)
+        ->and(Setor::count())->toBe(0);
+});
+
+it('falha quando o cabecalho do CSV nao tem as colunas obrigatorias', function () {
+    $csv = csvTemp("regional,setor,igreja\n01,0110,240003\n");
+    expect(fn () => app(ImportadorBrasilia::class)->importar($csv))->toThrow(RuntimeException::class);
+});

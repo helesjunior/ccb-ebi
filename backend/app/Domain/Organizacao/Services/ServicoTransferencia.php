@@ -57,14 +57,15 @@ class ServicoTransferencia implements TransferirIgreja
                 );
             }
 
-            // Nenhuma data pode cair dentro de outro vinculo ja encerrado da igreja.
-            // O vinculo ativo (que sera fechado nesta operacao) fica de fora.
+            // Nenhuma data pode cair dentro (nem no inicio) de outro vinculo
+            // ja encerrado da igreja. O vinculo ativo (que sera fechado nesta
+            // operacao) fica de fora.
             $ativoId = $ativo?->getKey();
 
             $sobrepoe = IgrejaVinculacao::query()
                 ->where('igreja_id', $igrejaId)
                 ->when($ativoId !== null, fn ($q) => $q->whereKeyNot($ativoId))
-                ->where('inicio', '<', $inicio)
+                ->where('inicio', '<=', $inicio)
                 ->where(function ($q) use ($inicio): void {
                     $q->whereNull('fim')->orWhere('fim', '>', $inicio);
                 })

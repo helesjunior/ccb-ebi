@@ -15,6 +15,7 @@ class GerenciadorOrganizacao implements GerirOrganizacao
     public function listarIgrejas(array $filtros, int $limit): CursorPaginator
     {
         return Igreja::query()
+            ->with('vinculacaoVigente.setor')
             ->when(isset($filtros['status']), fn ($q) => $q->where('status', $filtros['status']))
             ->when(isset($filtros['codigo']), fn ($q) => $q->where('codigo', $filtros['codigo']))
             ->orderBy('id')
