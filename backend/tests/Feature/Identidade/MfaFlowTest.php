@@ -1,0 +1,59 @@
+<?php
+
+use App\Domain\Identidade\Models\Usuario;
+use App\Domain\Identidade\Support\Totp;
+use Database\Seeders\PapelSeeder;
+
+beforeEach(function () {
+    $this->seed(PapelSeeder::class);
+});
+
+/**
+ * Regressão do fluxo CA-15 ponta a ponta: login de perfil com MFA devolve
+ * desafio, o desafio conclui o segundo fator e só então a sessão plena acessa a
+ * área operacional. Cobria um buraco onde /auth/mfa/verify nunca chegava ao
+ * controller (alias `abilities` ausente + ResolveActingScope bloqueando o
+ * token de desafio).
+ */
+it('conclui o MFA e libera a area operacional', function () {
+    $u = criarUsuarioComPapel('coordenadora', 'central', 'central-1');
+
+    // Setup: inscreve e confirma o TOTP com um token de sessão plena.
+    $setup = $u->createToken('setup', ['*'])->plainTextToken;
+    $segredo = $this->postJson('/api/v1/me/mfa/totp', [], ['Authorization' => "Bearer {$setup}"])
+        ->assertOk()->json('segredo');
+    $this->postJson('/api/v1/me/mfa/totp/confirm', ['codigo' => Totp::codigoAtual($segredo)], ['Authorization' => "Bearer {$setup}"])
+        ->assertOk();
+
+    // 1) Login devolve desafio (sem sessão plena).
+    $desafio = $this->postJson('/api/v1/auth/login', [
+        'email' => $u->email_normalizado,
+        'password' => 'senha-bem-longa-123',
+    ])
+        ->assertOk()
+        ->assertJsonPath('mfa_required', true)
+        ->json('token_desafio');
+
+    // 2) O token de desafio NÃO acessa a área operacional.
+    // O guard Sanctum cacheia o último token no mesmo teste; limpa para
+    // garantir que a requisição usa o token de desafio de fato.
+    $this->app['auth']->forgetGuards();
+    $this->getJson('/api/v1/me', ['Authorization' => "Bearer {$desafio}"])
+        ->assertStatus(403)
+        ->assertJsonPath('code', 'mfa_pendente');
+
+    // 3) Conclui o segundo fator e recebe a sessão plena.
+    $this->app['auth']->forgetGuards();
+    $token = $this->postJson('/api/v1/auth/mfa/verify', ['codigo' => Totp::codigoAtual($segredo)], ['Authorization' => "Bearer {$desafio}"])
+        ->assertStatus(201)
+        ->assertJsonStructure(['token', 'usuario'])
+        ->json('token');
+
+    // 4) A sessão plena acessa a área operacional; o desafio foi revogado.
+    $this->app['auth']->forgetGuards();
+    $this->getJson('/api/v1/me', ['Authorization' => "Bearer {$token}"])
+        ->assertOk()
+        ->assertJsonPath('email', $u->email_normalizado);
+
+    expect(Usuario::query()->find($u->id)->tokens()->where('name', 'mfa-desafio')->exists())->toBeFalse();
+});

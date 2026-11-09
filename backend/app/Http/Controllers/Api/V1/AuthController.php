@@ -2,15 +2,21 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Domain\Identidade\Contracts\AutenticarAtor;
-use App\Http\Resources\AtorResource;
+use App\Domain\Identidade\Contracts\Autenticar;
+use App\Domain\Identidade\Contracts\GerenciarSessao;
+use App\Http\Resources\UsuarioResource;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Str;
 
 class AuthController
 {
-    public function __construct(private readonly AutenticarAtor $autenticador) {}
+    public function __construct(
+        private readonly Autenticar $autenticador,
+        private readonly GerenciarSessao $sessoes,
+    ) {}
 
     public function login(Request $request): JsonResponse
     {
@@ -19,20 +25,41 @@ class AuthController
             'password' => ['required', 'string'],
         ]);
 
-        $ator = $this->autenticador->autenticar($dados['email'], $dados['password']);
+        $resultado = $this->autenticador->executar($dados['email'], $dados['password']);
 
-        $token = $ator->createToken('web')->plainTextToken;
+        if ($resultado->mfaPendente) {
+            return new JsonResponse([
+                'mfa_required' => true,
+                'token_desafio' => $resultado->tokenDesafio,
+            ], 200);
+        }
+
+        $token = $this->abrirSessao($request, $resultado->usuario);
 
         return new JsonResponse([
             'token' => $token,
-            'ator' => AtorResource::make($ator)->resolve(),
+            'usuario' => UsuarioResource::make($resultado->usuario)->resolve(),
         ], 201);
     }
 
     public function logout(Request $request): Response
     {
-        $request->user()?->currentAccessToken()?->delete();
+        $usuario = $request->user();
+        $token = $usuario?->currentAccessToken();
+
+        if ($usuario !== null && $token !== null) {
+            // Marca a sessao como revogada (some da listagem) e invalida o token.
+            $this->sessoes->revogarPorToken($usuario, $token->getKey());
+        }
 
         return response()->noContent();
+    }
+
+    /** Abre a sessao de dispositivo e devolve o token Sanctum de sessao plena. */
+    private function abrirSessao(Request $request, Authenticatable $usuario): string
+    {
+        $dispositivo = Str::limit((string) $request->userAgent(), 255, '') ?: 'Desconhecido';
+
+        return $this->sessoes->abrir($usuario, $dispositivo);
     }
 }

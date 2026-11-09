@@ -1,15 +1,15 @@
 <?php
 
-use Database\Seeders\AtorSeeder;
+use Database\Seeders\UsuarioSeeder;
 
 beforeEach(function () {
-    $this->seed(AtorSeeder::class);
+    $this->seed(UsuarioSeeder::class);
 });
 
 it('faz login e devolve token', function () {
     $this->postJson('/api/v1/auth/login', ['email' => 'coordenadora@ebi.test', 'password' => 'senha'])
         ->assertStatus(201)
-        ->assertJsonStructure(['token', 'ator' => ['id', 'nome', 'email', 'papel']]);
+        ->assertJsonStructure(['token', 'usuario' => ['id', 'nome', 'email', 'email_verificado', 'status']]);
 });
 
 it('responde 401 em problem+json para credenciais invalidas', function () {

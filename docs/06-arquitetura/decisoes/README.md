@@ -54,5 +54,6 @@ Duas listas: **decisões em aberto** (D-nn), que precisam de aprovação da CCB,
 | [ADR-0019](ADR-0019-base-normativa-lgpd.md) | Base normativa de privacidade | aceito em parte |
 | [ADR-0020](ADR-0020-supressao-e-definicao-de-ativo.md) | Supressão em relatórios e definição de "ativo" | aceito |
 | [ADR-0021](ADR-0021-portal-web-react.md) | Portal Web em React com TypeScript | aceito |
+| [ADR-0022](ADR-0022-identidade-e-acesso.md) | Identidade e acesso (Etapa 3): escopo e dívidas | aceito |
 
 Para criar um ADR, copie o [modelo](ADR-0001-registro-de-decisoes.md#modelo) e use o próximo número.

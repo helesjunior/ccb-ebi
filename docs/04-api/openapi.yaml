@@ -11,8 +11,10 @@ security:
   - bearerAuth: []
 tags:
   - name: auth
+  - name: identity
   - name: health
   - name: organization
+  - name: team
   - name: participants
   - name: sessions
   - name: activities
@@ -37,6 +39,11 @@ paths:
     post:
       tags: [auth]
       summary: Autenticar
+      description: >-
+        Valida e-mail e senha. Perfis que exigem MFA (todo perfil ≠ Responsável)
+        sempre recebem `mfa_required` + `token_desafio` (escopo restrito, sem
+        sessão plena); a sessão só sai após `POST /auth/mfa/verify`. Responsável
+        (perfil que não exige MFA) recebe a sessão direto.
       security: []
       requestBody:
         required: true
@@ -49,14 +56,132 @@ paths:
                 email: { type: string, format: email }
                 password: { type: string, format: password }
       responses:
-        '201':
-          description: Autenticado
+        '200':
+          description: Desafio de MFA emitido (perfil exige segundo fator)
           content:
             application/json:
               schema: { $ref: '#/components/schemas/LoginResponse' }
+        '201':
+          description: Sessão plena emitida (perfil que não exige MFA)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SessaoEmitida' }
         '401': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/Problem' }
         '429': { $ref: '#/components/responses/Problem' }
+  /auth/mfa/verify:
+    post:
+      tags: [auth]
+      summary: Validar o segundo fator
+      description: >-
+        Autenticado pelo token de desafio (`mfa:pendente`). Valida o código TOTP
+        ou um código de recuperação, revoga o desafio e emite a sessão plena.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [codigo]
+              properties:
+                codigo: { type: string }
+      responses:
+        '201':
+          description: Sessão plena emitida (token de dispositivo)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SessaoEmitida' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /auth/register-guardian:
+    post:
+      tags: [auth]
+      summary: Criar conta de responsável
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegistroGuardiao' }
+      responses:
+        '201': { description: Conta criada e verificação enviada por e-mail }
+        '422': { $ref: '#/components/responses/Problem' }
+        '429': { $ref: '#/components/responses/Problem' }
+  /auth/verify-email:
+    post:
+      tags: [auth]
+      summary: Verificar e-mail
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [usuario, signature]
+              properties:
+                usuario: { type: string }
+                signature: { type: string }
+      responses:
+        '200': { description: E-mail verificado }
+        '403': { $ref: '#/components/responses/Problem' }
+  /auth/email/resend:
+    post:
+      tags: [auth]
+      summary: Reenviar verificação de e-mail
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        '202': { description: Pedido aceito (resposta idêntica exista ou não o e-mail) }
+        '429': { $ref: '#/components/responses/Problem' }
+  /auth/password/forgot:
+    post:
+      tags: [auth]
+      summary: Pedir recuperação de senha
+      description: Sem enumeração de contas; a resposta é idêntica exista ou não o e-mail.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        '202': { description: Pedido aceito }
+        '429': { $ref: '#/components/responses/Problem' }
+  /auth/password/reset:
+    post:
+      tags: [auth]
+      summary: Redefinir senha
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, token, password]
+              properties:
+                email: { type: string, format: email }
+                token: { type: string }
+                password: { type: string, format: password, minLength: 12 }
+      responses:
+        '200': { description: Senha redefinida; sessões anteriores revogadas }
+        '422': { $ref: '#/components/responses/Problem' }
   /auth/logout:
     post:
       tags: [auth]
@@ -66,15 +191,261 @@ paths:
         '401': { $ref: '#/components/responses/Problem' }
   /me:
     get:
-      tags: [auth]
-      summary: Ator autenticado
+      tags: [identity]
+      summary: Usuário autenticado
       responses:
         '200':
-          description: Ator autenticado
+          description: Usuário autenticado
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Ator' }
+              schema: { $ref: '#/components/schemas/Usuario' }
         '401': { $ref: '#/components/responses/Problem' }
+  /me/scopes:
+    get:
+      tags: [identity]
+      summary: Contextos de atuação disponíveis
+      description: Vínculos vigentes do usuário, para o seletor de contexto (`X-Acting-Scope`).
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+      responses:
+        '200':
+          description: Lista de contextos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ContextoAtuacao' }
+        '401': { $ref: '#/components/responses/Problem' }
+  /me/mfa/totp:
+    post:
+      tags: [identity]
+      summary: Iniciar inscrição do TOTP
+      responses:
+        '200':
+          description: Segredo e URI otpauth para o app autenticador
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InscricaoTotp' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /me/mfa/totp/confirm:
+    post:
+      tags: [identity]
+      summary: Confirmar inscrição do TOTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [codigo]
+              properties:
+                codigo: { type: string }
+      responses:
+        '200': { description: Fator validado; códigos de recuperação gerados }
+        '422': { $ref: '#/components/responses/Problem' }
+  /me/mfa/recovery-codes:
+    post:
+      tags: [identity]
+      summary: Gerar códigos de recuperação
+      responses:
+        '200':
+          description: Novos códigos de recuperação (mostrados uma única vez)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  codigos:
+                    type: array
+                    items: { type: string }
+  /me/sessions:
+    get:
+      tags: [identity]
+      summary: Listar dispositivos/sessões
+      responses:
+        '200':
+          description: Sessões vigentes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/SessaoLogin' }
+        '401': { $ref: '#/components/responses/Problem' }
+  /me/sessions/{id}:
+    delete:
+      tags: [identity]
+      summary: Revogar dispositivo
+      parameters:
+        - $ref: '#/components/parameters/SessaoId'
+      responses:
+        '204': { description: Sessão revogada }
+        '401': { $ref: '#/components/responses/Problem' }
+  /users:
+    get:
+      tags: [team]
+      summary: Listar usuários da equipe
+      description: Restrito ao escopo de atuação (subárvore do vínculo).
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+        - name: status
+          in: query
+          schema: { type: string, enum: [ativo, suspenso] }
+      responses:
+        '200':
+          description: Página de usuários
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UsuarioPage' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /users/{id}:
+    get:
+      tags: [team]
+      summary: Ver usuário
+      parameters:
+        - $ref: '#/components/parameters/UsuarioId'
+      responses:
+        '200':
+          description: Usuário
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Usuario' }
+        '404': { $ref: '#/components/responses/Problem' }
+    patch:
+      tags: [team]
+      summary: Atualizar usuário (nome, status)
+      description: Suspender revoga as sessões do usuário e é auditado (RN-10).
+      parameters:
+        - $ref: '#/components/parameters/UsuarioId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nome: { type: string, maxLength: 255 }
+                status: { type: string, enum: [ativo, suspenso] }
+      responses:
+        '200':
+          description: Usuário atualizado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Usuario' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /invitations:
+    get:
+      tags: [team]
+      summary: Listar convites
+      responses:
+        '200':
+          description: Convites dentro do escopo de atuação
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Convite' }
+        '403': { $ref: '#/components/responses/Problem' }
+    post:
+      tags: [team]
+      summary: Convidar pessoa para a equipe
+      description: O convidante só convida para papel/escopo dentro da sua autoridade.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ConviteInput' }
+      responses:
+        '201':
+          description: Convite criado e e-mail enviado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Convite' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /invitations/{id}:
+    delete:
+      tags: [team]
+      summary: Cancelar convite
+      parameters:
+        - $ref: '#/components/parameters/ConviteId'
+      responses:
+        '204': { description: Convite cancelado }
+        '403': { $ref: '#/components/responses/Problem' }
+  /invitations/{id}/accept:
+    post:
+      tags: [auth]
+      summary: Aceitar convite (público)
+      description: >-
+        O token secreto do convite é a credencial. Cria a conta já vinculada e
+        marca o convite como aceito (uso único). Replay ou token inválido: 410.
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/ConviteId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, nome, password]
+              properties:
+                token: { type: string }
+                nome: { type: string, maxLength: 255 }
+                password: { type: string, format: password, minLength: 12 }
+      responses:
+        '201':
+          description: Conta criada e vinculada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ContaCriada' }
+        '410': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /access-grants:
+    post:
+      tags: [team]
+      summary: Conceder vínculo de acesso
+      description: Encerra o vínculo vigente do mesmo par e abre um novo (histórico por vigência); auditado. Exige autoridade sobre o papel e o escopo-alvo.
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/VinculoInput' }
+      responses:
+        '201':
+          description: Vínculo concedido
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Vinculo' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /access-grants/{id}:
+    delete:
+      tags: [team]
+      summary: Revogar vínculo de acesso
+      parameters:
+        - $ref: '#/components/parameters/VinculoId'
+      responses:
+        '204': { description: Vínculo revogado }
+        '403': { $ref: '#/components/responses/Problem' }
   /sessions/{sessionId}/attendance:
     post:
       tags: [sessions]
@@ -371,6 +742,15 @@ components:
       in: header
       required: false
       schema: { type: string, maxLength: 128 }
+    XActingScope:
+      name: X-Acting-Scope
+      in: header
+      required: false
+      description: >-
+        Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>`
+        (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor
+        revalida contra os vínculos vigentes (nunca é aceito sem revalidação).
+      schema: { type: string, example: "papel=adm_setor;escopo=setor:01H..." }
     Cursor:
       name: cursor
       in: query
@@ -401,6 +781,26 @@ components:
       in: path
       required: true
       schema: { type: string }
+    SessaoId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+    UsuarioId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+    ConviteId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+    VinculoId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
   responses:
     Problem:
       description: Erro no formato RFC 9457
@@ -416,19 +816,103 @@ components:
         status: { type: integer }
         detail: { type: string }
         code: { type: string }
-    Ator:
+    Usuario:
       type: object
       properties:
-        id: { type: integer }
+        id: { type: string }
         nome: { type: string }
         email: { type: string, format: email }
-        papel: { type: string }
+        email_verificado: { type: boolean }
+        status: { type: string, enum: [ativo, suspenso] }
+        papeis:
+          type: array
+          items: { type: string }
     LoginResponse:
       type: object
-      required: [token, ator]
+      properties:
+        mfa_required: { type: boolean }
+        token: { type: [string, 'null'] }
+        token_desafio: { type: [string, 'null'] }
+        usuario: { $ref: '#/components/schemas/Usuario' }
+    SessaoEmitida:
+      type: object
       properties:
         token: { type: string }
-        ator: { $ref: '#/components/schemas/Ator' }
+        usuario: { $ref: '#/components/schemas/Usuario' }
+    ContextoAtuacao:
+      type: object
+      properties:
+        papel: { type: string }
+        tipo_escopo: { type: string, enum: [central, regional, setor, igreja, ebi] }
+        escopo_id: { type: string }
+    SessaoLogin:
+      type: object
+      properties:
+        id: { type: string }
+        dispositivo: { type: string }
+        criada_em: { type: string, format: date-time }
+        expira_em: { type: string, format: date-time }
+    InscricaoTotp:
+      type: object
+      properties:
+        segredo: { type: string }
+        uri: { type: string }
+    RegistroGuardiao:
+      type: object
+      required: [nome, email, password]
+      properties:
+        nome: { type: string, maxLength: 255 }
+        email: { type: string, format: email }
+        password: { type: string, format: password, minLength: 12 }
+    Convite:
+      type: object
+      properties:
+        id: { type: string }
+        email: { type: string, format: email }
+        papel: { type: string }
+        tipo_escopo: { type: string, enum: [central, regional, setor, igreja, ebi] }
+        escopo_id: { type: string }
+        expira_em: { type: string, format: date-time }
+        pendente: { type: boolean }
+    ConviteInput:
+      type: object
+      required: [email, papel, tipo_escopo, escopo_id]
+      properties:
+        email: { type: string, format: email }
+        papel: { type: string }
+        tipo_escopo: { type: string, enum: [central, regional, setor, igreja, ebi] }
+        escopo_id: { type: string }
+    ContaCriada:
+      type: object
+      properties:
+        id: { type: string }
+        email_normalizado: { type: string, format: email }
+        nome: { type: string }
+    Vinculo:
+      type: object
+      properties:
+        id: { type: string }
+        usuario_id: { type: string }
+        tipo_escopo: { type: string, enum: [central, regional, setor, igreja, ebi] }
+        escopo_id: { type: string }
+    VinculoInput:
+      type: object
+      required: [usuario_id, papel, tipo_escopo, escopo_id]
+      properties:
+        usuario_id: { type: string }
+        papel: { type: string }
+        tipo_escopo: { type: string, enum: [central, regional, setor, igreja, ebi] }
+        escopo_id: { type: string }
+    UsuarioPage:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/Usuario' }
+        meta:
+          type: object
+          properties:
+            proximo_cursor: { type: [string, 'null'] }
     Health:
       type: object
       properties:
