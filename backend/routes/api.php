@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\V1\RegionController;
 use App\Http\Controllers\Api\V1\RegisterController;
 use App\Http\Controllers\Api\V1\SectorController;
 use App\Http\Controllers\Api\V1\SessionController;
+use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Middleware\IdempotenciaMiddleware;
 use Illuminate\Support\Facades\Route;
 
@@ -47,6 +48,16 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         // Sessoes por dispositivo (RF-05).
         Route::get('me/sessions', [SessionController::class, 'index'])->name('me.sessions.index');
         Route::delete('me/sessions/{id}', [SessionController::class, 'destroy'])->name('me.sessions.destroy');
+
+        // Equipe do EBI (RF-05): listagem/gestao de usuarios (matriz).
+        Route::get('users', [UserController::class, 'index'])
+            ->middleware('can:usuario.ler')->name('users.index');
+        Route::get('users/{id}', [UserController::class, 'show'])
+            ->middleware('can:usuario.ler')->name('users.show');
+        Route::middleware(IdempotenciaMiddleware::class)->group(function (): void {
+            Route::patch('users/{id}', [UserController::class, 'update'])
+                ->middleware('can:usuario.gerenciar')->name('users.update');
+        });
 
         // Organizacao - leitura (autorizacao por operacao; matriz).
         Route::middleware('can:organizacao.ler')->group(function (): void {

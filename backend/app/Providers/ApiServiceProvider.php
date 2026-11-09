@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Domain\Identidade\Support\Operacoes;
 use App\Policies\OrganizacaoPolicy;
+use App\Policies\UsuarioPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -22,5 +23,7 @@ class ApiServiceProvider extends ServiceProvider
         // Policy, que consulta o nucleo AutorizarOperacao com o ContextoAtuacao.
         Gate::define(Operacoes::ORGANIZACAO_LER, [OrganizacaoPolicy::class, 'ler']);
         Gate::define(Operacoes::ORGANIZACAO_GERENCIAR, [OrganizacaoPolicy::class, 'gerenciar']);
+        Gate::define(Operacoes::USUARIO_LER, [UsuarioPolicy::class, 'ler']);
+        Gate::define(Operacoes::USUARIO_GERENCIAR, [UsuarioPolicy::class, 'gerenciar']);
     }
 }
