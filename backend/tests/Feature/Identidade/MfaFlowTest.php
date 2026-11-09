@@ -57,3 +57,76 @@ it('conclui o MFA e libera a area operacional', function () {
 
     expect(Usuario::query()->find($u->id)->tokens()->where('name', 'mfa-desafio')->exists())->toBeFalse();
 });
+
+/**
+ * Usuário de perfil com MFA que ainda NÃO tem fator inscrito: o desafio aponta
+ * a inscrição pendente e o token de desafio consegue inscrever/confirmar o TOTP
+ * antes de concluir o login. Sem isso, todo usuário novo fica travado (não há
+ * código para digitar).
+ */
+it('inscreve o TOTP pelo token de desafio quando o usuario nao tem fator', function () {
+    $u = criarUsuarioComPapel('coordenadora', 'central', 'central-1');
+
+    // 1) Login devolve desafio e sinaliza que a inscricao esta pendente.
+    $desafio = $this->postJson('/api/v1/auth/login', [
+        'email' => $u->email_normalizado,
+        'password' => 'senha-bem-longa-123',
+    ])
+        ->assertOk()
+        ->assertJsonPath('mfa_required', true)
+        ->assertJsonPath('mfa_inscricao_pendente', true)
+        ->json('token_desafio');
+
+    // 2) O token de desafio NAO alcanca a area operacional nem os codigos de
+    //    recuperacao (que exigem sessao plena).
+    $this->app['auth']->forgetGuards();
+    $this->getJson('/api/v1/me', ['Authorization' => "Bearer {$desafio}"])
+        ->assertStatus(403)
+        ->assertJsonPath('code', 'mfa_pendente');
+
+    $this->app['auth']->forgetGuards();
+    $this->postJson('/api/v1/me/mfa/recovery-codes', [], ['Authorization' => "Bearer {$desafio}"])
+        ->assertStatus(403)
+        ->assertJsonPath('code', 'mfa_pendente');
+
+    // 3) MAS o desafio PODE inscrever o TOTP (excecao estreita).
+    $this->app['auth']->forgetGuards();
+    $segredo = $this->postJson('/api/v1/me/mfa/totp', [], ['Authorization' => "Bearer {$desafio}"])
+        ->assertOk()
+        ->assertJsonStructure(['segredo', 'uri'])
+        ->json('segredo');
+
+    $this->app['auth']->forgetGuards();
+    $this->postJson('/api/v1/me/mfa/totp/confirm', ['codigo' => Totp::codigoAtual($segredo)], ['Authorization' => "Bearer {$desafio}"])
+        ->assertOk()
+        ->assertJsonPath('confirmado', true);
+
+    // 4) Agora o desafio conclui o segundo fator e recebe a sessao plena.
+    $this->app['auth']->forgetGuards();
+    $token = $this->postJson('/api/v1/auth/mfa/verify', ['codigo' => Totp::codigoAtual($segredo)], ['Authorization' => "Bearer {$desafio}"])
+        ->assertStatus(201)
+        ->json('token');
+
+    $this->app['auth']->forgetGuards();
+    $this->getJson('/api/v1/me', ['Authorization' => "Bearer {$token}"])
+        ->assertOk()
+        ->assertJsonPath('email', $u->email_normalizado);
+});
+
+it('nao sinaliza inscricao pendente quando o usuario ja tem fator validado', function () {
+    $u = criarUsuarioComPapel('coordenadora', 'central', 'central-1');
+
+    $setup = $u->createToken('setup', ['*'])->plainTextToken;
+    $segredo = $this->postJson('/api/v1/me/mfa/totp', [], ['Authorization' => "Bearer {$setup}"])
+        ->assertOk()->json('segredo');
+    $this->postJson('/api/v1/me/mfa/totp/confirm', ['codigo' => Totp::codigoAtual($segredo)], ['Authorization' => "Bearer {$setup}"])
+        ->assertOk();
+
+    $this->postJson('/api/v1/auth/login', [
+        'email' => $u->email_normalizado,
+        'password' => 'senha-bem-longa-123',
+    ])
+        ->assertOk()
+        ->assertJsonPath('mfa_required', true)
+        ->assertJsonPath('mfa_inscricao_pendente', false);
+});

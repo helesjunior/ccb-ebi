@@ -36,7 +36,12 @@ class Autenticador implements Autenticar
         $precisaSegundoFator = $this->exigirMfa->exige($usuario);
 
         if ($precisaSegundoFator) {
-            return new ResultadoLogin($usuario, mfaPendente: true, tokenDesafio: $this->desafioMfa->emitir($usuario));
+            return new ResultadoLogin(
+                $usuario,
+                mfaPendente: true,
+                tokenDesafio: $this->desafioMfa->emitir($usuario),
+                mfaInscricaoPendente: ! $this->exigirMfa->temFatorValidado($usuario),
+            );
         }
 
         return new ResultadoLogin($usuario, mfaPendente: false);
