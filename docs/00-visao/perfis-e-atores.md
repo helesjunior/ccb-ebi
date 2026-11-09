@@ -36,7 +36,7 @@ Funções que se somam a um perfil existente, com escopo próprio.
 | Avaliador de exceção inclusiva | [RF-02](../01-requisitos/funcionais/RF-02-cadastro-de-participantes.md) | Não é atribuição separada: a coordenadora do dia decide com o responsável | Aceito ([ADR-0012](../06-arquitetura/decisoes/ADR-0012-excecao-decidida-pela-coordenadora.md)) |
 | Moderador editorial | [RF-10](../01-requisitos/funcionais/RF-10-biblioteca-de-atividades.md), [RF-12](../01-requisitos/funcionais/RF-12-avaliacao-de-atividades.md) | Atribuição regional ou nacional; aprova e retira materiais | Moderador regional aprova na Regional; publicação nacional pelo Ministério da Central (proposta em [ADR-0028](../06-arquitetura/decisoes/ADR-0028-politica-editorial-dos-pdfs.md)) |
 | Moderador de feedback | [RF-09](../01-requisitos/funcionais/RF-09-feedback.md) | Perfil Ministério Local da igreja | Aceito ([ADR-0008](../06-arquitetura/decisoes/ADR-0008-moderacao-de-feedback.md)) |
-| Encarregado (DPO) | [RF-16](../01-requisitos/funcionais/RF-16-administracao-e-auditoria.md) | Atribuição nacional; atende solicitações LGPD com acesso registrado | Pendente de [D-04](../06-arquitetura/decisoes/README.md) |
+| Encarregado (DPO) | [RF-16](../01-requisitos/funcionais/RF-16-administracao-e-auditoria.md) | Atribuição nacional; atende solicitações LGPD com acesso registrado | A CCB indica um encarregado provisório ([ADR-0019](../06-arquitetura/decisoes/ADR-0019-base-normativa-lgpd.md)) |
 | Suporte | [RF-16](../01-requisitos/funcionais/RF-16-administracao-e-auditoria.md) | Sem acesso a dados de participantes por padrão; acesso temporário com justificativa | Proposto |
 
 ## Regras transversais

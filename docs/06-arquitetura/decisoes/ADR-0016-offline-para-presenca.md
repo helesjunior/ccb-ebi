@@ -19,4 +19,4 @@ Igrejas podem ter internet instável no horário do culto. As opções eram: só
 - Entra com o app, na fase 3 (épico E13). Nas fases 1 e 2, o portal Web usa a contingência em papel ([RNF-03](../../01-requisitos/nao-funcionais.md)).
 - Dados de crianças ficam no celular: banco local cifrado, apagado ao encerrar a sessão ou após um prazo curto (proposta: 24 h), e ao sair da conta.
 - Cadastro, feedback, escalas e biblioteca continuam exigindo internet.
-- O tamanho da lista baixada e o prazo de retenção no aparelho devem passar pelo DPO (D-04).
+- Prazo de retenção da lista no aparelho: até a sincronização, no máximo 7 dias (padrão provisório do [ADR-0019](ADR-0019-base-normativa-lgpd.md), aguarda DPO).

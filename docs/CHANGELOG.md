@@ -2,6 +2,12 @@
 
 Formato: versão, data, autor e mudanças. Itens mais recentes primeiro.
 
+## 2.12 — 09/11/2026
+
+- D-04: padrão provisório conservador no [ADR-0019](06-arquitetura/decisoes/ADR-0019-base-normativa-lgpd.md) (base legal, termo de crianças, dado religioso, adulto com deficiência, cadastro assistido, retenção, incidentes, DPO), aprovado pelo produto. Desenvolvimento segue com dados fictícios; dados reais só depois do parecer do jurídico e do DPO (portão na etapa 8).
+- Novo [pacote para o jurídico](05-seguranca-e-privacidade/pacote-para-o-juridico.md) com os 8 itens para validar.
+- Dicionário de dados com os prazos de retenção provisórios; ADR-0015, ADR-0016, FL-07 e perfis atualizados.
+
 ## 2.11 — 09/11/2026
 
 Decisões D-06, D-10 e D-18 a D-22 respondidas pelo responsável do produto.

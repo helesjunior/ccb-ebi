@@ -1,6 +1,6 @@
 # Privacidade e LGPD
 
-**Status:** proposto · Referência normativa: as normas aplicáveis à CCB como instituição filantrópica sem fins lucrativos ([ADR-0019](../06-arquitetura/decisoes/ADR-0019-base-normativa-lgpd.md)). Os itens que ainda dependem do jurídico e do encarregado estão listados nesse ADR.
+**Status:** proposto · Referência normativa: as normas aplicáveis à CCB como instituição filantrópica sem fins lucrativos ([ADR-0019](../06-arquitetura/decisoes/ADR-0019-base-normativa-lgpd.md)). O ADR traz um padrão provisório para cada item; o [pacote para o jurídico](pacote-para-o-juridico.md) lista o que o jurídico e o encarregado precisam validar antes de dados reais.
 
 ## Pontos de atenção
 1. **Dados de crianças e adolescentes.** O tratamento deve ser feito no melhor interesse (LGPD, art. 14). O consentimento específico de um dos pais ou responsável é uma hipótese, mas não a única: a ANPD admite outras bases legais dos arts. 7º e 11, desde que observado o melhor interesse (Enunciado CD/ANPD nº 1/2023). **Não presumir que consentimento é a base para todo tratamento.**

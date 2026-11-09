@@ -1,6 +1,6 @@
 # Dicionário de dados
 
-Classificação de sensibilidade e retenção por entidade. O detalhamento campo a campo (tipo, obrigatoriedade, validação) será feito junto com as migrações do banco, usando o modelo no fim desta página.
+Classificação de sensibilidade e retenção por entidade. Os prazos são o padrão provisório do [ADR-0019](../06-arquitetura/decisoes/ADR-0019-base-normativa-lgpd.md), configuráveis e pendentes de aprovação do DPO. O detalhamento campo a campo (tipo, obrigatoriedade, validação) será feito junto com as migrações do banco, usando o modelo no fim desta página.
 
 ## Classes de sensibilidade
 
@@ -16,16 +16,16 @@ Classificação de sensibilidade e retenção por entidade. O detalhamento campo
 
 | Entidade | Classe mais alta | Retenção proposta | Observação |
 |---|---|---|---|
-| `participante` | Pessoal de criança | A definir ([D-04](../06-arquitetura/decisoes/README.md)) | Inativação, nunca exclusão silenciosa |
-| `excecao_etaria` | Sensível | A definir | Justificativa funcional, sem diagnóstico |
-| `dado_sensivel_participante` | Sensível | Mínima necessária | Campo `prazo_retencao` por registro |
+| `participante` | Pessoal de criança | Anonimizado 2 anos após a última presença (provisório, [ADR-0019](../06-arquitetura/decisoes/ADR-0019-base-normativa-lgpd.md)) | Inativação, nunca exclusão silenciosa |
+| `excecao_etaria` | Sensível | Junto com o participante | Justificativa funcional, sem diagnóstico |
+| `dado_sensivel_participante` | Sensível | Apagado ao fim da exceção | Campo `prazo_retencao` por registro |
 | `responsavel_participante` | Pessoal | Vigência + prazo legal | |
-| `presenca` | Pessoal de criança | A definir | Anonimizar para estatística histórica |
-| `feedback` | Pessoal de criança | A definir | |
-| `manifestacao_privacidade` | Pessoal | Enquanto houver tratamento + prazo de prova | Evidência de consentimento |
+| `presenca` | Pessoal de criança | Junto com o participante | Anonimizar para estatística histórica |
+| `feedback` | Pessoal de criança | 2 anos após a liberação | |
+| `manifestacao_privacidade` | Pessoal | 5 anos após o fim do tratamento | Evidência de consentimento |
 | `usuario` | Pessoal | Vigência + prazo legal | |
 | `fator_mfa`, `codigo_recuperacao`, `sessao_login` | Segredo | Até revogação | |
-| `evento_auditoria` | Pessoal | A definir; não apagável antes do prazo | Metadados minimizados |
+| `evento_auditoria` | Pessoal | 5 anos; não apagável antes do prazo (logs de acesso: 6 meses) | Metadados minimizados |
 | `atividade`, `atividade_versao`, `arquivo` | Pública interna | Enquanto publicada + histórico | Nunca contém dados de participantes (RN-12) |
 | Demais | Pública interna ou Pessoal | A definir | |
 
