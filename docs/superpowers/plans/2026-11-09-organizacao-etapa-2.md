@@ -1,6 +1,6 @@
 # Organização (Etapa 2) — Plano de implementação
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Implementar a estrutura organizacional (Central → Regional → Setor → Igreja → EBI) com histórico de vinculação, transferência de igreja (o setor vigente é o atual, sem data de corte) e carga CSV idempotente da Regional de Brasília.
 
@@ -51,7 +51,7 @@
 **Interfaces:**
 - Produces: models com `ULID` PK; `Igreja` com `codigo` (string, UNIQUE), `nome`, `endereco?`, `latitude?`, `longitude?`, `timezone`, `status`; relação `Igreja::vinculacoes()` (HasMany), `Igreja::vinculacaoVigente()` (HasOne, `fim IS NULL`); `IgrejaVinculacao` com `igreja_id`, `setor_id`, `inicio` (date), `fim` (date?, nullable); `Setor::regional()`, `Ebi::igreja()`.
 
-- [ ] **Step 1: Escrever o teste que falha do esquema**
+- [x] **Step 1: Escrever o teste que falha do esquema**
 
 ```php
 <?php // tests/Feature/Organizacao/EsquemaTest.php
@@ -81,25 +81,25 @@ it('impede codigo de igreja duplicado', function () {
 })->throws(Throwable::class);
 ```
 
-- [ ] **Step 2: Rodar e ver falhar**
+- [x] **Step 2: Rodar e ver falhar**
 
 Run: `docker compose run --rm app php artisan test --filter=EsquemaTest`
 Expected: FAIL ("Class CentralNacional not found" / tabela inexistente).
 
-- [ ] **Step 3: Escrever a migration**
+- [x] **Step 3: Escrever a migration**
 
 Uma migration cria as seis tabelas. Chaves estrangeiras com `ulid`. `igreja.codigo` `unique()`. `ebi.participantes_por_auxiliar` `unsignedSmallInteger()->default(4)`. Índice composto `('igreja_id', 'fim')` em `igreja_vinculacao`.
 
-- [ ] **Step 4: Escrever os models e factories**
+- [x] **Step 4: Escrever os models e factories**
 
 Padrão dos models existentes (`$table`, `$fillable`/`$guarded`, `casts`, `newFactory`). `IgrejaVinculacao` com `casts: ['inicio' => 'date', 'fim' => 'date']`. `Igreja::vinculacaoVigente()` = `hasOne(IgrejaVinculacao::class)->whereNull('fim')`. Factories no namespace `App\Domain\Organizacao\Database\Factories`.
 
-- [ ] **Step 5: Rodar e ver passar**
+- [x] **Step 5: Rodar e ver passar**
 
 Run: `docker compose run --rm app php artisan test --filter=EsquemaTest`
 Expected: PASS (2 testes).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add backend/database/migrations/2026_11_09_100001_create_organizacao_tables.php backend/app/Domain/Organizacao backend/tests/Feature/Organizacao/EsquemaTest.php
@@ -120,7 +120,7 @@ git commit -m "cria tabelas e models da organizacao"
 - Consumes: models da Task 1.
 - Produces: interface `ConsultarOrganizacao` com `setorVigente(string $igrejaId): ?Setor` e `regionalDoSetor(string $setorId): ?Regional`; binding no `DomainServiceProvider`. Serviços de outras etapas resolvem território **por aqui**, nunca lendo tabelas de Organização.
 
-- [ ] **Step 1: Escrever o teste que falha**
+- [x] **Step 1: Escrever o teste que falha**
 
 ```php
 <?php // tests/Feature/Organizacao/ConsultaVigenteTest.php
@@ -135,21 +135,21 @@ it('resolve o setor vigente e troca ao transferir', function () {
 });
 ```
 
-- [ ] **Step 2: Rodar e ver falhar**
+- [x] **Step 2: Rodar e ver falhar**
 
 Run: `docker compose run --rm app php artisan test --filter=ConsultaVigenteTest`
 Expected: FAIL (interface/binding inexistentes).
 
-- [ ] **Step 3: Implementar interface e serviço**
+- [x] **Step 3: Implementar interface e serviço**
 
 `ConsultaOrganizacao::setorVigente()` busca `IgrejaVinculacao` da igreja com `fim IS NULL` e devolve o `Setor`; `regionalDoSetor()` devolve a `Regional` do setor. Registrar `bind(ConsultarOrganizacao::class, ConsultaOrganizacao::class)`.
 
-- [ ] **Step 4: Rodar e ver passar**
+- [x] **Step 4: Rodar e ver passar**
 
 Run: `docker compose run --rm app php artisan test --filter=ConsultaVigenteTest`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/app/Domain/Organizacao/Contracts backend/app/Domain/Organizacao/Services/ConsultaOrganizacao.php backend/app/Providers/DomainServiceProvider.php backend/tests/Feature/Organizacao/ConsultaVigenteTest.php
@@ -171,7 +171,7 @@ git commit -m "adiciona contrato de consulta e setor vigente"
 - Consumes: models da Task 1; `ConsultarOrganizacao` (Task 2); `App\Domain\Auditoria\Contracts\RegistrarEvento`.
 - Produces: interface `TransferirIgreja` com `executar(string $igrejaId, string $setorDestinoId, \DateTimeInterface $data, ?string $motivo = null): IgrejaVinculacao`. Regra: fecha o vínculo ativo (`fim = data`, exclusivo) e abre novo (`inicio = data`, `fim = null`); rejeita sobreposição com `SobreposicaoVigenciaException`; registra evento `acao: transferir`, `recurso: igreja`.
 
-- [ ] **Step 1: Escrever o teste que falha (inclui a regra territorial)**
+- [x] **Step 1: Escrever o teste que falha (inclui a regra territorial)**
 
 ```php
 <?php // tests/Feature/Organizacao/TransferenciaTest.php
@@ -209,21 +209,21 @@ it('registra evento de auditoria na transferência', function () {
 });
 ```
 
-- [ ] **Step 2: Rodar e ver falhar**
+- [x] **Step 2: Rodar e ver falhar**
 
 Run: `docker compose run --rm app php artisan test --filter=TransferenciaTest`
 Expected: FAIL (interface/serviço inexistentes).
 
-- [ ] **Step 3: Implementar a exceção, a interface e o serviço**
+- [x] **Step 3: Implementar a exceção, a interface e o serviço**
 
 `SobreposicaoVigenciaException` estende `RuntimeException`. O serviço, em `DB::transaction`: (1) valida setor destino existe e difere do vigente; (2) valida que `data` não cai dentro de nenhum vínculo existente da igreja (nem o que está sendo fechado: exige `data > inicio` do vínculo ativo); (3) fecha o ativo com `fim = data`; (4) abre o novo; (5) chama `RegistrarEvento::registrar([...])`. Registrar o binding.
 
-- [ ] **Step 4: Rodar e ver passar**
+- [x] **Step 4: Rodar e ver passar**
 
 Run: `docker compose run --rm app php artisan test --filter=TransferenciaTest`
 Expected: PASS (3 testes).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/app/Domain/Organizacao/Contracts/TransferirIgreja.php backend/app/Domain/Organizacao/Services/ServicoTransferencia.php backend/app/Domain/Organizacao/Exceptions backend/app/Providers/DomainServiceProvider.php backend/tests/Feature/Organizacao/TransferenciaTest.php
@@ -244,7 +244,7 @@ git commit -m "adiciona transferencia de igreja com vigencia e auditoria"
 - Consumes: models da Task 1.
 - Produces: comando `organizacao:importar-brasilia {arquivo}` que lê o CSV, faz `updateOrCreate` por `codigo` de igreja (e por `codigo` de regional/setor), e imprime `criados`/`atualizados`/`ignorados`. Classes `ImportadorBrasilia` com `importar(string $caminho): array{criados:int, atualizados:int, ignorados:int}`.
 
-- [ ] **Step 1: Escrever o teste que falha (idempotência + linha inválida)**
+- [x] **Step 1: Escrever o teste que falha (idempotência + linha inválida)**
 
 ```php
 <?php // tests/Feature/Organizacao/ImportacaoBrasiliaTest.php
@@ -270,21 +270,21 @@ it('falha em linha sem codigo de igreja', function () {
 });
 ```
 
-- [ ] **Step 2: Rodar e ver falhar**
+- [x] **Step 2: Rodar e ver falhar**
 
 Run: `docker compose run --rm app php artisan test --filter=ImportacaoBrasiliaTest`
 Expected: FAIL (classes inexistentes).
 
-- [ ] **Step 3: Implementar o importador e o comando**
+- [x] **Step 3: Implementar o importador e o comando**
 
 `ImportadorBrasilia` lê com `fgetcsv`, valida `igreja_codigo` não vazio por linha (senão `RuntimeException` com número da linha), e usa `updateOrCreate` por `codigo`. O comando (namespace `App\Console\Commands`) chama o importador e imprime o resumo. Criar `brasilia.csv` com cabeçalho + linhas fictícias (incluindo `240003`).
 
-- [ ] **Step 4: Rodar e ver passar**
+- [x] **Step 4: Rodar e ver passar**
 
 Run: `docker compose run --rm app php artisan test --filter=ImportacaoBrasiliaTest`
 Expected: PASS (2 testes).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/app/Domain/Organizacao/Services/ImportadorBrasilia.php backend/app/Console/Commands/ImportarBrasilia.php backend/database/data/brasilia.csv backend/tests/Feature/Organizacao/ImportacaoBrasiliaTest.php
@@ -304,7 +304,7 @@ git commit -m "adiciona importacao CSV idempotente de Brasilia"
 - Consumes: `App\Domain\Identidade\Models\Ator` (via guard, não import direto no módulo).
 - Produces: `Gate::define('gerir-organizacao', ...)` que libera quando `$ator?->papel === 'coordenadora'` (ator fictício administrativo). Middleware `can:gerir-organizacao` nas rotas de escrita (Tasks 7–8).
 
-- [ ] **Step 1: Escrever o teste que falha (pode / não pode)**
+- [x] **Step 1: Escrever o teste que falha (pode / não pode)**
 
 ```php
 <?php // tests/Feature/Organizacao/AutorizacaoTest.php
@@ -323,21 +323,21 @@ it('nega gestao para papel sem permissao', function () {
 });
 ```
 
-- [ ] **Step 2: Rodar e ver falhar**
+- [x] **Step 2: Rodar e ver falhar**
 
 Run: `docker compose run --rm app php artisan test --filter=AutorizacaoTest`
 Expected: FAIL (`gerir-organizacao` não definido).
 
-- [ ] **Step 3: Implementar o Gate**
+- [x] **Step 3: Implementar o Gate**
 
 `Gate::define('gerir-organizacao', fn ($ator) => $ator?->papel === 'coordenadora');` no `boot()` do `ApiServiceProvider`. Criar `AtorFactory` se ainda não existir (namespace `Database\Factories` já ligado a `App\Domain\Identidade\Models\Ator` — verificar `newFactory`).
 
-- [ ] **Step 4: Rodar e ver passar**
+- [x] **Step 4: Rodar e ver passar**
 
 Run: `docker compose run --rm app php artisan test --filter=AutorizacaoTest`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/app/Providers/ApiServiceProvider.php backend/tests/Feature/Organizacao/AutorizacaoTest.php backend/database/factories
@@ -357,7 +357,7 @@ git commit -m "adiciona autorizacao provisoria da organizacao"
 **Interfaces:**
 - Produces: `PaginacaoCursor::resposta(Builder $q, Request $r): array{data:array, meta:array{proximo_cursor:?string}}` (limit máx. 100, usa `cursorPaginate`); middleware ou helper `Idempotencia::executar(Request $r, Closure $acao): Response` que, com `Idempotency-Key`, devolve a resposta gravada em replay.
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 ```php
 <?php // tests/Unit/PaginacaoCursorTest.php
@@ -385,21 +385,21 @@ it('replay devolve a mesma resposta e nao executa duas vezes', function () {
 });
 ```
 
-- [ ] **Step 2: Rodar e ver falhar**
+- [x] **Step 2: Rodar e ver falhar**
 
 Run: `docker compose run --rm app php artisan test --filter="PaginacaoCursorTest|IdempotenciaTest"`
 Expected: FAIL (classes inexistentes).
 
-- [ ] **Step 3: Implementar os utilitários**
+- [x] **Step 3: Implementar os utilitários**
 
 `PaginacaoCursor::limit()` (default 20, máx. 100) e `resposta()` usando `cursorPaginate`. `Idempotencia::executar()` grava em cache (`Cache::remember`) por chave+usuário e devolve a resposta no replay. Registrar onde fizer sentido (helper estático, sem middleware global — aplicado nas rotas que declararem).
 
-- [ ] **Step 4: Rodar e ver passar**
+- [x] **Step 4: Rodar e ver passar**
 
 Run: `docker compose run --rm app php artisan test --filter="PaginacaoCursorTest|IdempotenciaTest"`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/app/Support/PaginacaoCursor.php backend/app/Support/Idempotencia.php backend/tests/Unit/PaginacaoCursorTest.php backend/tests/Feature/Organizacao/IdempotenciaTest.php
@@ -422,7 +422,7 @@ git commit -m "adiciona paginacao por cursor e idempotencia"
 - Consumes: `ConsultarOrganizacao`, `TransferirIgreja` (Tasks 2–3); Gate (Task 5); `PaginacaoCursor`/`Idempotencia` (Task 6).
 - Produces: rotas `GET/POST /api/v1/churches`, `GET/PATCH /api/v1/churches/{id}`, `POST /api/v1/churches/{id}/transfers`. `ChurchResource` expõe `id, codigo, nome, endereco, latitude, longitude, timezone, status, setor` (do vínculo vigente, `null` se não houver).
 
-- [ ] **Step 1: Escrever o teste que falha (autorização + contrato + vigência)**
+- [x] **Step 1: Escrever o teste que falha (autorização + contrato + vigência)**
 
 ```php
 <?php // tests/Feature/Api/ChurchTest.php
@@ -466,21 +466,21 @@ it('transfere igreja e devolve o setor novo na leitura', function () {
 });
 ```
 
-- [ ] **Step 2: Rodar e ver falhar**
+- [x] **Step 2: Rodar e ver falhar**
 
 Run: `docker compose run --rm app php artisan test --filter=ChurchTest`
 Expected: FAIL (rotas inexistentes → 404).
 
-- [ ] **Step 3: Implementar requests, resource, controller e rotas**
+- [x] **Step 3: Implementar requests, resource, controller e rotas**
 
 `IgrejaRequest` valida `codigo` (required, unique em create), `nome`, `timezone`, `status` (in `ativo,inativo`). `TransferenciaRequest` valida `sector_id` (exists) e `date` (date). Controller `ChurchController` com `index` (paginação cursor), `store`, `show`, `update`, `transfer` (usa `Idempotencia` quando há cabeçalho). Rotas agrupadas em `auth:sanctum` + `can:gerir-organizacao` nas escritas; leitura só `auth:sanctum`.
 
-- [ ] **Step 4: Rodar e ver passar**
+- [x] **Step 4: Rodar e ver passar**
 
 Run: `docker compose run --rm app php artisan test --filter=ChurchTest`
 Expected: PASS (4 testes).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/app/Http/Controllers/Api/V1/ChurchController.php backend/app/Http/Requests/Organizacao backend/app/Http/Resources/ChurchResource.php backend/routes/api.php backend/tests/Feature/Api/ChurchTest.php
@@ -504,7 +504,7 @@ git commit -m "adiciona endpoints de igreja e transferencia"
 - Consumes: models (Task 1); Gate (Task 5); `PaginacaoCursor` (Task 6).
 - Produces: `GET /api/v1/regions`, `POST/PATCH /api/v1/regions[/{id}]`, `GET /api/v1/regions/{id}/sectors`, `POST/PATCH /api/v1/sectors[/{id}]`, `GET /api/v1/ebis`, `POST/PATCH /api/v1/ebis[/{id}]`, `GET /api/v1/central`.
 
-- [ ] **Step 1: Escrever o teste que falha**
+- [x] **Step 1: Escrever o teste que falha**
 
 ```php
 <?php // tests/Feature/Api/OrganizacaoEndpointsTest.php
@@ -531,21 +531,21 @@ it('cria ebi vinculado a igreja', function () {
 });
 ```
 
-- [ ] **Step 2: Rodar e ver falhar**
+- [x] **Step 2: Rodar e ver falhar**
 
 Run: `docker compose run --rm app php artisan test --filter=OrganizacaoEndpointsTest`
 Expected: FAIL (rotas inexistentes).
 
-- [ ] **Step 3: Implementar controllers, requests, resources e rotas**
+- [x] **Step 3: Implementar controllers, requests, resources e rotas**
 
 Mesmo padrão da Task 7. `GET /regions/{id}/sectors` lista setores da regional (paginado). Escritas sob `can:gerir-organizacao`; leitura sob `auth:sanctum`.
 
-- [ ] **Step 4: Rodar e ver passar**
+- [x] **Step 4: Rodar e ver passar**
 
 Run: `docker compose run --rm app php artisan test --filter=OrganizacaoEndpointsTest`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/app/Http/Controllers/Api/V1/RegionController.php backend/app/Http/Controllers/Api/V1/SectorController.php backend/app/Http/Controllers/Api/V1/EbiController.php backend/app/Http/Requests/Organizacao backend/app/Http/Resources backend/routes/api.php backend/tests/Feature/Api/OrganizacaoEndpointsTest.php
@@ -565,22 +565,22 @@ git commit -m "adiciona endpoints de regiao, setor, central e ebi"
 - Consumes: as rotas das Tasks 7–8.
 - Produces: contrato OpenAPI 3.1 com todas as rotas novas; `endpoints.md` marcando cada rota nova como `no OpenAPI`; `check-endpoints.py` verde.
 
-- [ ] **Step 1: Adicionar os caminhos e schemas ao openapi.yaml**
+- [x] **Step 1: Adicionar os caminhos e schemas ao openapi.yaml**
 
 Incluir `Church`, `ChurchTransferRequest`, `Region`, `Sector`, `Ebi`, `CentralNacional`, respostas `Problem`, e os `paths` das Tasks 7–8. Cuidado com **vírgulas em flow mapping** (bug histórico) — quotar strings.
 
-- [ ] **Step 2: Marcar as rotas novas em endpoints.md**
+- [x] **Step 2: Marcar as rotas novas em endpoints.md**
 
 Adicionar `no OpenAPI` nas linhas correspondentes.
 
-- [ ] **Step 3: Verificar Spectral e alinhamento**
+- [x] **Step 3: Verificar Spectral e alinhamento**
 
 Run: `npx --yes @stoplight/spectral-cli lint docs/04-api/openapi.yaml --ruleset scripts/.spectral.yaml`
 Expected: sem erros.
 Run: `docker run --rm -v "${PWD}:/work" -w /work python:3.12-alpine sh -c "pip install pyyaml -q && python scripts/check-endpoints.py"`
 Expected: `OK: N operações alinhadas.`
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add docs/04-api/openapi.yaml docs/04-api/endpoints.md
@@ -601,23 +601,23 @@ git commit -m "documenta contrato OpenAPI da organizacao"
 - Consumes: os textos novos da seção 8 do desenho.
 - Produces: documentação coerente com a implementação.
 
-- [ ] **Step 1: Reescrever RN-09**
+- [x] **Step 1: Reescrever RN-09**
 
 Texto: *"Transferências organizacionais não criam data de corte: o território (setor e regional) de uma igreja é sempre o vigente atual. Ao transferir, todos os dados daquela igreja — inclusive de períodos anteriores — passam a ser atribuídos ao novo setor. O vínculo com vigência preserva o histórico de transferências (RF-01), não a atribuição territorial dos dados."*
 
-- [ ] **Step 2: Reescrever CA-18**
+- [x] **Step 2: Reescrever CA-18**
 
 Texto: *"Transferência de igreja: depois que a igreja muda de setor, todos os relatórios — inclusive de períodos anteriores — passam a atribuir os dados daquela igreja ao novo setor; a igreja é a âncora e o setor é sempre o vigente."*
 
-- [ ] **Step 3: Ajustar o modelo conceitual (sessao)**
+- [x] **Step 3: Ajustar o modelo conceitual (sessao)**
 
 Remover `setor_id, regional_id` de `sessao` e anotar que setor/regional derivam do vínculo vigente da igreja.
 
-- [ ] **Step 4: Registrar no CHANGELOG**
+- [x] **Step 4: Registrar no CHANGELOG**
 
 Nota da mudança de regra territorial.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add docs/02-regras-de-negocio/regras-de-negocio.md docs/01-requisitos/criterios-de-aceite.md docs/03-dados/modelo-conceitual.md docs/CHANGELOG.md
@@ -637,27 +637,27 @@ git commit -m "atualiza RN-09, CA-18 e modelo para a regra territorial vigente"
 - Consumes: tudo das tasks anteriores.
 - Produces: seeder de hierarquia fictícia de Brasília; suíte verde; fumaça end-to-end.
 
-- [ ] **Step 1: Garantir que o teste de arquitetura cobre o novo contrato**
+- [x] **Step 1: Garantir que o teste de arquitetura cobre o novo contrato**
 
 Rodar `docker compose run --rm app php artisan test --filter=ModularBoundariesTest`. Se as rotas/controllers importarem `Models` de `Organizacao` direto, corrigir para usar `Contracts` ou mover a leitura para o módulo. Adicionar caso afirmando que `app/Http` não importa `App\Domain\Organizacao\Models\*`.
 
-- [ ] **Step 2: Escrever o seeder de desenvolvimento**
+- [x] **Step 2: Escrever o seeder de desenvolvimento**
 
 `OrganizacaoSeeder` cria Central (Brás) → Regional Brasília → setores → igrejas fictícias → EBIs. Registrar no `DatabaseSeeder`.
 
-- [ ] **Step 3: Rodar a suíte completa e o estático**
+- [x] **Step 3: Rodar a suíte completa e o estático**
 
 Run: `docker compose run --rm app composer test`
 Expected: todos os testes verdes.
 Run: `docker compose run --rm app composer pint --test` · `docker compose run --rm app composer phpstan`
 Expected: PASS / `[OK] No errors`.
 
-- [ ] **Step 4: Fumaça end-to-end**
+- [x] **Step 4: Fumaça end-to-end**
 
 Run: `docker compose exec app php artisan migrate:fresh --seed --force`
 Expected: sem erro. Depois: `GET /api/v1/churches` (autenticado) devolve a hierarquia semeada; `php artisan organizacao:importar-brasilia database/data/brasilia.csv` roda 2× sem duplicar.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/tests/Arch/ModularBoundariesTest.php backend/database/seeders
