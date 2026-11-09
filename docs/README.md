@@ -2,7 +2,7 @@
 
 Especificação da Plataforma de Gestão do Espaço Bíblico Infantil (EBI) da CCB, dividida por assunto para que cada área (produto, jurídico/DPO, segurança, desenvolvimento, institucional) revise a parte que lhe cabe.
 
-**Versão:** 2.7 — proposta para validação · **Data:** 09/11/2026 · **Abrangência prevista:** nacional, com piloto na Regional de Brasília
+**Versão:** 2.11 — proposta para validação · **Data:** 09/11/2026 · **Abrangência prevista:** nacional, com piloto na Regional de Brasília
 
 > Documento de trabalho. Os requisitos dependem de aprovação institucional e não substituem validação jurídica, pastoral/institucional, de segurança ou de proteção de dados.
 
@@ -56,7 +56,7 @@ Nos ADRs, `aceito` equivale a `aprovado`. Item sem ADR ou aprovação registrada
 
 | Assunto | Quem aprova | Situação em 08/11/2026 |
 |---|---|---|
-| Produto: regras de negócio, perfis, fluxos, prioridades | **Heles Júnior**, responsável pelo produto | Decisões D-01 a D-03, D-05, D-07 a D-09, D-12 e D-14 a D-17 aprovadas, D-13 em parte (ADR-0007 a ADR-0020); D-18 a D-22 aguardando |
+| Produto: regras de negócio, perfis, fluxos, prioridades | **Heles Júnior**, responsável pelo produto | Decisões D-01 a D-03, D-05, D-07 a D-09, D-12, D-14 a D-22 aprovadas; D-13 em parte; D-06 e D-10 com regra proposta pelo produto (ADR-0007 a ADR-0029) |
 | Institucional: autorização do projeto pela CCB | Administração da CCB | **Pendente para todo o documento.** Uma aprovação de produto não substitui a autorização da CCB ([plano](07-produto/plano-de-desenvolvimento.md)) |
 | Jurídico e privacidade (LGPD) | Jurídico e encarregado (DPO) da CCB | Pendente: itens listados no [ADR-0019](06-arquitetura/decisoes/ADR-0019-base-normativa-lgpd.md) |
 | Arquitetura e infraestrutura | TI da CCB | Pendente: ADRs técnicos estão `proposto` até a validação (D-11) |

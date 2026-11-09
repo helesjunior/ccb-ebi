@@ -8,12 +8,12 @@ O registro de presença do MVP (E04) depende do bloco inteiro. Ele só está pro
 
 | Parte | Status | Pendente |
 |---|---|---|
-| RN-13 — faixa de 3 anos até a véspera dos 12; menores de 3 bloqueados | aprovado | Cadastro antecipado de menores de 3 anos (proposta: permitido) |
-| RN-14 — exceção inclusiva decidida pela coordenadora com o responsável | aprovado | Validade da exceção entre sessões (proposta: vale até ser revogada); concordância do participante adulto ([ADR-0019](../06-arquitetura/decisoes/ADR-0019-base-normativa-lgpd.md)) |
-| RN-15 — fim da exceção bloqueia novas presenças | proposto | Aprovação do produto |
-| RN-16 — cálculo da idade (fuso da igreja; 29/02) | proposto | Aprovação do produto |
+| RN-13 — faixa de 3 anos até a véspera dos 12; menores de 3 bloqueados; cadastro antecipado permitido | aprovado | — |
+| RN-14 — exceção inclusiva decidida pela coordenadora com o responsável; vale até ser revogada | aprovado | Concordância do participante adulto, com o jurídico ([ADR-0019](../06-arquitetura/decisoes/ADR-0019-base-normativa-lgpd.md)); não muda o cálculo de elegibilidade |
+| RN-15 — fim da exceção bloqueia novas presenças | aprovado | — |
+| RN-16 — cálculo da idade (fuso da igreja; 29/02) | aprovado | — |
 
-**Situação do bloco:** aguardando aprovação de RN-15, RN-16 e das duas propostas acima.
+**Situação do bloco:** aprovado pelo produto ([ADR-0026](../06-arquitetura/decisoes/ADR-0026-confirmacoes-do-bloco-de-idade.md)); pronto para implementar.
 
 ## Resumo
 
@@ -44,7 +44,7 @@ flowchart TD
 
 A participação regular é permitida a partir dos 3 anos e enquanto o participante **não tiver completado 12 anos** na data da sessão (até 11 anos, 11 meses e o último dia antes do aniversário). No dia do 12º aniversário, novas presenças pela regra geral são bloqueadas, sem apagar cadastro ou histórico.
 
-**Menores de 3 anos não participam.** A presença é bloqueada e a exceção inclusiva não se aplica abaixo dessa idade. O cadastro antecipado é permitido (proposto; ver status do bloco).
+**Menores de 3 anos não participam.** A presença é bloqueada e a exceção inclusiva não se aplica abaixo dessa idade. O cadastro antecipado é permitido ([ADR-0026](../06-arquitetura/decisoes/ADR-0026-confirmacoes-do-bloco-de-idade.md)).
 
 <a id="rn-14"></a>
 ### RN-14 — Exceção inclusiva
@@ -53,20 +53,20 @@ A participação regular é permitida a partir dos 3 anos e enquanto o participa
 Pessoas com deficiência e/ou neurodivergência podem continuar participando, **sem limite máximo de idade**, quando a necessidade de apoio e a adequação das atividades justificarem, conforme política institucional.
 
 - **A coordenadora do dia decide, junto com o responsável**, e registra a decisão no sistema. Não há avaliador regional ou setorial.
-- Proposto (ver status do bloco): a exceção registrada vale para as sessões seguintes, em qualquer EBI, até ser revogada; a coordenadora de cada sessão pode recusar a participação naquele dia.
+- A exceção registrada vale para as sessões seguintes, em qualquer EBI, até ser revogada; a coordenadora de cada sessão pode recusar a participação naquele dia.
 - O diagnóstico isolado não gera presunção automática de incapacidade nem de "idade mental".
 - A condição não é exposta a outras igrejas sem necessidade operacional e autorização.
 - Para quem tem 12 anos ou mais, telas e registros usam "participante do EBI".
 
 <a id="rn-15"></a>
 ### RN-15 — Fim da exceção
-**Status:** proposto
+**Status:** aprovado ([ADR-0026](../06-arquitetura/decisoes/ADR-0026-confirmacoes-do-bloco-de-idade.md))
 
 Exceção `suspensa`, `revogada` ou `expirada` (data atual depois de `vigente_ate`) impede novas presenças fora da faixa regular. Registros históricos e auditoria são preservados.
 
 <a id="rn-16"></a>
 ### RN-16 — Cálculo da idade
-**Status:** proposto (novo na 2.0)
+**Status:** aprovado ([ADR-0026](../06-arquitetura/decisoes/ADR-0026-confirmacoes-do-bloco-de-idade.md))
 
 - A idade é calculada na **data local da sessão, no fuso horário da igreja**.
 - Nascidos em 29/02 completam ano em 01/03 nos anos não bissextos.

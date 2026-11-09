@@ -7,4 +7,4 @@ Menores de 3 anos **não podem participar**. O sistema **bloqueia** o registro d
 
 ## Consequências
 - RN-13 e o fluxo de elegibilidade ganharam o bloqueio explícito; novo critério de aceite CA-19.
-- **A confirmar:** se o cadastro de uma criança com menos de 3 anos pode ser feito antecipadamente (proposta: sim, o cadastro é permitido e só a presença é bloqueada).
+- Cadastro antecipado de menores de 3 anos é permitido; só a presença é bloqueada ([ADR-0026](ADR-0026-confirmacoes-do-bloco-de-idade.md)).

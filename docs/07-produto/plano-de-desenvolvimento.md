@@ -15,8 +15,8 @@ Sim, com uma condição: **dá para desenvolver, mas não dá para colocar dados
 | Itens jurídicos do [ADR-0019](../06-arquitetura/decisoes/ADR-0019-base-normativa-lgpd.md) (bases legais, art. 14, retenção) | O sistema precisa do *mecanismo*; o *texto* pode chegar depois | Termos versionados (RF-04), prazos de retenção como configuração, textos provisórios marcados como rascunho |
 | Destino dos backups fora da VM ([ADR-0006](../06-arquitetura/decisoes/ADR-0006-segredos-backups-e-observabilidade.md)) | Só existe backup quando existe produção | WAL-G configurado e testado contra um MinIO local; destino definitivo entra na etapa 8 |
 | D-11 — infraestrutura e SLA finais | O Compose roda em qualquer VM com Docker | Desenvolvimento e CI não dependem da VM da CCB |
-| D-10 — dados identificáveis em níveis superiores | O MVP pode nascer com a regra mais restritiva | Relatórios acima da igreja só agregados e com supressão (ADR-0020); exportação identificável desligada até a decisão |
-| D-06 — direitos dos PDFs | Biblioteca é fase 2 (E08) | — |
+| D-10 — dados identificáveis em níveis superiores | O MVP nasce com a regra mais restritiva, já aprovada pelo produto ([ADR-0029](../06-arquitetura/decisoes/ADR-0029-dados-identificaveis-acima-da-igreja.md)) | Relatórios acima da igreja só agregados e com supressão (ADR-0020); exportação identificável desligada até a validação da CCB e do DPO |
+| D-06 — direitos dos PDFs | Biblioteca é fase 2 (E08); regra proposta no [ADR-0028](../06-arquitetura/decisoes/ADR-0028-politica-editorial-dos-pdfs.md) | — |
 | D-07 — titular das lojas | Apps são fase 3 (E11) | — |
 | Duração de sessão, política de senha e operações críticas ([autenticação](../05-seguranca-e-privacidade/autenticacao.md#a-definir)) | Valores padrão de mercado servem até a revisão | Tudo configurável; padrão proposto na etapa 3 |
 

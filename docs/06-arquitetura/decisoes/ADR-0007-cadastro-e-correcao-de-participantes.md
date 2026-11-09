@@ -12,5 +12,5 @@ A especificação não dizia quem cria, aprova, mescla e corrige cadastros. Isso
 
 ## Consequências
 - Mesclagem continua sem fusão automática irreversível: a coordenadora revisa, a operação é auditada e pode ser desfeita.
-- **Proposta a confirmar:** a coordenadora só mescla ou corrige participantes que tenham presença ou igreja de referência em EBI onde ela atua. Sem essa restrição, qualquer coordenadora alteraria cadastros de todo o país.
+- Escopo: a coordenadora só mescla ou corrige participantes ligados aos EBIs onde atua; o resto vai para a coordenadora chefe ([ADR-0027](ADR-0027-escopo-de-mesclagem.md)).
 - A matriz de autorização foi atualizada.
