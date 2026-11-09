@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Domain\Identidade\Support\Operacoes;
+use App\Policies\AccessGrantPolicy;
 use App\Policies\ConvitePolicy;
 use App\Policies\OrganizacaoPolicy;
 use App\Policies\UsuarioPolicy;
@@ -27,5 +28,6 @@ class ApiServiceProvider extends ServiceProvider
         Gate::define(Operacoes::USUARIO_LER, [UsuarioPolicy::class, 'ler']);
         Gate::define(Operacoes::USUARIO_GERENCIAR, [UsuarioPolicy::class, 'gerenciar']);
         Gate::define(Operacoes::CONVITE_GERENCIAR, [ConvitePolicy::class, 'gerenciar']);
+        Gate::define(Operacoes::ACESSO_GERENCIAR, [AccessGrantPolicy::class, 'gerenciar']);
     }
 }

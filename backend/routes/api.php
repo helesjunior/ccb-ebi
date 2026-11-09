@@ -1,6 +1,7 @@
 <?php
 
 use App\Domain\Identidade\Services\DesafioMfa;
+use App\Http\Controllers\Api\V1\AccessGrantController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CentralController;
 use App\Http\Controllers\Api\V1\ChurchController;
@@ -69,6 +70,13 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
             Route::get('invitations', [InvitationController::class, 'index'])->name('invitations.index');
             Route::post('invitations', [InvitationController::class, 'store'])->name('invitations.store');
             Route::delete('invitations/{id}', [InvitationController::class, 'destroy'])->name('invitations.destroy');
+        });
+
+        // Concessoes de acesso (nomeacao/afastamento) — RF-05, RN-10.
+        Route::middleware('can:acesso.gerenciar')->group(function (): void {
+            Route::post('access-grants', [AccessGrantController::class, 'store'])
+                ->middleware(IdempotenciaMiddleware::class)->name('access-grants.store');
+            Route::delete('access-grants/{id}', [AccessGrantController::class, 'destroy'])->name('access-grants.destroy');
         });
 
         // Organizacao - leitura (autorizacao por operacao; matriz).
