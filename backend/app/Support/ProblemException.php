@@ -11,12 +11,16 @@ class ProblemException extends RuntimeException
         public readonly string $title,
         public readonly int $status,
         public readonly ?string $detail = null,
+        /** @var array<string, mixed> */
         public readonly array $extra = [],
         public readonly string $type = 'about:blank',
     ) {
         parent::__construct($title);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function toProblemArray(): array
     {
         return array_merge([

@@ -12,7 +12,6 @@
  * Os nomes de tabela/modelo ficam dentro do modulo dono; a superficie publica
  * de um modulo sao suas classes em Contracts/.
  */
-
 it('fronteiras de modulo respeitadas', function () {
     $app = dirname(__DIR__, 2).'/app';
 
@@ -28,6 +27,7 @@ it('fronteiras de modulo respeitadas', function () {
                 $out[] = $f->getPathname();
             }
         }
+
         return $out;
     };
 
