@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\InvitationController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MfaController;
 use App\Http\Controllers\Api\V1\PasswordController;
+use App\Http\Controllers\Api\V1\PrivacyTermController;
 use App\Http\Controllers\Api\V1\RegionController;
 use App\Http\Controllers\Api\V1\RegisterController;
 use App\Http\Controllers\Api\V1\SectorController;
@@ -46,6 +47,10 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         Route::post('auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
         Route::get('me', [MeController::class, 'me'])->name('me');
         Route::get('me/scopes', [MeController::class, 'scopes'])->name('me.scopes');
+
+        // Termos de privacidade (RF-04): qualquer usuario autenticado le a
+        // versao vigente que precisa aceitar.
+        Route::get('privacy/terms', [PrivacyTermController::class, 'index'])->name('privacy.terms');
 
         // MFA do usuario autenticado (inscricao/confirmacao/recuperacao).
         Route::post('me/mfa/totp', [MfaController::class, 'iniciarTotp'])->name('me.mfa.totp');

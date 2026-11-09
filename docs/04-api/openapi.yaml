@@ -18,6 +18,7 @@ tags:
   - name: participants
   - name: sessions
   - name: activities
+  - name: privacy
 paths:
   /health:
     get:
@@ -729,6 +730,31 @@ paths:
       responses:
         '200': { description: Central Nacional (ou null) }
         '401': { $ref: '#/components/responses/Problem' }
+  /privacy/terms:
+    get:
+      tags: [privacy]
+      summary: Termo de privacidade vigente por finalidade
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: finalidade
+          in: query
+          required: true
+          description: Código da finalidade do termo (ex.: `cadastro`, `notificacoes`).
+          schema: { type: string, example: cadastro }
+      responses:
+        '200':
+          description: Termo vigente da finalidade (lista vazia quando não houver)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/TermoVersao' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
 components:
   securitySchemes:
     bearerAuth:
@@ -1019,3 +1045,11 @@ components:
         igreja_id: { type: string }
         participantes_por_auxiliar: { type: integer }
         status: { type: string, enum: [ativo, inativo] }
+    TermoVersao:
+      type: object
+      properties:
+        id: { type: string }
+        finalidade: { type: string }
+        base_legal: { type: string }
+        versao: { type: string }
+        vigente_em: { type: string, format: date-time }
