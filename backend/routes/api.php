@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\MfaController;
 use App\Http\Controllers\Api\V1\RegionController;
 use App\Http\Controllers\Api\V1\RegisterController;
 use App\Http\Controllers\Api\V1\SectorController;
+use App\Http\Controllers\Api\V1\SessionController;
 use App\Http\Middleware\IdempotenciaMiddleware;
 use Illuminate\Support\Facades\Route;
 
@@ -37,6 +38,10 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         Route::post('me/mfa/totp', [MfaController::class, 'iniciarTotp'])->name('me.mfa.totp');
         Route::post('me/mfa/totp/confirm', [MfaController::class, 'confirmarTotp'])->name('me.mfa.totp.confirm');
         Route::post('me/mfa/recovery-codes', [MfaController::class, 'gerarRecuperacao'])->name('me.mfa.recovery-codes');
+
+        // Sessoes por dispositivo (RF-05).
+        Route::get('me/sessions', [SessionController::class, 'index'])->name('me.sessions.index');
+        Route::delete('me/sessions/{id}', [SessionController::class, 'destroy'])->name('me.sessions.destroy');
 
         // Organizacao - leitura autenticada
         Route::get('churches', [ChurchController::class, 'index'])->name('churches.index');
