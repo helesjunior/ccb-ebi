@@ -1,0 +1,8 @@
+# Responsável padrão pelo repositório.
+* @helesjunior
+
+# Regras sensíveis: infraestrutura, empacotamento e automação.
+/infra/ @helesjunior
+/docker/ @helesjunior
+/.github/ @helesjunior
+/frontend/Dockerfile @helesjunior
