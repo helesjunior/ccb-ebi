@@ -1,11 +1,13 @@
 <?php
 
+use App\Domain\Identidade\Services\DesafioMfa;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CentralController;
 use App\Http\Controllers\Api\V1\ChurchController;
 use App\Http\Controllers\Api\V1\EbiController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\MeController;
+use App\Http\Controllers\Api\V1\MfaController;
 use App\Http\Controllers\Api\V1\RegionController;
 use App\Http\Controllers\Api\V1\RegisterController;
 use App\Http\Controllers\Api\V1\SectorController;
@@ -22,9 +24,19 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
     Route::post('auth/verify-email', [RegisterController::class, 'verify'])->name('auth.verify-email');
     Route::post('auth/email/resend', [RegisterController::class, 'resend'])->name('auth.email.resend');
 
+    // Segundo fator do login: autenticado pelo token de desafio, escopo restrito.
+    Route::middleware(['auth:sanctum', 'abilities:'.DesafioMfa::ABILITY])
+        ->post('auth/mfa/verify', [MfaController::class, 'verify'])
+        ->name('auth.mfa.verify');
+
     Route::middleware('auth:sanctum')->group(function (): void {
         Route::post('auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
         Route::get('me', [MeController::class, 'me'])->name('me');
+
+        // MFA do usuario autenticado (inscricao/confirmacao/recuperacao).
+        Route::post('me/mfa/totp', [MfaController::class, 'iniciarTotp'])->name('me.mfa.totp');
+        Route::post('me/mfa/totp/confirm', [MfaController::class, 'confirmarTotp'])->name('me.mfa.totp.confirm');
+        Route::post('me/mfa/recovery-codes', [MfaController::class, 'gerarRecuperacao'])->name('me.mfa.recovery-codes');
 
         // Organizacao - leitura autenticada
         Route::get('churches', [ChurchController::class, 'index'])->name('churches.index');
