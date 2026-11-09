@@ -45,6 +45,7 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
     Route::middleware('auth:sanctum')->group(function (): void {
         Route::post('auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
         Route::get('me', [MeController::class, 'me'])->name('me');
+        Route::get('me/scopes', [MeController::class, 'scopes'])->name('me.scopes');
 
         // MFA do usuario autenticado (inscricao/confirmacao/recuperacao).
         Route::post('me/mfa/totp', [MfaController::class, 'iniciarTotp'])->name('me.mfa.totp');
