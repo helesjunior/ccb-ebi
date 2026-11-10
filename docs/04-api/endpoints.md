@@ -7,7 +7,7 @@ Proposta inicial, prefixo `/api/v1`. Rotas marcadas *novo* não existiam na vers
 ## Autenticação
 | Método | Rota | Finalidade | RF |
 |---|---|---|---|
-| POST | `/auth/register-guardian` | Criar conta de responsável (`no OpenAPI`) | RF-03 |
+| POST | `/auth/register-guardian` | Criar conta de responsável exigindo aceite do termo vigente (`no OpenAPI`) | RF-03, CA-16 |
 | POST | `/auth/verify-email` | Verificar e-mail (`no OpenAPI`) | RF-03 |
 | POST | `/auth/email/resend` | Reenviar verificação de e-mail (`no OpenAPI`) | RF-03 |
 | POST | `/auth/login` | Autenticar (`no OpenAPI`) | — |

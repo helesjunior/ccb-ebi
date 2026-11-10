@@ -958,11 +958,13 @@ components:
         uri: { type: string }
     RegistroGuardiao:
       type: object
-      required: [nome, email, password]
+      required: [nome, email, password, termo_versao_id, aceite]
       properties:
         nome: { type: string, maxLength: 255 }
         email: { type: string, format: email }
         password: { type: string, format: password, minLength: 12 }
+        termo_versao_id: { type: string, description: 'Versão vigente do termo de cadastro aceita (CA-16).' }
+        aceite: { type: boolean, description: 'Confirmação explícita do aceite do termo (CA-16).' }
     Convite:
       type: object
       properties:

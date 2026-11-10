@@ -1,6 +1,7 @@
 <?php
 
 use App\Domain\Identidade\Models\Usuario;
+use App\Domain\Privacidade\Models\TermoVersao;
 use Database\Seeders\PapelSeeder;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
@@ -8,8 +9,12 @@ use Illuminate\Support\Facades\URL;
 it('verifica o e-mail apenas com assinatura valida', function () {
     Notification::fake();
     $this->seed(PapelSeeder::class);
+    $termo = TermoVersao::factory()->create(['finalidade' => 'cadastro', 'vigente_em' => now()->subDay()]);
 
-    $this->postJson('/api/v1/auth/register-guardian', ['nome' => 'Ana', 'email' => 'ana@ex.com', 'password' => 'senha-bem-longa-123'])
+    $this->postJson('/api/v1/auth/register-guardian', [
+        'nome' => 'Ana', 'email' => 'ana@ex.com', 'password' => 'senha-bem-longa-123',
+        'termo_versao_id' => $termo->id, 'aceite' => true,
+    ])
         ->assertStatus(201);
 
     $u = Usuario::query()->where('email_normalizado', 'ana@ex.com')->firstOrFail();

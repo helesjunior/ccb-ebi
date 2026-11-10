@@ -20,6 +20,9 @@ class RegistrarRequest extends FormRequest
             'nome' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255'],
             'password' => ['required', 'string', 'min:12'],
+            // CA-16: aceite obrigatorio do termo de cadastro vigente no cadastro.
+            'termo_versao_id' => ['required', 'exists:termo_versao,id'],
+            'aceite' => ['required', 'accepted'],
         ];
     }
 }
