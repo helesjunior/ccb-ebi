@@ -22,5 +22,7 @@ final class Operacoes
 
     public const CONSENTIMENTO_LER = 'consentimento.ler';
 
+    public const AUDITORIA_LER = 'auditoria.ler';
+
     private function __construct() {}
 }

@@ -101,4 +101,4 @@ Proposta inicial, prefixo `/api/v1`. Rotas marcadas *novo* não existiam na vers
 | GET | `/privacy/consents/{id}` | Recuperar manifestação com a versão do termo (`no OpenAPI`) | RF-04, CA-16 |
 | GET | `/privacy/terms` | Consultar termo vigente por finalidade (`no OpenAPI`) | RF-04 |
 | POST | `/privacy/requests` | Exercício de direitos (`no OpenAPI`) | RF-04, RF-16 |
-| GET | `/audit-events` | Consultar auditoria *novo* | RF-16 |
+| GET | `/audit-events` | Consultar auditoria *novo* (`no OpenAPI`) | RF-16 |

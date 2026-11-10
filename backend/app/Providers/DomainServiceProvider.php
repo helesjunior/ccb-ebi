@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Domain\Auditoria\Contracts\ConsultarAuditoria;
 use App\Domain\Auditoria\Contracts\RegistrarEvento;
+use App\Domain\Auditoria\Services\ConsultaAuditoria;
 use App\Domain\Auditoria\Services\RegistradorAuditoria;
 use App\Domain\Identidade\Contracts\AceitarConvite;
 use App\Domain\Identidade\Contracts\Autenticar;
@@ -56,6 +58,7 @@ class DomainServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(RegistrarEvento::class, RegistradorAuditoria::class);
+        $this->app->bind(ConsultarAuditoria::class, ConsultaAuditoria::class);
         $this->app->bind(Autenticar::class, Autenticador::class);
         $this->app->bind(GerenciarMfa::class, GerenciadorMfa::class);
         $this->app->bind(ExigirMfa::class, GerenciadorMfa::class);
