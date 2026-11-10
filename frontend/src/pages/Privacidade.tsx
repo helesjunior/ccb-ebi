@@ -57,6 +57,12 @@ export function Privacidade() {
   const manifestacaoCadastro = manifestacoes.find((x) => x.termo_versao?.finalidade === 'cadastro')
   const aceito = manifestacaoCadastro?.decisao === 'aceito'
 
+  /**
+   * Registra uma manifestação. `retirar: true` aciona o caminho de retirada no
+   * servidor (`RegistrarConsentimento::retirar` → decisão `retirado`), que tem
+   * evidência própria — por isso a retirada envia `decisao: 'aceito'` e deixa o
+   * `retirar` mandar na semântica (o `decisao` só é lido quando `retirar` é falso).
+   */
   async function registrar(decisao: 'aceito' | 'recusado', retirar = false) {
     if (!termo?.id) {
       setErro('Termo de cadastro indisponível.')
@@ -100,6 +106,13 @@ export function Privacidade() {
       {erro && <p role="alert">{erro}</p>}
 
       <h2>Termo de cadastro</h2>
+      {/*
+        Divida registrada: `GET /privacy/terms` (TermoVersaoResource) nao expoe
+        `texto`, apenas metadados. O texto integral so vem aninhado em uma
+        manifestacao (`ManifestacaoPrivacidade.termo_versao.texto`). Expor
+        `texto` no endpoint avulso e debito adiado (acompanhado pelo controller);
+        nao alteramos o backend nesta tarefa.
+      */}
       {termo ? (
         <div data-testid="termo-vigente">
           <p>
@@ -108,6 +121,20 @@ export function Privacidade() {
           {termo.vigente_em && (
             <p>
               <small>Vigente desde {new Date(termo.vigente_em).toLocaleDateString('pt-BR')}</small>
+            </p>
+          )}
+          {manifestacaoCadastro?.termo_versao?.texto ? (
+            <section aria-labelledby="termo-texto-titulo">
+              <h3 id="termo-texto-titulo">Texto do termo</h3>
+              <p data-testid="termo-texto">{manifestacaoCadastro.termo_versao.texto}</p>
+            </section>
+          ) : (
+            <p data-testid="termo-texto-indisponivel">
+              <small>
+                O texto integral do termo fica disponível após você registrar uma
+                manifestação (aceite, recusa ou retirada), quando é recuperado junto
+                à sua manifestação.
+              </small>
             </p>
           )}
         </div>
@@ -123,11 +150,20 @@ export function Privacidade() {
       </p>
       <button
         type="button"
-        onClick={() => registrar(aceito ? 'recusado' : 'aceito')}
+        onClick={() => registrar('aceito', aceito)}
         disabled={enviando || !termo?.id}
       >
         {aceito ? 'Retirar consentimento' : 'Aceitar termo'}
       </button>
+      {!aceito && (
+        <button
+          type="button"
+          onClick={() => registrar('recusado', false)}
+          disabled={enviando || !termo?.id}
+        >
+          Recusar termo
+        </button>
+      )}
 
       <h2>Solicitação</h2>
       <form onSubmit={abrirSolicitacao} noValidate>
