@@ -34,6 +34,10 @@ pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->in('Feature');
 
+// Testes de unidade que dependem do container (config(), etc.) mas nao do banco.
+pest()->extend(TestCase::class)
+    ->in('Unit');
+
 // Limpa o cache antes de cada teste para isolar o rate limiter
 // (o store em memória persiste entre testes no mesmo processo).
 beforeEach(function () {

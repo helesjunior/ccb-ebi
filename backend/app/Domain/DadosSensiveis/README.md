@@ -1,0 +1,1 @@
+# Dados sensíveis e retenção (E05/A2). Expoe: `App\Domain\DadosSensiveis\Contracts\*`.
