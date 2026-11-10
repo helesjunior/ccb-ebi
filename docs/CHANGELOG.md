@@ -2,6 +2,18 @@
 
 Formato: versão, data, autor e mudanças. Itens mais recentes primeiro.
 
+## 2.13 — 09/11/2026
+
+Etapa 4 — Privacidade e auditoria (sub-etapa A1).
+
+- **Termos versionados e consentimento:** `termo_versao` + `GerirTermos` (uma versão vigente por finalidade; publicar fecha a anterior). Consulta em `GET /privacy/terms`. Manifestação de privacidade (aceito/recusado/retirado; origem próprio/assistido) com evidência de aceite (IP, User-Agent e hash do termo — CA-16). `GET/POST /privacy/consents` (titular) e `GET /privacy/consents/{id}` sob a operação `consentimento.ler`, com checagem de subárvore do titular.
+- **Aceite obrigatório no cadastro:** o `register-guardian` valida o termo vigente e grava o consentimento na mesma transação do cadastro.
+- **Direitos do titular:** `POST /privacy/requests` (acesso, correção, revogação) gera protocolo (RF-16).
+- **Auditoria consultável:** `GET /audit-events` sob a operação `auditoria.ler` (super_admin, adm_regional, adm_setor — não adm_igreja), com filtro territorial por linha de evento.
+- **`ator_id` nas escritas auditadas** (`GerenciadorUsuario`, `GerenciadorVinculo`, `ServicoTransferencia`); a transferência passa a gravar escopo `setor:<id>`.
+- **Portal:** telas de Privacidade e Auditoria.
+- **Dívidas (sub-etapa A2):** registro de finalidade (`*`) e exceção do [ADR-0029](06-arquitetura/decisoes/ADR-0029-dados-identificaveis-acima-da-igreja.md) (aguardam recurso sensível); dados sensíveis com chave própria e retenção (A2); cadastro assistido completo (E03); textos finais do termo (jurídico). Escopo e dívidas no [ADR-0030](06-arquitetura/decisoes/ADR-0030-privacidade-e-auditoria.md).
+
 ## 2.12 — 09/11/2026
 
 - D-04: padrão provisório conservador no [ADR-0019](06-arquitetura/decisoes/ADR-0019-base-normativa-lgpd.md) (base legal, termo de crianças, dado religioso, adulto com deficiência, cadastro assistido, retenção, incidentes, DPO), aprovado pelo produto. Desenvolvimento segue com dados fictícios; dados reais só depois do parecer do jurídico e do DPO (portão na etapa 8).
