@@ -97,7 +97,8 @@ Proposta inicial, prefixo `/api/v1`. Rotas marcadas *novo* não existiam na vers
 |---|---|---|---|
 | GET | `/reports/attendance` | Indicadores de presença | RF-14 |
 | GET | `/reports/participants` | Indicadores de participantes *novo* | RF-14 |
-| GET/POST | `/privacy/consents` | Consultar e registrar manifestações | RF-04 |
+| GET/POST | `/privacy/consents` | Consultar e registrar manifestações do próprio titular (`no OpenAPI`) | RF-04 |
+| GET | `/privacy/consents/{id}` | Recuperar manifestação com a versão do termo (`no OpenAPI`) | RF-04, CA-16 |
 | GET | `/privacy/terms` | Consultar termo vigente por finalidade (`no OpenAPI`) | RF-04 |
 | POST | `/privacy/requests` | Exercício de direitos | RF-04, RF-16 |
 | GET | `/audit-events` | Consultar auditoria *novo* | RF-16 |

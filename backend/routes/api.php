@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\InvitationController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MfaController;
 use App\Http\Controllers\Api\V1\PasswordController;
+use App\Http\Controllers\Api\V1\PrivacyConsentController;
 use App\Http\Controllers\Api\V1\PrivacyTermController;
 use App\Http\Controllers\Api\V1\RegionController;
 use App\Http\Controllers\Api\V1\RegisterController;
@@ -51,6 +52,15 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         // Termos de privacidade (RF-04): qualquer usuario autenticado le a
         // versao vigente que precisa aceitar.
         Route::get('privacy/terms', [PrivacyTermController::class, 'index'])->name('privacy.terms');
+
+        // Consentimentos (RF-04): o titular registra e consulta os proprios.
+        Route::get('privacy/consents', [PrivacyConsentController::class, 'index'])->name('privacy.consents.index');
+        Route::post('privacy/consents', [PrivacyConsentController::class, 'store'])->name('privacy.consents.store');
+
+        // Leitura por operador: o Gate cobre `consentimento.ler`; a subarvore do
+        // titular e conferida no controller.
+        Route::get('privacy/consents/{id}', [PrivacyConsentController::class, 'show'])
+            ->middleware('can:consentimento.ler')->name('privacy.consents.show');
 
         // MFA do usuario autenticado (inscricao/confirmacao/recuperacao).
         Route::post('me/mfa/totp', [MfaController::class, 'iniciarTotp'])->name('me.mfa.totp');

@@ -20,5 +20,7 @@ final class Operacoes
 
     public const ACESSO_GERENCIAR = 'acesso.gerenciar';
 
+    public const CONSENTIMENTO_LER = 'consentimento.ler';
+
     private function __construct() {}
 }

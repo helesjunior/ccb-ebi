@@ -755,6 +755,70 @@ paths:
                     items: { $ref: '#/components/schemas/TermoVersao' }
         '401': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/Problem' }
+  /privacy/consents:
+    get:
+      tags: [privacy]
+      summary: Manifestações de consentimento atuais do titular
+      description: >-
+        Lista, por finalidade, a manifestação mais recente do próprio usuário
+        autenticado. Não expõe consentimentos de terceiros.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Manifestações atuais do titular
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ManifestacaoPrivacidade' }
+        '401': { $ref: '#/components/responses/Problem' }
+    post:
+      tags: [privacy]
+      summary: Registrar aceite ou recusa do próprio titular
+      description: >-
+        Registra uma manifestação do usuário autenticado com evidência (IP,
+        user agent e hash do termo). O cadastro assistido (`participante_id`)
+        ainda não é aceito nesta etapa.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ConsentimentoInput' }
+      responses:
+        '201':
+          description: Manifestação registrada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ManifestacaoPrivacidade' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /privacy/consents/{id}:
+    get:
+      tags: [privacy]
+      summary: Recuperar uma manifestação com a versão do termo (CA-16)
+      description: >-
+        Exige a operação `consentimento.ler` e respeita o escopo de atuação:
+        operadores só enxergam manifestações de titulares na própria subárvore.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ConsentimentoId'
+      responses:
+        '200':
+          description: Manifestação com a versão e o hash do termo
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ManifestacaoPrivacidade' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
 components:
   securitySchemes:
     bearerAuth:
@@ -826,6 +890,11 @@ components:
       required: true
       schema: { type: string }
     VinculoId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+    ConsentimentoId:
       name: id
       in: path
       required: true
@@ -1053,3 +1122,31 @@ components:
         base_legal: { type: string }
         versao: { type: string }
         vigente_em: { type: string, format: date-time }
+    ConsentimentoInput:
+      type: object
+      required: [termo_versao_id, decisao]
+      properties:
+        termo_versao_id: { type: string }
+        decisao: { type: string, enum: [aceito, recusado] }
+        retirar: { type: boolean, default: false }
+    ManifestacaoPrivacidade:
+      type: object
+      required: [id, termo_versao_id, decisao, origem, evidencia, ocorrido_em]
+      properties:
+        id: { type: string }
+        usuario_id: { type: [string, 'null'] }
+        participante_id: { type: [string, 'null'] }
+        termo_versao_id: { type: string }
+        decisao: { type: string, enum: [aceito, recusado, retirado] }
+        origem: { type: string, enum: [proprio, assistido] }
+        evidencia: { type: string }
+        ocorrido_em: { type: string, format: date-time }
+        termo_versao:
+          type: object
+          properties:
+            id: { type: string }
+            finalidade: { type: string }
+            base_legal: { type: string }
+            versao: { type: string }
+            texto_hash: { type: string }
+            texto: { type: string }

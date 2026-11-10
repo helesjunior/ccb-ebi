@@ -17,6 +17,11 @@ class GerenciadorTermos implements GerirTermos
             ->first();
     }
 
+    public function encontrar(string $id): ?TermoVersao
+    {
+        return TermoVersao::query()->find($id);
+    }
+
     public function publicar(
         string $finalidade,
         string $baseLegal,

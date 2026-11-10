@@ -12,6 +12,8 @@ interface GerirTermos
 {
     public function vigente(string $finalidade): ?TermoVersao;
 
+    public function encontrar(string $id): ?TermoVersao;
+
     public function publicar(
         string $finalidade,
         string $baseLegal,
