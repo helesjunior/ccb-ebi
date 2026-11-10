@@ -19,7 +19,11 @@ final class CofreChaveSensivel
             throw new RuntimeException('Chave de dados sensíveis ausente (SENSITIVE_DATA_KEY).');
         }
 
-        $binaria = base64_decode(substr($chave, 7), true); // prefixo "base64:"
+        if (! str_starts_with($chave, 'base64:')) {
+            throw new RuntimeException('Chave de dados sensíveis inválida: prefixo "base64:" ausente.');
+        }
+
+        $binaria = base64_decode(substr($chave, 7), true);
         if ($binaria === false || strlen($binaria) !== 32) {
             throw new RuntimeException('Chave de dados sensíveis inválida: esperado base64 de 32 bytes.');
         }

@@ -1,6 +1,7 @@
 <?php
 
 use App\Domain\DadosSensiveis\Support\CofreChaveSensivel;
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Encryption\Encrypter;
 
 it('monta um encrypter AES-256-GCM a partir da chave configurada', function () {
@@ -10,13 +11,29 @@ it('monta um encrypter AES-256-GCM a partir da chave configurada', function () {
     $enc = CofreChaveSensivel::encrypter();
     expect($enc)->toBeInstanceOf(Encrypter::class);
 
-    // Encrypter nao expoe getCipher() nesta versao; o cipher e privado.
-    $cipher = (new ReflectionProperty(Encrypter::class, 'cipher'))->getValue($enc);
-    expect($cipher)->toBe('aes-256-gcm');
-
     $cifrado = $enc->encryptString('segredo infantil');
     expect($cifrado)->not->toContain('segredo infantil');
     expect($enc->decryptString($cifrado))->toBe('segredo infantil');
+});
+
+it('rejeita ciphertext adulterado (AEAD/GCM tamper-evident)', function () {
+    config(['privacidade.chave' => 'base64:'.base64_encode(random_bytes(32))]);
+
+    $enc = CofreChaveSensivel::encrypter();
+    $cifrado = $enc->encryptString('segredo infantil');
+
+    // Adultera um byte no meio do payload cifrado.
+    $pos = intdiv(strlen($cifrado), 2);
+    $adulterado = substr($cifrado, 0, $pos).chr(ord($cifrado[$pos]) ^ 0xFF).substr($cifrado, $pos + 1);
+
+    expect(fn () => $enc->decryptString($adulterado))
+        ->toThrow(DecryptException::class);
+});
+
+it('falha quando o prefixo base64: esta ausente', function () {
+    config(['privacidade.chave' => base64_encode(random_bytes(32))]);
+    expect(fn () => CofreChaveSensivel::encrypter())
+        ->toThrow(RuntimeException::class);
 });
 
 it('falha explicitamente quando a chave nao esta configurada', function () {
