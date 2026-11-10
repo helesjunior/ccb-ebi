@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Identidade\Services\ContextoAtuacao;
 use App\Domain\Organizacao\Contracts\ConsultarOrganizacao;
 use App\Domain\Organizacao\Contracts\GerirOrganizacao;
 use App\Domain\Organizacao\Contracts\TransferirIgreja;
@@ -81,11 +82,14 @@ class ChurchController
     public function transfer(TransferenciaRequest $request, string $id): Response
     {
         try {
+            $contexto = $request->attributes->get('contexto_atuacao');
+
             $this->transferir->executar(
                 $id,
                 $request->string('sector_id')->toString(),
                 new \DateTimeImmutable($request->string('date')->toString()),
                 $request->input('reason'),
+                $contexto instanceof ContextoAtuacao ? $contexto->usuarioId : null,
             );
         } catch (SobreposicaoVigenciaException $e) {
             throw new ProblemException('transferencia_invalida', 'Transferência inválida', 422, $e->getMessage());

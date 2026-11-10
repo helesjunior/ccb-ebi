@@ -66,7 +66,7 @@ class GerenciadorVinculo implements GerirVinculo
         $this->auditoria->registrar([
             'acao' => 'acesso.concedido',
             'recurso' => 'vinculo_acesso',
-            'ator_id' => null,
+            'ator_id' => $contexto->usuarioId,
             'origem' => 'api',
             'escopo' => $contexto->tipoEscopo.':'.$contexto->escopoId,
             'motivo' => null,
@@ -100,7 +100,7 @@ class GerenciadorVinculo implements GerirVinculo
         $this->auditoria->registrar([
             'acao' => 'acesso.revogado',
             'recurso' => 'vinculo_acesso',
-            'ator_id' => null,
+            'ator_id' => $contexto->usuarioId,
             'origem' => 'api',
             'escopo' => $contexto->tipoEscopo.':'.$contexto->escopoId,
             'motivo' => null,

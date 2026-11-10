@@ -21,10 +21,11 @@ class ServicoTransferencia implements TransferirIgreja
         string $setorDestinoId,
         \DateTimeInterface $data,
         ?string $motivo = null,
+        ?string $atorId = null,
     ): IgrejaVinculacao {
         $inicio = \DateTimeImmutable::createFromInterface($data)->setTime(0, 0);
 
-        return DB::transaction(function () use ($igrejaId, $setorDestinoId, $inicio, $motivo): IgrejaVinculacao {
+        return DB::transaction(function () use ($igrejaId, $setorDestinoId, $inicio, $motivo, $atorId): IgrejaVinculacao {
             $igreja = Igreja::query()->find($igrejaId);
 
             if ($igreja === null) {
@@ -93,7 +94,8 @@ class ServicoTransferencia implements TransferirIgreja
             $this->auditoria->registrar([
                 'acao' => 'transferir',
                 'recurso' => 'igreja',
-                'escopo' => $setorDestinoId,
+                'ator_id' => $atorId,
+                'escopo' => 'setor:'.$setorDestinoId,
                 'origem' => 'web',
                 'motivo' => $motivo,
                 'metadados_minimizados' => [

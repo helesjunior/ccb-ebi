@@ -26,6 +26,8 @@ class ResolvedorContextoAtuacao implements ResolverContextoAtuacao
         /** @var Collection<int, VinculoAcesso> $vinculos */
         $vinculos = $usuario->vinculosVigentes()->with('papel')->get();
 
+        $usuarioId = (string) $usuario->id;
+
         if ($vinculos->isEmpty()) {
             // Sem vinculo: sem contexto. A rota que exigir contexto recusa.
             return null;
@@ -44,7 +46,7 @@ class ResolvedorContextoAtuacao implements ResolverContextoAtuacao
             /** @var VinculoAcesso $unico */
             $unico = $vinculos->first();
 
-            return $this->doVinculo($unico);
+            return $this->doVinculo($unico, $usuarioId);
         }
 
         if (preg_match('/^papel=([a-z_]+);escopo=([a-z]+):(.+)$/', $header, $partes) !== 1) {
@@ -73,10 +75,10 @@ class ResolvedorContextoAtuacao implements ResolverContextoAtuacao
             );
         }
 
-        return new ContextoAtuacao($papelCodigo, $tipoEscopo, $escopoId);
+        return new ContextoAtuacao($papelCodigo, $tipoEscopo, $escopoId, $usuarioId);
     }
 
-    private function doVinculo(VinculoAcesso $vinculo): ContextoAtuacao
+    private function doVinculo(VinculoAcesso $vinculo, string $usuarioId): ContextoAtuacao
     {
         /** @var Papel $papel */
         $papel = $vinculo->papel;
@@ -85,6 +87,7 @@ class ResolvedorContextoAtuacao implements ResolverContextoAtuacao
             $papel->codigo,
             $vinculo->tipo_escopo,
             (string) $vinculo->escopo_id,
+            $usuarioId,
         );
     }
 }

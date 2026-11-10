@@ -60,7 +60,7 @@ class GerenciadorUsuario implements GerirUsuario
             $this->auditoria->registrar([
                 'acao' => 'alterar_status_usuario',
                 'recurso' => 'usuario',
-                'ator_id' => null,
+                'ator_id' => $contexto->usuarioId,
                 'origem' => 'api',
                 'escopo' => $contexto->tipoEscopo.':'.$contexto->escopoId,
                 'motivo' => null,
