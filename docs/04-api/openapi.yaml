@@ -819,6 +819,29 @@ paths:
         '401': { $ref: '#/components/responses/Problem' }
         '403': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
+  /privacy/requests:
+    post:
+      tags: [privacy]
+      summary: Abrir solicitação de direito do titular (RF-16)
+      description: >-
+        O titular autenticado abre uma solicitação de exercício de direitos
+        (acesso, correção ou revogação). A resposta traz o protocolo gerado e o
+        status inicial `recebida`.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SolicitacaoInput' }
+      responses:
+        '201':
+          description: Solicitação aberta
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SolicitacaoTitular' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
 components:
   securitySchemes:
     bearerAuth:
@@ -1152,3 +1175,17 @@ components:
             versao: { type: string }
             texto_hash: { type: string }
             texto: { type: string }
+    SolicitacaoInput:
+      type: object
+      required: [tipo]
+      properties:
+        tipo: { type: string, enum: [acesso, correcao, revogacao] }
+        descricao: { type: string }
+    SolicitacaoTitular:
+      type: object
+      required: [id, protocolo, tipo, status]
+      properties:
+        id: { type: string }
+        protocolo: { type: string }
+        tipo: { type: string, enum: [acesso, correcao, revogacao] }
+        status: { type: string, enum: [recebida, em_analise, atendida, recusada] }

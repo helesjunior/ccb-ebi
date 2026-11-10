@@ -45,7 +45,9 @@ use App\Domain\Organizacao\Services\ServicoTransferencia;
 use App\Domain\Privacidade\Contracts\ConsultarConsentimentos;
 use App\Domain\Privacidade\Contracts\GerirTermos;
 use App\Domain\Privacidade\Contracts\RegistrarConsentimento;
+use App\Domain\Privacidade\Contracts\SolicitarDireitoTitular;
 use App\Domain\Privacidade\Services\GerenciadorConsentimento;
+use App\Domain\Privacidade\Services\GerenciadorSolicitacao;
 use App\Domain\Privacidade\Services\GerenciadorTermos;
 use Illuminate\Support\ServiceProvider;
 
@@ -77,5 +79,6 @@ class DomainServiceProvider extends ServiceProvider
         $this->app->bind(GerirTermos::class, GerenciadorTermos::class);
         $this->app->bind(RegistrarConsentimento::class, GerenciadorConsentimento::class);
         $this->app->bind(ConsultarConsentimentos::class, GerenciadorConsentimento::class);
+        $this->app->bind(SolicitarDireitoTitular::class, GerenciadorSolicitacao::class);
     }
 }
