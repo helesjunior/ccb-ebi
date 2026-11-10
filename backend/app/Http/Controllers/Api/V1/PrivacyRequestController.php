@@ -17,9 +17,10 @@ class PrivacyRequestController
     {
         $dados = $request->validated();
 
-        // O titular so abre solicitacao em nome proprio (RF-16).
+        // O titular so abre solicitacao em nome proprio (RF-16). Rota sob
+        // `auth:sanctum`: o `?->` apenas satisfaz o analisador estatico.
         $solicitacao = $this->solicitar->abrir(
-            (string) $request->user()->id,
+            (string) ($request->user()?->getAuthIdentifier() ?? ''),
             $dados['tipo'],
             $dados['descricao'] ?? null,
         );

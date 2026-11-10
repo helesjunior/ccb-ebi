@@ -38,7 +38,8 @@ class PrivacyConsentController
         $usuarioId = $this->usuarioId($request);
 
         $termo = $this->termos->encontrar($dados['termo_versao_id']);
-        $evidencia = EvidenciaAceite::deRequest($request, (string) ($termo?->texto_hash ?? ''));
+        $hashTermo = $termo === null ? '' : (string) $termo->texto_hash;
+        $evidencia = EvidenciaAceite::deRequest($request, $hashTermo);
 
         $manifestacao = ($dados['retirar'] ?? false)
             ? $this->registrar->retirar($usuarioId, $dados['termo_versao_id'], $evidencia)
@@ -75,7 +76,9 @@ class PrivacyConsentController
 
     private function usuarioId(Request $request): string
     {
-        return (string) $request->user()->getAuthIdentifier();
+        // Rota sob `auth:sanctum`: nao ha nulo em runtime; o `?->` satisfaz o
+        // analisador estatico sem importar o modelo do modulo Identidade.
+        return (string) ($request->user()?->getAuthIdentifier() ?? '');
     }
 
     private function contexto(Request $request): ContextoAtuacao
