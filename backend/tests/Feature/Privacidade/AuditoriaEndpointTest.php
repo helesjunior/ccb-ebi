@@ -5,8 +5,10 @@ use App\Domain\Identidade\Models\Papel;
 use App\Domain\Identidade\Models\Usuario;
 use App\Domain\Identidade\Models\VinculoAcesso;
 use App\Domain\Organizacao\Models\CentralNacional;
+use App\Domain\Organizacao\Models\Ebi;
 use App\Domain\Organizacao\Models\Igreja;
 use App\Domain\Organizacao\Models\Regional;
+use App\Domain\Organizacao\Models\Setor;
 use Database\Seeders\PapelSeeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -84,6 +86,40 @@ it('papel territorial ve apenas eventos da propria subarvore', function () {
         ->assertOk()
         ->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.acao', 'dentro');
+});
+
+it('papel territorial ve eventos da subarvore descendente (setor -> igreja/ebi)', function () {
+    $regional = Regional::factory()->create();
+    $setor = Setor::factory()->create(['regional_id' => $regional->id]);
+    $igreja = Igreja::factory()->create();
+    $igreja->vinculacoes()->create(['setor_id' => $setor->id, 'inicio' => now()->toDateString(), 'fim' => null]);
+    $ebi = Ebi::factory()->create(['igreja_id' => $igreja->id]);
+
+    app(RegistrarEvento::class)->registrar(['acao' => 'igreja', 'recurso' => 'usuario', 'origem' => 'api', 'escopo' => 'igreja:'.$igreja->id]);
+    app(RegistrarEvento::class)->registrar(['acao' => 'ebi', 'recurso' => 'usuario', 'origem' => 'api', 'escopo' => 'ebi:'.$ebi->id]);
+    // Outra igreja, fora do setor: nao desce do vinculo.
+    $fora = Igreja::factory()->create();
+    app(RegistrarEvento::class)->registrar(['acao' => 'fora', 'recurso' => 'usuario', 'origem' => 'api', 'escopo' => 'igreja:'.$fora->id]);
+
+    $adm = auditoriaUsuarioCom('adm_setor', 'setor', $setor->id);
+
+    $this->getJson('/api/v1/audit-events', auditoriaAuth($adm, 'adm_setor', 'setor', $setor->id))
+        ->assertOk()
+        ->assertJsonCount(2, 'data')
+        ->assertJsonPath('data.0.acao', 'igreja')
+        ->assertJsonPath('data.1.acao', 'ebi');
+});
+
+it('trata escopo de tipo desconhecido como nao coberto', function () {
+    // Tipo fora da hierarquia: `ResolverEscopo` lanca RuntimeException e o
+    // evento e negado por seguranca (nao aparece para papel territorial).
+    app(RegistrarEvento::class)->registrar(['acao' => 'desconhecido', 'recurso' => 'usuario', 'origem' => 'api', 'escopo' => 'departamento:qualquer']);
+    $regional = Regional::factory()->create();
+    $adm = auditoriaUsuarioCom('adm_regional', 'regional', $regional->id);
+
+    $this->getJson('/api/v1/audit-events', auditoriaAuth($adm, 'adm_regional', 'regional', $regional->id))
+        ->assertOk()
+        ->assertJsonCount(0, 'data');
 });
 
 it('filtra por recurso, ator e intervalo de ocorrencia', function () {
