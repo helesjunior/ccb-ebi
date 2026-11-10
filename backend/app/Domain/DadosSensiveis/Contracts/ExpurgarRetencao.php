@@ -7,9 +7,11 @@ use App\Domain\DadosSensiveis\Support\ResultadoRetencao;
 /**
  * Aplica os prazos de retenção aos dados sensíveis do participante.
  *
- * A rotina é DESLIGADA por padrão (`config('privacidade.retencao.ativa')` falso)
- * e permanece assim até o DPO aprovar (RNF-07). Quando desligada, ou quando
- * `$executar` é falso, nada é escrito — apenas um relatório é devolvido.
+ * O serviço honra apenas o parâmetro `$executar`: quando falso, nada é escrito —
+ * apenas um relatório é devolvido. O "desligado por padrão"
+ * (`config('privacidade.retencao.ativa')` falso, até o DPO aprovar — RNF-07) é
+ * responsabilidade do **comando** (`privacidade:expurgar`), que só executa de
+ * fato com `--force`; o serviço em si não lê essa config.
  */
 interface ExpurgarRetencao
 {

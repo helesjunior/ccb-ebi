@@ -11,7 +11,10 @@ return [
         // Rotina de descarte/anonimização DESLIGADA até o DPO aprovar (RNF-07).
         'ativa' => filter_var(EnvArquivo::obter('PRIVACIDADE_RETENCAO_ATIVA') ?? 'false', FILTER_VALIDATE_BOOL),
 
-        // Prazo por tipo de dado, em meses (padrão provisório do ADR-0019).
+        // Mapa RESERVADO de prazo por tipo de dado, em meses (provisório do ADR-0019).
+        // Ainda NÃO é consultado pelo motor de retenção (ExpurgarRetencao): o prazo
+        // vigente de cada registro é a coluna `prazo_retencao`. Mantido para o dia
+        // em que houver consumidor real; enquanto isso, não dirige nada.
         'prazos' => [
             'laudo' => 0,          // apagado ao fim da exceção (por registro; 0 = só com prazo_retencao explícito)
             'diagnostico' => 0,
