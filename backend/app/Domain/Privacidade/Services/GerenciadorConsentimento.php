@@ -3,6 +3,7 @@
 namespace App\Domain\Privacidade\Services;
 
 use App\Domain\Privacidade\Contracts\ConsultarConsentimentos;
+use App\Domain\Privacidade\Contracts\GerirTermos;
 use App\Domain\Privacidade\Contracts\RegistrarConsentimento;
 use App\Domain\Privacidade\Models\ManifestacaoPrivacidade;
 use App\Domain\Privacidade\Models\TermoVersao;
@@ -11,6 +12,8 @@ use App\Support\ProblemException;
 
 class GerenciadorConsentimento implements ConsultarConsentimentos, RegistrarConsentimento
 {
+    public function __construct(private readonly GerirTermos $termos) {}
+
     public function registrar(
         string $usuarioId,
         string $termoVersaoId,
@@ -25,6 +28,20 @@ class GerenciadorConsentimento implements ConsultarConsentimentos, RegistrarCons
                 422,
                 'Versão de termo inexistente.',
             );
+
+        // CA-16: so a versao vigente da finalidade pode ser manifestada — mesma
+        // regra do `register-guardian` (`GerenciadorConta`). Versoes futuras ou
+        // encerradas sao recusadas.
+        $vigente = $this->termos->vigente($termo->finalidade);
+
+        if ($vigente === null || $vigente->id !== $termo->id) {
+            throw new ProblemException(
+                'termo_indisponivel',
+                'Termo indisponível',
+                422,
+                'A versão de termo informada não é a vigente para a finalidade.',
+            );
+        }
 
         return ManifestacaoPrivacidade::query()->create([
             'usuario_id' => $usuarioId,

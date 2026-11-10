@@ -58,6 +58,13 @@ export function Privacidade() {
   const aceito = manifestacaoCadastro?.decisao === 'aceito'
 
   /**
+   * Texto do termo para leitura ANTES de manifestar. A fonte primaria e o
+   * `GET /privacy/terms` (payload informado); se por algum motivo ele vier
+   * ausente, cai para o texto aninhado na manifestacao ja existente.
+   */
+  const textoTermo = termo?.texto ?? manifestacaoCadastro?.termo_versao?.texto ?? null
+
+  /**
    * Registra uma manifestação. `retirar: true` aciona o caminho de retirada no
    * servidor (`RegistrarConsentimento::retirar` → decisão `retirado`), que tem
    * evidência própria — por isso a retirada envia `decisao: 'aceito'` e deixa o
@@ -106,13 +113,6 @@ export function Privacidade() {
       {erro && <p role="alert">{erro}</p>}
 
       <h2>Termo de cadastro</h2>
-      {/*
-        Divida registrada: `GET /privacy/terms` (TermoVersaoResource) nao expoe
-        `texto`, apenas metadados. O texto integral so vem aninhado em uma
-        manifestacao (`ManifestacaoPrivacidade.termo_versao.texto`). Expor
-        `texto` no endpoint avulso e debito adiado (acompanhado pelo controller);
-        nao alteramos o backend nesta tarefa.
-      */}
       {termo ? (
         <div data-testid="termo-vigente">
           <p>
@@ -123,18 +123,14 @@ export function Privacidade() {
               <small>Vigente desde {new Date(termo.vigente_em).toLocaleDateString('pt-BR')}</small>
             </p>
           )}
-          {manifestacaoCadastro?.termo_versao?.texto ? (
+          {textoTermo ? (
             <section aria-labelledby="termo-texto-titulo">
               <h3 id="termo-texto-titulo">Texto do termo</h3>
-              <p data-testid="termo-texto">{manifestacaoCadastro.termo_versao.texto}</p>
+              <p data-testid="termo-texto">{textoTermo}</p>
             </section>
           ) : (
             <p data-testid="termo-texto-indisponivel">
-              <small>
-                O texto integral do termo fica disponível após você registrar uma
-                manifestação (aceite, recusa ou retirada), quando é recuperado junto
-                à sua manifestação.
-              </small>
+              <small>O texto integral do termo não está disponível no momento.</small>
             </p>
           )}
         </div>

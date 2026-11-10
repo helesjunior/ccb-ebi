@@ -87,6 +87,35 @@ it('rejeita cadastro assistido (participante_id) nesta etapa', function () {
     ], $auth)->assertStatus(422);
 });
 
+it('rejeita versao nao vigente no consentimento (422)', function () {
+    // Termo futuro: ainda nao vigente.
+    $futuro = TermoVersao::factory()->create(['finalidade' => 'cadastro', 'vigente_em' => now()->addDay()]);
+    $u = usuarioCom('responsavel', 'igreja', $this->igreja->id);
+    $auth = ['Authorization' => 'Bearer '.$u->createToken('t', ['*'])->plainTextToken];
+
+    $this->postJson('/api/v1/privacy/consents', ['termo_versao_id' => $futuro->id, 'decisao' => 'aceito'], $auth)
+        ->assertStatus(422)
+        ->assertJsonPath('code', 'termo_indisponivel');
+});
+
+it('rejeita versao encerrada no consentimento (422)', function () {
+    // Uma versao vigente e a anterior encerrada: so a vigente vale.
+    TermoVersao::factory()->create(['finalidade' => 'cadastro', 'versao' => '2026-10', 'vigente_em' => now()->subMonth(), 'encerrado_em' => now()->subDay()]);
+    $vigente = TermoVersao::factory()->create(['finalidade' => 'cadastro', 'versao' => '2026-11', 'vigente_em' => now()->subDay()]);
+    $encerrada = TermoVersao::query()->where('versao', '2026-10')->firstOrFail();
+
+    $u = usuarioCom('responsavel', 'igreja', $this->igreja->id);
+    $auth = ['Authorization' => 'Bearer '.$u->createToken('t', ['*'])->plainTextToken];
+
+    $this->postJson('/api/v1/privacy/consents', ['termo_versao_id' => $encerrada->id, 'decisao' => 'aceito'], $auth)
+        ->assertStatus(422)
+        ->assertJsonPath('code', 'termo_indisponivel');
+
+    // A vigente continua aceita.
+    $this->postJson('/api/v1/privacy/consents', ['termo_versao_id' => $vigente->id, 'decisao' => 'aceito'], $auth)
+        ->assertStatus(201);
+});
+
 it('nega a leitura a papel sem a operacao consentimento.ler', function () {
     $termo = TermoVersao::factory()->create(['vigente_em' => now()->subDay()]);
     $titular = usuarioCom('responsavel', 'igreja', $this->igreja->id);

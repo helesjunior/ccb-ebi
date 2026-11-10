@@ -2170,6 +2170,7 @@ export interface components {
             finalidade?: string;
             base_legal?: string;
             versao?: string;
+            texto?: string;
             /** Format: date-time */
             vigente_em?: string;
         };

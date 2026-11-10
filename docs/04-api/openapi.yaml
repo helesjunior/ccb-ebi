@@ -1189,6 +1189,7 @@ components:
         finalidade: { type: string }
         base_legal: { type: string }
         versao: { type: string }
+        texto: { type: string }
         vigente_em: { type: string, format: date-time }
     ConsentimentoInput:
       type: object

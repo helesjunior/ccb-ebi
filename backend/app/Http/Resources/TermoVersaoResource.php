@@ -21,6 +21,9 @@ class TermoVersaoResource extends JsonResource
             'finalidade' => $this->resource->finalidade,
             'base_legal' => $this->resource->base_legal,
             'versao' => $this->resource->versao,
+            // O texto integral e exposto para o consentimento ser informado: a
+            // pessoa precisa ler o termo antes de aceita-lo (RF-04, CA-16).
+            'texto' => $this->resource->texto,
             'vigente_em' => $this->resource->vigente_em?->toIso8601String(),
         ];
     }
