@@ -25,21 +25,25 @@ class AutorizadorOperacao implements AutorizarOperacao
             Operacoes::ORGANIZACAO_LER, Operacoes::ORGANIZACAO_GERENCIAR,
             Operacoes::USUARIO_LER, Operacoes::USUARIO_GERENCIAR,
             Operacoes::CONVITE_GERENCIAR, Operacoes::ACESSO_GERENCIAR,
+            Operacoes::CONSENTIMENTO_LER, Operacoes::AUDITORIA_LER,
         ],
         'adm_regional' => [
             Operacoes::ORGANIZACAO_LER, Operacoes::ORGANIZACAO_GERENCIAR,
             Operacoes::USUARIO_LER, Operacoes::USUARIO_GERENCIAR,
             Operacoes::CONVITE_GERENCIAR, Operacoes::ACESSO_GERENCIAR,
+            Operacoes::CONSENTIMENTO_LER, Operacoes::AUDITORIA_LER,
         ],
         'adm_setor' => [
             Operacoes::ORGANIZACAO_LER, Operacoes::ORGANIZACAO_GERENCIAR,
             Operacoes::USUARIO_LER, Operacoes::USUARIO_GERENCIAR,
             Operacoes::CONVITE_GERENCIAR, Operacoes::ACESSO_GERENCIAR,
+            Operacoes::CONSENTIMENTO_LER, Operacoes::AUDITORIA_LER,
         ],
         'adm_igreja' => [
             Operacoes::ORGANIZACAO_LER,
             Operacoes::USUARIO_LER, Operacoes::USUARIO_GERENCIAR,
             Operacoes::CONVITE_GERENCIAR, Operacoes::ACESSO_GERENCIAR,
+            Operacoes::CONSENTIMENTO_LER,
         ],
         'coordenadora' => [
             Operacoes::ORGANIZACAO_LER, Operacoes::USUARIO_LER,

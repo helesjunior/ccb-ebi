@@ -23,3 +23,5 @@ Liga cada requisito funcional às regras, fluxos, critérios de aceite e épico.
 | RNF-01 / [autenticação](../05-seguranca-e-privacidade/autenticacao.md) | — | — | CA-15 | E01 | | |
 
 Todo RF tem ao menos um critério de aceite desde a versão 2.5.
+
+> **Entrega da Etapa 4, sub-etapa A1 (privacidade e auditoria):** cobre **RF-04 / CA-16** (termos versionados, `GET /privacy/terms` com o texto integral, consentimento com evidência de aceite e aceite obrigatório no cadastro) e **RF-16 / CA-13** (exercício de direitos com protocolo e trilha de auditoria consultável). As colunas "Histórias" e "Testes" só serão preenchidas quando o backlog for detalhado (entregável 1); escopo e dívidas da sub-etapa estão no [ADR-0030](../06-arquitetura/decisoes/ADR-0030-privacidade-e-auditoria.md).

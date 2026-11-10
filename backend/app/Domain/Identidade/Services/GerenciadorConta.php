@@ -9,15 +9,28 @@ use App\Domain\Identidade\Models\Usuario;
 use App\Domain\Identidade\Models\VinculoAcesso;
 use App\Domain\Identidade\Notifications\VerificacaoEmail;
 use App\Domain\Organizacao\Contracts\ConsultarHierarquia;
+use App\Domain\Privacidade\Contracts\GerirTermos;
+use App\Domain\Privacidade\Contracts\RegistrarConsentimento;
+use App\Support\EvidenciaAceite;
 use App\Support\ProblemException;
 use Illuminate\Support\Facades\DB;
 
 class GerenciadorConta implements RegistrarConta, VerificarEmail
 {
-    public function __construct(private readonly ConsultarHierarquia $hierarquia) {}
+    public function __construct(
+        private readonly ConsultarHierarquia $hierarquia,
+        private readonly GerirTermos $termos,
+        private readonly RegistrarConsentimento $consentimentos,
+    ) {}
 
-    public function registrar(string $nome, string $email, string $senha): Usuario
-    {
+    public function registrar(
+        string $nome,
+        string $email,
+        string $senha,
+        string $termoVersaoId,
+        string $origem,
+        EvidenciaAceite $evidencia,
+    ): Usuario {
         $normalizado = Usuario::emailNormalizado($email);
 
         if (Usuario::query()->where('email_normalizado', $normalizado)->exists()) {
@@ -29,7 +42,19 @@ class GerenciadorConta implements RegistrarConta, VerificarEmail
             );
         }
 
-        return DB::transaction(function () use ($nome, $normalizado, $senha): Usuario {
+        // CA-16: so o termo de cadastro vigente pode ser aceito no cadastro.
+        $vigente = $this->termos->vigente('cadastro');
+
+        if ($vigente === null || $vigente->id !== $termoVersaoId) {
+            throw new ProblemException(
+                'termo_indisponivel',
+                'Termo indisponível',
+                422,
+                'A versão de termo informada não é a vigente para o cadastro.',
+            );
+        }
+
+        return DB::transaction(function () use ($nome, $normalizado, $senha, $termoVersaoId, $origem, $evidencia): Usuario {
             $usuario = Usuario::query()->create([
                 'nome' => $nome,
                 'email_normalizado' => $normalizado,
@@ -50,6 +75,15 @@ class GerenciadorConta implements RegistrarConta, VerificarEmail
                 'fim' => null,
                 'status' => 'ativo',
             ]);
+
+            // Consentimento na mesma transacao do cadastro (CA-16).
+            $this->consentimentos->registrar(
+                $usuario->id,
+                $termoVersaoId,
+                'aceito',
+                $origem,
+                $evidencia,
+            );
 
             $usuario->notify(new VerificacaoEmail);
 

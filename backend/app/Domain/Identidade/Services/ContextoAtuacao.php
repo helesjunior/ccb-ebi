@@ -12,5 +12,6 @@ class ContextoAtuacao
         public readonly string $papelCodigo,
         public readonly string $tipoEscopo,
         public readonly string $escopoId,
+        public readonly ?string $usuarioId = null,
     ) {}
 }

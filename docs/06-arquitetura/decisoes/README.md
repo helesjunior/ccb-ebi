@@ -62,5 +62,6 @@ Duas listas: **decisões em aberto** (D-nn), que precisam de aprovação da CCB,
 | [ADR-0027](ADR-0027-escopo-de-mesclagem.md) | Escopo da coordenadora para mesclar e corrigir cadastros | aceito |
 | [ADR-0028](ADR-0028-politica-editorial-dos-pdfs.md) | Política editorial e direitos dos PDFs | proposto pelo produto; aguarda CCB e jurídico |
 | [ADR-0029](ADR-0029-dados-identificaveis-acima-da-igreja.md) | Dados identificáveis acima da igreja | proposto pelo produto; aguarda CCB e DPO |
+| [ADR-0030](ADR-0030-privacidade-e-auditoria.md) | Privacidade e auditoria (Etapa 4, A1): escopo e dívidas | aceito |
 
 Para criar um ADR, copie o [modelo](ADR-0001-registro-de-decisoes.md#modelo) e use o próximo número.

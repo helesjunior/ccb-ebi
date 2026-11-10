@@ -34,6 +34,24 @@ it('registra evento de auditoria na transferência', function () {
     expect(DB::table('evento_auditoria')->where('acao', 'transferir')->where('recurso', 'igreja')->count())->toBeGreaterThan(0);
 });
 
+it('grava o escopo da transferência em formato tipo:id e o ator informado', function () {
+    $igreja = Igreja::factory()->create();
+    $setor = Setor::factory()->create();
+
+    app(TransferirIgreja::class)->executar($igreja->id, $setor->id, now(), null, 'ator-123');
+
+    $evento = DB::table('evento_auditoria')
+        ->where('acao', 'transferir')
+        ->where('recurso', 'igreja')
+        ->latest('id')
+        ->first();
+
+    // Escopo territorial no formato `tipo:id` (visivel a papeis territoriais
+    // no GET /audit-events); o ator precisa ser atribuivel (RF-16/RN-10).
+    expect($evento->escopo)->toBe('setor:'.$setor->id)
+        ->and($evento->ator_id)->toBe('ator-123');
+});
+
 it('rejeita transferência na data de inicio de um vinculo ja encerrado (sem vinculo ativo)', function () {
     $igreja = Igreja::factory()->create();
     $setorA = Setor::factory()->create();

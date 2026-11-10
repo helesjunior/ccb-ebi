@@ -12,12 +12,14 @@ import {
   type Usuario,
 } from './api/sessao'
 import { AceitarConvite } from './pages/AceitarConvite'
+import { Auditoria } from './pages/Auditoria'
 import { Dispositivos } from './pages/Dispositivos'
 import { Equipe } from './pages/Equipe'
 import { Login } from './pages/Login'
 import { MeuPerfil } from './pages/MeuPerfil'
+import { Privacidade } from './pages/Privacidade'
 
-type Tela = 'inicio' | 'perfil' | 'dispositivos' | 'equipe'
+type Tela = 'inicio' | 'perfil' | 'dispositivos' | 'equipe' | 'privacidade' | 'auditoria'
 
 interface ConvitePendente {
   id: string
@@ -105,6 +107,12 @@ function App() {
         <button type="button" onClick={() => setTela('equipe')}>
           Equipe
         </button>
+        <button type="button" onClick={() => setTela('privacidade')}>
+          Privacidade
+        </button>
+        <button type="button" onClick={() => setTela('auditoria')}>
+          Auditoria
+        </button>
         <button type="button" onClick={sair}>
           Sair
         </button>
@@ -130,6 +138,8 @@ function App() {
       {tela === 'perfil' && <MeuPerfil usuario={usuario} />}
       {tela === 'dispositivos' && <Dispositivos />}
       {tela === 'equipe' && <Equipe />}
+      {tela === 'privacidade' && <Privacidade />}
+      {tela === 'auditoria' && <Auditoria />}
     </>
   )
 }

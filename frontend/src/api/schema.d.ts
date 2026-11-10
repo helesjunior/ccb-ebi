@@ -1708,6 +1708,262 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/privacy/terms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Termo de privacidade vigente por finalidade */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Código da finalidade do termo (ex.: `cadastro`, `notificacoes`). */
+                    finalidade: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Termo vigente da finalidade (lista vazia quando não houver) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["TermoVersao"][];
+                        };
+                    };
+                };
+                401: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/privacy/consents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Manifestações de consentimento atuais do titular
+         * @description Lista, por finalidade, a manifestação mais recente do próprio usuário autenticado. Não expõe consentimentos de terceiros.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Manifestações atuais do titular */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data: components["schemas"]["ManifestacaoPrivacidade"][];
+                        };
+                    };
+                };
+                401: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        /**
+         * Registrar aceite ou recusa do próprio titular
+         * @description Registra uma manifestação do usuário autenticado com evidência (IP, user agent e hash do termo). O cadastro assistido (`participante_id`) ainda não é aceito nesta etapa.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ConsentimentoInput"];
+                };
+            };
+            responses: {
+                /** @description Manifestação registrada */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ManifestacaoPrivacidade"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/privacy/consents/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Recuperar uma manifestação com a versão do termo (CA-16)
+         * @description Exige a operação `consentimento.ler` e respeita o escopo de atuação: operadores só enxergam manifestações de titulares na própria subárvore.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["ConsentimentoId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Manifestação com a versão e o hash do termo */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ManifestacaoPrivacidade"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/privacy/requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Abrir solicitação de direito do titular (RF-16)
+         * @description O titular autenticado abre uma solicitação de exercício de direitos (acesso, correção ou revogação). A resposta traz o protocolo gerado e o status inicial `recebida`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SolicitacaoInput"];
+                };
+            };
+            responses: {
+                /** @description Solicitação aberta */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SolicitacaoTitular"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/audit-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Consultar eventos de auditoria (RF-16)
+         * @description Lista a trilha append-only, paginada por cursor e ordenada por `id` crescente. Exige a operação `auditoria.ler`. `super_admin` enxerga todos os eventos; os demais papéis só enxergam eventos cujo `escopo` territorial (`tipo:id`) esteja na própria subárvore. Eventos sem escopo territorial não aparecem para papéis territoriais.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    cursor?: components["parameters"]["Cursor"];
+                    limit?: components["parameters"]["Limit"];
+                    recurso?: string;
+                    ator_id?: string;
+                    /** @description Início do intervalo de ocorrência (inclusive). */
+                    de?: string;
+                    /** @description Fim do intervalo de ocorrência (inclusive). */
+                    ate?: string;
+                };
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Página de eventos de auditoria */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EventoAuditoriaPage"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1764,6 +2020,10 @@ export interface components {
             email: string;
             /** Format: password */
             password: string;
+            /** @description Versão vigente do termo de cadastro aceita (CA-16). */
+            termo_versao_id: string;
+            /** @description Confirmação explícita do aceite do termo (CA-16). */
+            aceite: boolean;
         };
         Convite: {
             id?: string;
@@ -1905,6 +2165,84 @@ export interface components {
             /** @enum {string} */
             status?: "ativo" | "inativo";
         };
+        TermoVersao: {
+            id?: string;
+            finalidade?: string;
+            base_legal?: string;
+            versao?: string;
+            texto?: string;
+            /** Format: date-time */
+            vigente_em?: string;
+        };
+        ConsentimentoInput: {
+            termo_versao_id: string;
+            /** @enum {string} */
+            decisao: "aceito" | "recusado";
+            /** @default false */
+            retirar: boolean;
+        };
+        ManifestacaoPrivacidade: {
+            id: string;
+            usuario_id?: string | null;
+            participante_id?: string | null;
+            termo_versao_id: string;
+            /** @enum {string} */
+            decisao: "aceito" | "recusado" | "retirado";
+            /** @enum {string} */
+            origem: "proprio" | "assistido";
+            evidencia: string;
+            /** Format: date-time */
+            ocorrido_em: string;
+            termo_versao?: {
+                id?: string;
+                finalidade?: string;
+                base_legal?: string;
+                versao?: string;
+                texto_hash?: string;
+                texto?: string;
+            };
+        };
+        SolicitacaoInput: {
+            /** @enum {string} */
+            tipo: "acesso" | "correcao" | "revogacao";
+            descricao?: string;
+        };
+        SolicitacaoTitular: {
+            id: string;
+            protocolo: string;
+            /** @enum {string} */
+            tipo: "acesso" | "correcao" | "revogacao";
+            /** @enum {string} */
+            status: "recebida" | "em_analise" | "atendida" | "recusada";
+        };
+        EventoAuditoria: {
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            sequencia: number;
+            /** @description Hash do evento anterior (nulo no primeiro elo). */
+            hash_anterior?: string | null;
+            /** @description Hash SHA-256 do elo encadeado. */
+            hash_encadeado: string;
+            ator_id?: string | null;
+            acao: string;
+            recurso: string;
+            /** @description Escopo territorial no formato `tipo:id`. */
+            escopo?: string | null;
+            origem: string;
+            motivo?: string | null;
+            metadados_minimizados?: {
+                [key: string]: unknown;
+            } | null;
+            /** Format: date-time */
+            ocorrido_em: string;
+        };
+        EventoAuditoriaPage: {
+            data?: components["schemas"]["EventoAuditoria"][];
+            meta?: {
+                proximo_cursor?: string | null;
+            };
+        };
     };
     responses: {
         /** @description Erro no formato RFC 9457 */
@@ -1932,6 +2270,7 @@ export interface components {
         UsuarioId: string;
         ConviteId: string;
         VinculoId: string;
+        ConsentimentoId: string;
     };
     requestBodies: never;
     headers: never;

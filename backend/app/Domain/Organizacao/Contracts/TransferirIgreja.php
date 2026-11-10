@@ -26,5 +26,6 @@ interface TransferirIgreja
         string $setorDestinoId,
         \DateTimeInterface $data,
         ?string $motivo = null,
+        ?string $atorId = null,
     ): IgrejaVinculacao;
 }

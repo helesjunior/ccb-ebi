@@ -2,6 +2,7 @@
 
 use App\Domain\Identidade\Services\DesafioMfa;
 use App\Http\Controllers\Api\V1\AccessGrantController;
+use App\Http\Controllers\Api\V1\AuditEventController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CentralController;
 use App\Http\Controllers\Api\V1\ChurchController;
@@ -12,6 +13,9 @@ use App\Http\Controllers\Api\V1\InvitationController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MfaController;
 use App\Http\Controllers\Api\V1\PasswordController;
+use App\Http\Controllers\Api\V1\PrivacyConsentController;
+use App\Http\Controllers\Api\V1\PrivacyRequestController;
+use App\Http\Controllers\Api\V1\PrivacyTermController;
 use App\Http\Controllers\Api\V1\RegionController;
 use App\Http\Controllers\Api\V1\RegisterController;
 use App\Http\Controllers\Api\V1\SectorController;
@@ -46,6 +50,29 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         Route::post('auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
         Route::get('me', [MeController::class, 'me'])->name('me');
         Route::get('me/scopes', [MeController::class, 'scopes'])->name('me.scopes');
+
+        // Termos de privacidade (RF-04): qualquer usuario autenticado le a
+        // versao vigente que precisa aceitar.
+        Route::get('privacy/terms', [PrivacyTermController::class, 'index'])->name('privacy.terms');
+
+        // Consentimentos (RF-04): o titular registra e consulta os proprios.
+        Route::get('privacy/consents', [PrivacyConsentController::class, 'index'])->name('privacy.consents.index');
+        Route::post('privacy/consents', [PrivacyConsentController::class, 'store'])->name('privacy.consents.store');
+
+        // Leitura por operador: o Gate cobre `consentimento.ler`; a subarvore do
+        // titular e conferida no controller.
+        Route::get('privacy/consents/{id}', [PrivacyConsentController::class, 'show'])
+            ->middleware('can:consentimento.ler')->name('privacy.consents.show');
+
+        // Solicitacao de direitos do titular (RF-16): o titular abre um pedido
+        // em nome proprio; sem Gate, a rota inteira e do proprio usuario.
+        Route::post('privacy/requests', [PrivacyRequestController::class, 'store'])
+            ->name('privacy.requests.store');
+
+        // Auditoria (RF-16): leitura sob a operacao `auditoria.ler`; o recorte
+        // territorial e aplicado na consulta, que revalida o escopo de cada evento.
+        Route::get('audit-events', [AuditEventController::class, 'index'])
+            ->middleware('can:auditoria.ler')->name('audit-events.index');
 
         // MFA do usuario autenticado (inscricao/confirmacao/recuperacao).
         Route::post('me/mfa/totp', [MfaController::class, 'iniciarTotp'])->name('me.mfa.totp');
