@@ -1,7 +1,7 @@
 <?php
 
 use App\Domain\Auditoria\Models\EventoAuditoria;
-use App\Domain\Participantes\Models\Participante;
+use App\Domain\Participantes\Contracts\GerirMesclagem;
 use App\Domain\Participantes\Models\ResponsavelParticipante;
 
 beforeEach(function () {
@@ -23,8 +23,8 @@ it('detecta possivel duplicidade por nome normalizado e data', function () {
 });
 
 it('mescla e desfaz preservando o estado anterior', function () {
-    $principal = Participante::factory()->create(['nome' => 'Ana', 'data_nascimento' => '2015-03-10', 'nome_social' => null]);
-    $duplicado = Participante::factory()->create(['nome' => 'Ana Maria', 'data_nascimento' => '2015-03-10', 'nome_social' => 'Aninha']);
+    $principal = participanteNaIgreja($this->igreja, ['nome' => 'Ana', 'data_nascimento' => '2015-03-10', 'nome_social' => null]);
+    $duplicado = participanteNaIgreja($this->igreja, ['nome' => 'Ana Maria', 'data_nascimento' => '2015-03-10', 'nome_social' => 'Aninha']);
 
     $this->postJson("/api/v1/participants/{$principal->id}/merge", [
         'duplicado_id' => $duplicado->id,
@@ -50,7 +50,7 @@ it('mescla e desfaz preservando o estado anterior', function () {
 });
 
 it('nao mescla consigo mesmo', function () {
-    $p = Participante::factory()->create();
+    $p = participanteNaIgreja($this->igreja);
 
     $this->postJson("/api/v1/participants/{$p->id}/merge", [
         'duplicado_id' => $p->id,
@@ -58,8 +58,8 @@ it('nao mescla consigo mesmo', function () {
 });
 
 it('desfazer a mesclagem devolve os vinculos movidos ao duplicado (H4)', function () {
-    $principal = Participante::factory()->create(['data_nascimento' => '2015-03-10']);
-    $duplicado = Participante::factory()->create(['data_nascimento' => '2015-03-10']);
+    $principal = participanteNaIgreja($this->igreja, ['data_nascimento' => '2015-03-10']);
+    $duplicado = participanteNaIgreja($this->igreja, ['data_nascimento' => '2015-03-10']);
 
     $vinculo = ResponsavelParticipante::factory()->aprovado()->create([
         'participante_id' => $duplicado->id,
@@ -76,9 +76,39 @@ it('desfazer a mesclagem devolve os vinculos movidos ao duplicado (H4)', functio
     expect($vinculo->fresh()->participante_id)->toBe($duplicado->id);
 });
 
+it('nao mescla cadastros fora do escopo territorial (M6)', function () {
+    // Ambos os cadastros estao em outra igreja, fora da subarvore da
+    // coordenadora (design §6.7: a igreja de referencia gateia a mesclagem).
+    ['igreja' => $outra] = igrejaComEbi();
+
+    $principal = participanteNaIgreja($outra, ['data_nascimento' => '2015-03-10']);
+    $duplicado = participanteNaIgreja($outra, ['data_nascimento' => '2015-03-10']);
+
+    $this->postJson("/api/v1/participants/{$principal->id}/merge", [
+        'duplicado_id' => $duplicado->id,
+    ], $this->auth + ['Idempotency-Key' => (string) Str::uuid()])->assertForbidden();
+
+    expect($duplicado->fresh()->status)->toBe('ativo');
+});
+
+it('desfazer mesclagem fora do escopo e negado (M6)', function () {
+    ['igreja' => $outra] = igrejaComEbi();
+
+    $principal = participanteNaIgreja($outra, ['data_nascimento' => '2015-03-10']);
+    $duplicado = participanteNaIgreja($outra, ['data_nascimento' => '2015-03-10']);
+
+    // Mesclagem direta no servico (sem passar pelo gate HTTP) para montar o
+    // estado e testar so a negacao do desfazer.
+    app(GerirMesclagem::class)
+        ->mesclar($this->coordenadora->id, $principal->id, $duplicado->id);
+
+    $this->postJson("/api/v1/participants/{$principal->id}/merge/undo", [], $this->auth + ['Idempotency-Key' => (string) Str::uuid()])
+        ->assertForbidden();
+});
+
 it('grava auditoria da mesclagem e da reversao', function () {
-    $principal = Participante::factory()->create(['data_nascimento' => '2015-03-10']);
-    $duplicado = Participante::factory()->create(['data_nascimento' => '2015-03-10']);
+    $principal = participanteNaIgreja($this->igreja, ['data_nascimento' => '2015-03-10']);
+    $duplicado = participanteNaIgreja($this->igreja, ['data_nascimento' => '2015-03-10']);
 
     $this->postJson("/api/v1/participants/{$principal->id}/merge", ['duplicado_id' => $duplicado->id], $this->auth + ['Idempotency-Key' => (string) Str::uuid()])->assertOk();
     $this->postJson("/api/v1/participants/{$principal->id}/merge/undo", [], $this->auth + ['Idempotency-Key' => (string) Str::uuid()])->assertOk();
