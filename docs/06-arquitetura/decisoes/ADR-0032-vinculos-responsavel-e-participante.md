@@ -27,7 +27,7 @@ A Etapa 5 entrega o **cadastro único do participante** e os **vínculos do resp
 7. **Evidência do cadastro assistido rejeitada após o cadastro (M5).** A evidência é enfileirada antes de criar o participante; a fila é assíncrona em produção, então o arquivo pode ser classificado `infectado`/`inválido` **depois** de o participante existir. Falta a reconciliação/auditoria que sinaliza o cadastro assistido sem evidência limpa. Fica para a fase devida (E08/retenção).
 8. **`PATCH /participants/{id}` (correção) sem rota e `GET /participants` sem paginação (M9).** A operação `participante.corrigir` está no catálogo/matriz, mas sem endpoint nesta entrega; a busca/dedup devolve a lista inteira do escopo (sem cursor/limite).
 9. **`aprovar` exceção aceita `vigente_ate` no passado (M8).** A exceção já-vencida não concede presença (o `AvaliadorElegibilidade` recusa), mas a aprovação não valida a data de vigência na entrada; regra de sanidade fica para o hardening.
-10. **Cifra client-side vs SSE-S3** — usado SSE-S3 (MinIO); chave gerenciada pela aplicação fica como alternativa se a CCB exigir.
+10. **Cifra client-side vs SSE-S3** — usado SSE-S3 (MinIO); chave gerenciada pela aplicação fica como alternativa se a CCB exigir. O driver S3 depende de `league/flysystem-aws-s3-v3` (adicionado ao `composer.json` nesta correção — sem ele o pipeline falhava em qualquer ambiente com S3 real, pois os testes usam disco fake).
 11. **Testes de frontend (Vitest)** — segue validado por `lint` + `build` (ADR-0022).
 
 ## Consequências

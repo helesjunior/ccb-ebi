@@ -1,0 +1,76 @@
+# Override de desenvolvimento (o Docker Compose o aplica automaticamente sobre
+# o docker-compose.yml). Adiciona o storage do pipeline de arquivos (E08):
+# um S3 compatível (LocalStack) + ClamAV (antivírus). Sem isto, o cadastro
+# assistido não conclui — o upload falha por falta de bucket e o scan falha por
+# falta de clamd.
+#
+# As variáveis AWS_*/CLAMAV_* ficam no backend/.env (ver backend/.env.example).
+# Os buckets (quarentena + laudos) são criados pelo serviço `s3-init`.
+#
+# Nota: usamos LocalStack (e não MinIO) porque as imagens oficiais do MinIO não
+# estão disponíveis para pull anônimo neste ambiente. A app fala S3 puro, então
+# trocar pelo MinIO depois é só apontar AWS_ENDPOINT.
+services:
+  app:
+    environment:
+      AWS_ENDPOINT: http://s3:4566
+      AWS_USE_PATH_STYLE_ENDPOINT: "true"
+      CLAMAV_HOST: clamav
+    depends_on:
+      s3: { condition: service_healthy }
+      s3-init: { condition: service_completed_successfully }
+      clamav: { condition: service_started }
+
+  horizon:
+    environment:
+      AWS_ENDPOINT: http://s3:4566
+      AWS_USE_PATH_STYLE_ENDPOINT: "true"
+      CLAMAV_HOST: clamav
+    depends_on:
+      s3-init: { condition: service_completed_successfully }
+
+  scheduler:
+    environment:
+      AWS_ENDPOINT: http://s3:4566
+      AWS_USE_PATH_STYLE_ENDPOINT: "true"
+      CLAMAV_HOST: clamav
+
+  s3:
+    image: localstack/localstack:3.8.1
+    environment:
+      SERVICES: s3
+      DEBUG: "0"
+    ports: ["127.0.0.1:4566:4566"]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  # Cria os buckets do pipeline (quarentena + laudos) de forma idempotente.
+  s3-init:
+    image: localstack/localstack:3.8.1
+    depends_on:
+      s3: { condition: service_healthy }
+    environment:
+      AWS_ACCESS_KEY_ID: ebi
+      AWS_SECRET_ACCESS_KEY: ebi-secret
+      AWS_DEFAULT_REGION: us-east-1
+    entrypoint: >
+      /bin/sh -c "
+      awslocal s3 mb s3://ebi-quarentena --endpoint-url http://s3:4566 || true &&
+      awslocal s3 mb s3://ebi-laudos --endpoint-url http://s3:4566 || true &&
+      echo 'buckets prontos'
+      "
+
+  clamav:
+    image: clamav/clamav:1.4
+    volumes: [clamdb:/var/lib/clamav]
+    healthcheck:
+      test: ["CMD", "clamdcheck.sh"]
+      interval: 60s
+      start_period: 5m
+
+volumes:
+  clamdb:
