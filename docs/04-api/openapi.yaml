@@ -909,11 +909,7 @@ paths:
           in: query
           required: false
           schema: { type: string }
-        - name: finalidade
-          in: query
-          required: true
-          description: Finalidade declarada da leitura identificável (registrada na auditoria).
-          schema: { type: string }
+        - $ref: '#/components/parameters/FinalidadeLeitura'
       responses:
         '200':
           description: Candidatos
@@ -994,10 +990,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/XActingScope'
         - $ref: '#/components/parameters/ParticipanteId'
-        - name: finalidade
-          in: query
-          required: true
-          schema: { type: string }
+        - $ref: '#/components/parameters/FinalidadeLeitura'
       responses:
         '200':
           description: Participante
@@ -1284,6 +1277,14 @@ components:
       name: id
       in: path
       required: true
+      schema: { type: string }
+    FinalidadeLeitura:
+      name: finalidade
+      in: query
+      required: true
+      description: >-
+        Finalidade declarada da leitura identificável (matriz `*` da leitura),
+        registrada na auditoria. Não reusa a finalidade do termo de consentimento.
       schema: { type: string }
   responses:
     Problem:
@@ -1583,6 +1584,7 @@ components:
             proximo_cursor: { type: [string, 'null'] }
     Participante:
       type: object
+      required: [id, nome, data_nascimento]
       properties:
         id: { type: string }
         matricula: { type: string, description: '8 caracteres Crockford + dígito verificador.' }

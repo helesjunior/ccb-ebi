@@ -1981,8 +1981,8 @@ export interface paths {
                     q: string;
                     data_nascimento?: string;
                     igreja_referencia_id?: string;
-                    /** @description Finalidade declarada da leitura identificável (registrada na auditoria). */
-                    finalidade: string;
+                    /** @description Finalidade declarada da leitura identificável (matriz `*` da leitura), registrada na auditoria. Não reusa a finalidade do termo de consentimento. */
+                    finalidade: components["parameters"]["FinalidadeLeitura"];
                 };
                 header?: {
                     /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
@@ -2115,7 +2115,8 @@ export interface paths {
         get: {
             parameters: {
                 query: {
-                    finalidade: string;
+                    /** @description Finalidade declarada da leitura identificável (matriz `*` da leitura), registrada na auditoria. Não reusa a finalidade do termo de consentimento. */
+                    finalidade: components["parameters"]["FinalidadeLeitura"];
                 };
                 header?: {
                     /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
@@ -2785,13 +2786,13 @@ export interface components {
             };
         };
         Participante: {
-            id?: string;
+            id: string;
             /** @description 8 caracteres Crockford + dígito verificador. */
             matricula?: string;
-            nome?: string;
+            nome: string;
             nome_social?: string | null;
             /** Format: date */
-            data_nascimento?: string;
+            data_nascimento: string;
             status?: string;
             /** @enum {string} */
             origem_cadastro?: "responsavel" | "assistido";
@@ -2909,6 +2910,8 @@ export interface components {
         ParticipanteId: string;
         VinculoResponsavelId: string;
         ExcecaoEtariaId: string;
+        /** @description Finalidade declarada da leitura identificável (matriz `*` da leitura), registrada na auditoria. Não reusa a finalidade do termo de consentimento. */
+        FinalidadeLeitura: string;
     };
     requestBodies: never;
     headers: never;

@@ -12,14 +12,32 @@ import {
 } from './api/sessao'
 import { AceitarConvite } from './pages/AceitarConvite'
 import { Auditoria } from './pages/Auditoria'
+import { CadastroAssistido } from './pages/CadastroAssistido'
+import { Dependentes } from './pages/Dependentes'
 import { Dispositivos } from './pages/Dispositivos'
 import { Equipe } from './pages/Equipe'
+import { ExcecaoInclusiva } from './pages/ExcecaoInclusiva'
 import { Login } from './pages/Login'
+import { Mesclagem } from './pages/Mesclagem'
 import { MeuPerfil } from './pages/MeuPerfil'
+import { Participantes } from './pages/Participantes'
 import { Privacidade } from './pages/Privacidade'
+import { Vinculos } from './pages/Vinculos'
 import { Button } from '@/components/ui/button'
 
-type Tela = 'inicio' | 'perfil' | 'dispositivos' | 'equipe' | 'privacidade' | 'auditoria'
+type Tela =
+  | 'inicio'
+  | 'perfil'
+  | 'dispositivos'
+  | 'equipe'
+  | 'privacidade'
+  | 'auditoria'
+  | 'participantes'
+  | 'dependentes'
+  | 'cadastro-assistido'
+  | 'vinculos'
+  | 'excecao'
+  | 'mesclagem'
 
 interface ConvitePendente {
   id: string
@@ -110,6 +128,24 @@ function App() {
         <button type="button" onClick={() => setTela('privacidade')}>
           Privacidade
         </button>
+        <button type="button" onClick={() => setTela('participantes')}>
+          Participantes
+        </button>
+        <button type="button" onClick={() => setTela('dependentes')}>
+          Dependentes
+        </button>
+        <button type="button" onClick={() => setTela('cadastro-assistido')}>
+          Cadastro assistido
+        </button>
+        <button type="button" onClick={() => setTela('vinculos')}>
+          Vínculos
+        </button>
+        <button type="button" onClick={() => setTela('excecao')}>
+          Exceção inclusiva
+        </button>
+        <button type="button" onClick={() => setTela('mesclagem')}>
+          Mesclagem
+        </button>
         <button type="button" onClick={() => setTela('auditoria')}>
           Auditoria
         </button>
@@ -139,6 +175,12 @@ function App() {
       {tela === 'dispositivos' && <Dispositivos />}
       {tela === 'equipe' && <Equipe />}
       {tela === 'privacidade' && <Privacidade />}
+      {tela === 'participantes' && <Participantes />}
+      {tela === 'dependentes' && <Dependentes />}
+      {tela === 'cadastro-assistido' && <CadastroAssistido />}
+      {tela === 'vinculos' && <Vinculos />}
+      {tela === 'excecao' && <ExcecaoInclusiva />}
+      {tela === 'mesclagem' && <Mesclagem />}
       {tela === 'auditoria' && <Auditoria />}
     </>
   )
