@@ -82,6 +82,10 @@
 @layer base {
   :root {
     color-scheme: light dark;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   * {
@@ -94,7 +98,7 @@
     font-size: 18px;
     line-height: 145%;
     letter-spacing: 0.18px;
-    color: var(--foreground);
+    color: var(--muted-foreground);
     background: var(--background);
   }
 
@@ -143,7 +147,7 @@
   }
 
   @media (max-width: 1024px) {
-    #root {
+    :root {
       font-size: 16px;
     }
 
