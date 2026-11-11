@@ -37,4 +37,11 @@ return [
         ],
     ],
 
+    // ClamAV (clamd): antivirus do pipeline de arquivos (E08).
+    'clamav' => [
+        'host' => env('CLAMAV_HOST', 'clamav'),
+        'porta' => (int) env('CLAMAV_PORT', 3310),
+        'timeout' => (int) env('CLAMAV_TIMEOUT', 15),
+    ],
+
 ];

@@ -885,6 +885,311 @@ paths:
               schema: { $ref: '#/components/schemas/EventoAuditoriaPage' }
         '401': { $ref: '#/components/responses/Problem' }
         '403': { $ref: '#/components/responses/Problem' }
+  /participants:
+    get:
+      tags: [participants]
+      summary: Buscar participantes por nome/data (dedup, CA-27)
+      description: >-
+        Busca candidatos por nome normalizado (sem acento, minúsculas) e, se
+        informado, data de nascimento. Exige a operação `participante.ler` e a
+        finalidade declarada (`finalidade`), registrada na auditoria.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - name: q
+          in: query
+          required: true
+          schema: { type: string }
+        - name: data_nascimento
+          in: query
+          required: false
+          schema: { type: string, format: date }
+        - name: igreja_referencia_id
+          in: query
+          required: false
+          schema: { type: string }
+        - name: finalidade
+          in: query
+          required: true
+          description: Finalidade declarada da leitura identificável (registrada na auditoria).
+          schema: { type: string }
+      responses:
+        '200':
+          description: Candidatos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Participante' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+    post:
+      tags: [participants]
+      summary: Cadastrar participante (RF-02)
+      description: >-
+        O responsável cadastra um participante. Gera a matrícula nacional e
+        registra auditoria. Exige a operação `participante.cadastrar`; escrita
+        idempotente (`Idempotency-Key`).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ParticipanteInput' }
+      responses:
+        '201':
+          description: Participante cadastrado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Participante' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /participants/assisted:
+    post:
+      tags: [participants]
+      summary: Cadastro assistido com evidência (FL-01, CA-16)
+      description: >-
+        A coordenadora cadastra um participante presencialmente com a evidência
+        de aceite obrigatória (arquivo, que passa pelo pipeline de storage). O
+        responsável pode existir sem conta. Exige `participante.cadastrar`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema: { $ref: '#/components/schemas/CadastroAssistidoInput' }
+      responses:
+        '201':
+          description: Participante cadastrado (assistido)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Participante' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /participants/{id}:
+    get:
+      tags: [participants]
+      summary: Consultar participante (RF-02)
+      description: >-
+        Leitura por operador, sob a operação `participante.ler` (territorial). O
+        caminho do responsável é por propriedade (`/me/participants`). Exige a
+        finalidade declarada, registrada na auditoria.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/ParticipanteId'
+        - name: finalidade
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Participante
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Participante' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /participants/{id}/guardians:
+    post:
+      tags: [participants]
+      summary: Solicitar vínculo de responsável (RF-03)
+      description: >-
+        O responsável autenticado pede o vínculo com um participante. O vínculo
+        nasce `pendente` e só libera acesso após aprovação (CA-04). Escrita
+        idempotente.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/ParticipanteId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/VinculoResponsavelInput' }
+      responses:
+        '201':
+          description: Vínculo solicitado (pendente)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ResponsavelParticipante' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /me/participants:
+    get:
+      tags: [participants]
+      summary: Dependentes do responsável (autorização por propriedade, CA-04)
+      description: >-
+        Lista os participantes que o usuário representa por vínculo `aprovada` e
+        vigente. Nunca usa território nem o conhecimento da matrícula.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+      responses:
+        '200':
+          description: Dependentes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Participante' }
+        '401': { $ref: '#/components/responses/Problem' }
+  /guardian-requests/{id}:
+    patch:
+      tags: [participants]
+      summary: Decidir pedido de vínculo (RF-03)
+      description: >-
+        A coordenadora aprova, recusa, pede documento, revoga ou contesta um
+        vínculo. Exige a operação `vinculo.gerenciar`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/VinculoResponsavelId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DecisaoVinculoInput' }
+      responses:
+        '200':
+          description: Vínculo atualizado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ResponsavelParticipante' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /participants/{id}/age-exceptions:
+    post:
+      tags: [participants]
+      summary: Solicitar exceção inclusiva (FL-06)
+      description: >-
+        O responsável solicita a exceção inclusiva para um participante. Nasce
+        `solicitada`. Escrita idempotente.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/ParticipanteId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ExcecaoEtariaInput' }
+      responses:
+        '201':
+          description: Exceção solicitada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExcecaoEtaria' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /age-exceptions/{id}:
+    patch:
+      tags: [participants]
+      summary: Decidir exceção inclusiva (FL-06, CA-17)
+      description: >-
+        A coordenadora aprova, recusa, suspende ou revoga a exceção. Exige a
+        operação `excecao.decidir`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/ExcecaoEtariaId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DecisaoExcecaoInput' }
+      responses:
+        '200':
+          description: Exceção atualizada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExcecaoEtaria' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /participants/{id}/merge:
+    post:
+      tags: [participants]
+      summary: Mesclar duplicados (CA-27)
+      description: >-
+        Funde o duplicado no principal, preservando um snapshot para desfazer.
+        Exige `participante.mesclar`; escrita idempotente e auditada.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/ParticipanteId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MesclagemInput' }
+      responses:
+        '200':
+          description: Participante principal após a mesclagem
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Participante' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /participants/{id}/merge/undo:
+    post:
+      tags: [participants]
+      summary: Desfazer mesclagem (CA-27)
+      description: >-
+        Restaura o estado anterior gravado na última mesclagem. Exige
+        `participante.mesclar`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/ParticipanteId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Participante principal restaurado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Participante' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
 components:
   securitySchemes:
     bearerAuth:
@@ -961,6 +1266,21 @@ components:
       required: true
       schema: { type: string }
     ConsentimentoId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+    ParticipanteId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+    VinculoResponsavelId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+    ExcecaoEtariaId:
       name: id
       in: path
       required: true
@@ -1261,3 +1581,100 @@ components:
           type: object
           properties:
             proximo_cursor: { type: [string, 'null'] }
+    Participante:
+      type: object
+      properties:
+        id: { type: string }
+        matricula: { type: string, description: '8 caracteres Crockford + dígito verificador.' }
+        nome: { type: string }
+        nome_social: { type: [string, 'null'] }
+        data_nascimento: { type: string, format: date }
+        status: { type: string }
+        origem_cadastro: { type: string, enum: [responsavel, assistido] }
+        igreja_referencia_id: { type: [string, 'null'] }
+    ParticipanteInput:
+      type: object
+      required: [nome, data_nascimento]
+      properties:
+        nome: { type: string, maxLength: 255 }
+        nome_social: { type: [string, 'null'], maxLength: 255 }
+        data_nascimento: { type: string, format: date }
+        igreja_referencia_id: { type: [string, 'null'] }
+    CadastroAssistidoInput:
+      type: object
+      required: [nome, data_nascimento, responsavel_nome, tipo_relacao, evidencia]
+      properties:
+        nome: { type: string, maxLength: 255 }
+        nome_social: { type: [string, 'null'], maxLength: 255 }
+        data_nascimento: { type: string, format: date }
+        igreja_referencia_id: { type: [string, 'null'] }
+        responsavel_nome: { type: string, maxLength: 255 }
+        responsavel_telefone: { type: [string, 'null'], maxLength: 30 }
+        tipo_relacao: { type: string, maxLength: 50 }
+        evidencia:
+          type: string
+          format: binary
+          description: 'Arquivo da evidência de aceite (PDF/JPEG/PNG). Obrigatório.'
+    ResponsavelParticipante:
+      type: object
+      properties:
+        id: { type: string }
+        usuario_id: { type: [string, 'null'] }
+        participante_id: { type: string }
+        nome: { type: string }
+        tipo_relacao: { type: string }
+        status: { type: string }
+        validacao: { type: string, enum: [pendente, aprovada, aguardando_documento, recusada] }
+        conferido_em: { type: [string, 'null'], format: date-time }
+        inicio: { type: [string, 'null'], format: date }
+        fim: { type: [string, 'null'], format: date }
+    VinculoResponsavelInput:
+      type: object
+      required: [nome, tipo_relacao]
+      properties:
+        nome: { type: string, maxLength: 255 }
+        tipo_relacao: { type: string, maxLength: 50 }
+        telefone: { type: [string, 'null'], maxLength: 30 }
+    DecisaoVinculoInput:
+      type: object
+      required: [decisao]
+      properties:
+        decisao:
+          type: string
+          enum: [aprovar, recusar, pedir_documento, revogar, contestar]
+        motivo: { type: [string, 'null'], maxLength: 500 }
+    ExcecaoEtaria:
+      type: object
+      properties:
+        id: { type: string }
+        participante_id: { type: string }
+        tipo_necessidade: { type: string }
+        status:
+          type: string
+          enum: [solicitada, aprovada, recusada, suspensa, revogada, expirada]
+        decidido_por: { type: [string, 'null'] }
+        decidido_em: { type: [string, 'null'], format: date-time }
+        vigente_ate: { type: [string, 'null'], format: date }
+        revogado_em: { type: [string, 'null'], format: date-time }
+        motivo: { type: [string, 'null'] }
+    ExcecaoEtariaInput:
+      type: object
+      required: [tipo_necessidade]
+      properties:
+        tipo_necessidade: { type: string, maxLength: 100 }
+        apoios_necessarios: { type: [string, 'null'], maxLength: 2000 }
+        justificativa_funcional: { type: [string, 'null'], maxLength: 2000 }
+    DecisaoExcecaoInput:
+      type: object
+      required: [decisao]
+      properties:
+        decisao: { type: string, enum: [aprovar, recusar, suspender, revogar] }
+        vigente_ate: { type: [string, 'null'], format: date }
+        revisao_prevista_em: { type: [string, 'null'], format: date }
+        responsavel_concordante_id: { type: [string, 'null'] }
+        motivo: { type: [string, 'null'], maxLength: 500 }
+    MesclagemInput:
+      type: object
+      required: [duplicado_id]
+      properties:
+        duplicado_id: { type: string }

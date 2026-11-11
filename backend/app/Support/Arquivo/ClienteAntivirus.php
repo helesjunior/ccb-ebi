@@ -24,7 +24,7 @@ class ClienteAntivirus
     /** @return bool true = limpo, false = infectado. */
     public function scan(string $conteudo): bool
     {
-        $host = $this->host !== '' ? $this->host : (string) config('services.clamav.host', env('CLAMAV_HOST', 'clamav'));
+        $host = $this->host !== '' ? $this->host : (string) config('services.clamav.host', 'clamav');
 
         $socket = @fsockopen($host, $this->porta, $errno, $errstr, $this->timeout);
 

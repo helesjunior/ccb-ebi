@@ -20,7 +20,9 @@ class PipelineArquivo implements ArmazenarArquivo
     {
         $chave = 'quarentena/'.Str::ulid().'/'.$arquivo->getClientOriginalName();
 
-        Storage::disk('quarentena')->put($chave, $arquivo->get());
+        $conteudo = $arquivo->get();
+
+        Storage::disk('quarentena')->put($chave, $conteudo === false ? '' : $conteudo);
 
         $registro = Arquivo::create([
             'finalidade' => $finalidade,

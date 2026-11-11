@@ -52,7 +52,7 @@ class GerenciadorMesclagem implements GerirMesclagem
                 'principal' => [
                     'nome' => $principal->nome,
                     'nome_social' => $principal->nome_social,
-                    'data_nascimento' => $principal->data_nascimento?->toDateString(),
+                    'data_nascimento' => $principal->data_nascimento->toDateString(),
                     'igreja_referencia_id' => $principal->igreja_referencia_id,
                 ],
                 'duplicado' => [
@@ -99,7 +99,7 @@ class GerenciadorMesclagem implements GerirMesclagem
             $principal->save();
 
             // Devolve o duplicado ao estado anterior e repoe seus vinculos.
-            if ($duplicado !== null) {
+            if ($duplicado instanceof Participante) {
                 $duplicado->status = $snapshot['duplicado']['status'] ?? 'ativo';
                 $duplicado->save();
             }

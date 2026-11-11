@@ -11,7 +11,7 @@ beforeEach(function () {
 it('detecta possivel duplicidade por nome normalizado e data', function () {
     Participante::factory()->create(['nome' => 'José  da Silva', 'data_nascimento' => '2015-03-10']);
 
-    $this->getJson('/api/v1/participants?q='.urlencode('jose da silva'), $this->auth)
+    $this->getJson('/api/v1/participants?q='.urlencode('jose da silva').'&finalidade=deduplicacao', $this->auth)
         ->assertOk()
         ->assertJsonPath('data.0.nome', 'José  da Silva');
 });
