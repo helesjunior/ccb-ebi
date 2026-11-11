@@ -7,6 +7,8 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CentralController;
 use App\Http\Controllers\Api\V1\ChurchController;
 use App\Http\Controllers\Api\V1\EbiController;
+use App\Http\Controllers\Api\V1\GuardianController;
+use App\Http\Controllers\Api\V1\GuardianRequestController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\InvitationAcceptController;
 use App\Http\Controllers\Api\V1\InvitationController;
@@ -151,5 +153,16 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         });
         Route::get('participants/{id}', [ParticipantController::class, 'show'])
             ->middleware('can:participante.ler')->name('participants.show');
+
+        // Vinculos do responsavel (RF-03). A solicitacao parte do responsavel
+        // autenticado; a decisao e da coordenadora (`vinculo.gerenciar`).
+        Route::middleware(IdempotenciaMiddleware::class)->group(function (): void {
+            Route::post('participants/{participantId}/guardians', [GuardianController::class, 'store'])
+                ->name('guardians.store');
+        });
+        Route::get('me/participants', [GuardianController::class, 'meusDependentes'])
+            ->name('me.participants.index');
+        Route::patch('guardian-requests/{id}', [GuardianRequestController::class, 'update'])
+            ->middleware('can:vinculo.gerenciar')->name('guardian-requests.update');
     });
 });

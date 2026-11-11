@@ -51,7 +51,9 @@ use App\Domain\Organizacao\Services\ConsultaOrganizacao;
 use App\Domain\Organizacao\Services\GerenciadorOrganizacao;
 use App\Domain\Organizacao\Services\ServicoTransferencia;
 use App\Domain\Participantes\Contracts\GerirParticipante;
+use App\Domain\Participantes\Contracts\GerirVinculoResponsavel;
 use App\Domain\Participantes\Services\GerenciadorParticipante;
+use App\Domain\Participantes\Services\GerenciadorVinculoResponsavel;
 use App\Domain\Privacidade\Contracts\ConsultarConsentimentos;
 use App\Domain\Privacidade\Contracts\GerirTermos;
 use App\Domain\Privacidade\Contracts\RegistrarConsentimento;
@@ -95,5 +97,6 @@ class DomainServiceProvider extends ServiceProvider
         $this->app->bind(LerDadoSensivel::class, LeitorDadoSensivel::class);
         $this->app->bind(ExpurgarRetencao::class, ExpurgadorRetencao::class);
         $this->app->bind(GerirParticipante::class, GerenciadorParticipante::class);
+        $this->app->bind(GerirVinculoResponsavel::class, GerenciadorVinculoResponsavel::class);
     }
 }
