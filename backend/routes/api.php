@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\V1\InvitationController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MfaController;
 use App\Http\Controllers\Api\V1\ParticipantController;
+use App\Http\Controllers\Api\V1\ParticipantMergeController;
 use App\Http\Controllers\Api\V1\PasswordController;
 use App\Http\Controllers\Api\V1\PrivacyConsentController;
 use App\Http\Controllers\Api\V1\PrivacyRequestController;
@@ -154,6 +155,17 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         });
         Route::get('participants/{id}', [ParticipantController::class, 'show'])
             ->middleware('can:participante.ler')->name('participants.show');
+
+        // Busca/dedup e mesclagem (CA-27). Busca e leitura; mesclagem e escrita
+        // sob `participante.mesclar`, idempotente e reversivel.
+        Route::get('participants', [ParticipantController::class, 'index'])
+            ->middleware('can:participante.ler')->name('participants.index');
+        Route::middleware(IdempotenciaMiddleware::class)->group(function (): void {
+            Route::post('participants/{id}/merge', [ParticipantMergeController::class, 'store'])
+                ->middleware('can:participante.mesclar')->name('participants.merge');
+            Route::post('participants/{id}/merge/undo', [ParticipantMergeController::class, 'undo'])
+                ->middleware('can:participante.mesclar')->name('participants.merge.undo');
+        });
 
         // Vinculos do responsavel (RF-03). A solicitacao parte do responsavel
         // autenticado; a decisao e da coordenadora (`vinculo.gerenciar`).

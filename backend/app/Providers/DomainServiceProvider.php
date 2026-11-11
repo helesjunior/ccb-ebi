@@ -51,9 +51,11 @@ use App\Domain\Organizacao\Services\ConsultaOrganizacao;
 use App\Domain\Organizacao\Services\GerenciadorOrganizacao;
 use App\Domain\Organizacao\Services\ServicoTransferencia;
 use App\Domain\Participantes\Contracts\GerirExcecaoEtaria;
+use App\Domain\Participantes\Contracts\GerirMesclagem;
 use App\Domain\Participantes\Contracts\GerirParticipante;
 use App\Domain\Participantes\Contracts\GerirVinculoResponsavel;
 use App\Domain\Participantes\Services\GerenciadorExcecao;
+use App\Domain\Participantes\Services\GerenciadorMesclagem;
 use App\Domain\Participantes\Services\GerenciadorParticipante;
 use App\Domain\Participantes\Services\GerenciadorVinculoResponsavel;
 use App\Domain\Privacidade\Contracts\ConsultarConsentimentos;
@@ -101,5 +103,6 @@ class DomainServiceProvider extends ServiceProvider
         $this->app->bind(GerirParticipante::class, GerenciadorParticipante::class);
         $this->app->bind(GerirVinculoResponsavel::class, GerenciadorVinculoResponsavel::class);
         $this->app->bind(GerirExcecaoEtaria::class, GerenciadorExcecao::class);
+        $this->app->bind(GerirMesclagem::class, GerenciadorMesclagem::class);
     }
 }

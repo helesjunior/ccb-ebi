@@ -22,6 +22,14 @@ interface GerirParticipante
     public function encontrar(string $id): ?Participante;
 
     /**
+     * Busca candidatos por nome normalizado + data de nascimento + igreja de
+     * referencia (dedup, CA-27). Devolve apenas o sinal.
+     *
+     * @return array<int, Participante>
+     */
+    public function buscar(string $nome, ?string $dataNascimento = null, ?string $igrejaReferenciaId = null): array;
+
+    /**
      * Corrige dados cadastrais permitidos. Registra auditoria com o estado
      * anterior para reversao (ADR-0007).
      *

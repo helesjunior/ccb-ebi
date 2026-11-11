@@ -23,6 +23,20 @@ class ParticipantController
         return (new ParticipanteResource($participante))->response()->setStatusCode(201);
     }
 
+    /** Busca candidatos por nome normalizado + data (dedup, CA-27). */
+    public function index(Request $request): JsonResponse
+    {
+        $candidatos = $this->participantes->buscar(
+            (string) $request->query('q', ''),
+            $request->query('data_nascimento'),
+            $request->query('igreja_referencia_id'),
+        );
+
+        return response()->json([
+            'data' => ParticipanteResource::collection($candidatos)->resolve($request),
+        ]);
+    }
+
     public function show(Request $request, string $id): JsonResponse
     {
         // Leitura por operador: a policy cobre `participante.ler` (territorial).

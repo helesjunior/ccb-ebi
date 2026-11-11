@@ -18,7 +18,10 @@ use Illuminate\Support\Carbon;
  */
 class GerenciadorParticipante implements GerirParticipante
 {
-    public function __construct(private readonly RegistrarEvento $auditoria) {}
+    public function __construct(
+        private readonly RegistrarEvento $auditoria,
+        private readonly DetectorDuplicidade $detector,
+    ) {}
 
     public function cadastrar(string $usuarioId, array $dados): Participante
     {
@@ -54,6 +57,15 @@ class GerenciadorParticipante implements GerirParticipante
     public function encontrar(string $id): ?Participante
     {
         return Participante::query()->find($id);
+    }
+
+    public function buscar(string $nome, ?string $dataNascimento = null, ?string $igrejaReferenciaId = null): array
+    {
+        return $this->detector->detectar([
+            'nome' => $nome,
+            'data_nascimento' => $dataNascimento,
+            'igreja_referencia_id' => $igrejaReferenciaId,
+        ]);
     }
 
     public function corrigir(string $usuarioId, string $id, array $dados): Participante
