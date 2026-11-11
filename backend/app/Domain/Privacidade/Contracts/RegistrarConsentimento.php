@@ -13,14 +13,18 @@ use App\Support\ProblemException;
 interface RegistrarConsentimento
 {
     /**
+     * @param  string|null  $usuarioId  nulo no cadastro assistido (sem conta)
+     * @param  string|null  $participanteId  participante a quem o aceite se refere
+     *
      * @throws ProblemException quando a versao de termo nao existe.
      */
     public function registrar(
-        string $usuarioId,
+        ?string $usuarioId,
         string $termoVersaoId,
         string $decisao,
         string $origem,
         EvidenciaAceite $evidencia,
+        ?string $participanteId = null,
     ): ManifestacaoPrivacidade;
 
     /**

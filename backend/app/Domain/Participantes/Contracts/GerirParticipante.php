@@ -22,6 +22,16 @@ interface GerirParticipante
     public function encontrar(string $id): ?Participante;
 
     /**
+     * Cadastro assistido (FL-01, CA-16): a coordenadora cadastra um participante
+     * com uma evidencia de aceite obrigatoria (arquivo, ja no pipeline). Cria o
+     * participante (origem `assistido`), o responsavel sem conta, o arquivo de
+     * evidencia e a manifestacao de consentimento (usuario nulo).
+     *
+     * @param  array<string, mixed>  $dados  nome, data_nascimento, nome_social?, responsavel_nome, tipo_relacao
+     */
+    public function cadastrarAssistido(string $usuarioId, array $dados, string $evidenciaArquivoId): Participante;
+
+    /**
      * Busca candidatos por nome normalizado + data de nascimento + igreja de
      * referencia (dedup, CA-27). Devolve apenas o sinal.
      *

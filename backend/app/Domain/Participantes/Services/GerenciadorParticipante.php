@@ -5,8 +5,13 @@ namespace App\Domain\Participantes\Services;
 use App\Domain\Auditoria\Contracts\RegistrarEvento;
 use App\Domain\Participantes\Contracts\GerirParticipante;
 use App\Domain\Participantes\Models\Participante;
+use App\Domain\Participantes\Models\ResponsavelParticipante;
+use App\Domain\Privacidade\Contracts\GerirTermos;
+use App\Domain\Privacidade\Contracts\RegistrarConsentimento;
+use App\Support\EvidenciaAceite;
 use App\Support\ProblemException;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Cadastro e correcao de participantes pelo responsavel (RF-02, CA-01).
@@ -21,6 +26,8 @@ class GerenciadorParticipante implements GerirParticipante
     public function __construct(
         private readonly RegistrarEvento $auditoria,
         private readonly DetectorDuplicidade $detector,
+        private readonly RegistrarConsentimento $consentimentos,
+        private readonly GerirTermos $termos,
     ) {}
 
     public function cadastrar(string $usuarioId, array $dados): Participante
@@ -66,6 +73,83 @@ class GerenciadorParticipante implements GerirParticipante
             'data_nascimento' => $dataNascimento,
             'igreja_referencia_id' => $igrejaReferenciaId,
         ]);
+    }
+
+    public function cadastrarAssistido(string $usuarioId, array $dados, string $evidenciaArquivoId): Participante
+    {
+        if ($evidenciaArquivoId === '') {
+            throw new ProblemException('evidencia_obrigatoria', 'Dados inválidos', 422, 'A evidência do cadastro assistido é obrigatória.');
+        }
+
+        $this->validarNascimento($dados['data_nascimento'] ?? null);
+
+        $termo = $this->termos->vigente('cadastro');
+
+        if ($termo === null) {
+            throw new ProblemException('termo_indisponivel', 'Termo indisponível', 422, 'Não há termo de cadastro vigente.');
+        }
+
+        return DB::transaction(function () use ($usuarioId, $dados, $evidenciaArquivoId, $termo): Participante {
+            $participante = Participante::criarComMatricula([
+                'nome' => (string) $dados['nome'],
+                'nome_social' => $dados['nome_social'] ?? null,
+                'data_nascimento' => $dados['data_nascimento'],
+                'status' => Participante::STATUS_ATIVO,
+                'igreja_referencia_id' => $dados['igreja_referencia_id'] ?? null,
+                'origem_cadastro' => Participante::ORIGEM_ASSISTIDO,
+                'cadastrado_por' => $usuarioId,
+                'evidencia_consentimento_id' => $evidenciaArquivoId,
+            ]);
+
+            // Responsavel sem conta (cadastro assistido): o vinculo nasce
+            // aprovado, pois foi a propria coordenadora que cadastrou.
+            ResponsavelParticipante::create([
+                'usuario_id' => null,
+                'nome' => (string) ($dados['responsavel_nome'] ?? $dados['nome']),
+                'telefone' => $dados['responsavel_telefone'] ?? null,
+                'participante_id' => $participante->id,
+                'tipo_relacao' => (string) ($dados['tipo_relacao'] ?? 'responsavel'),
+                'permissoes' => [],
+                'status' => 'ativo',
+                'validacao' => ResponsavelParticipante::VALIDACAO_APROVADA,
+                'conferido_em' => now(),
+                'conferido_por' => $usuarioId,
+                'inicio' => now()->toDateString(),
+            ]);
+
+            // Consentimento do cadastro assistido: usuario nulo, evidencia com
+            // o arquivo, referenciando o participante (CA-16).
+            $this->consentimentos->registrar(
+                null,
+                (string) $termo->id,
+                'aceito',
+                'assistido',
+                new EvidenciaAceite(
+                    ip: 'presencial',
+                    userAgent: 'cadastro-assistido',
+                    termoHash: $termo->texto_hash ?? null,
+                    arquivoId: $evidenciaArquivoId,
+                ),
+                $participante->id,
+            );
+
+            $this->auditoria->registrar([
+                'acao' => 'participante.cadastrado',
+                'recurso' => 'participante',
+                'ator_id' => $usuarioId,
+                'origem' => 'api',
+                'escopo' => null,
+                'motivo' => null,
+                'metadados_minimizados' => [
+                    'participante_id' => (string) $participante->id,
+                    'origem_cadastro' => $participante->origem_cadastro,
+                    'evidencia_id' => $evidenciaArquivoId,
+                ],
+                'ocorrido_em' => now(),
+            ]);
+
+            return $participante;
+        });
     }
 
     public function corrigir(string $usuarioId, string $id, array $dados): Participante

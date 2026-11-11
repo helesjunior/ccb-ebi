@@ -152,6 +152,8 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         Route::middleware(IdempotenciaMiddleware::class)->group(function (): void {
             Route::post('participants', [ParticipantController::class, 'store'])
                 ->middleware('can:participante.cadastrar')->name('participants.store');
+            Route::post('participants/assisted', [ParticipantController::class, 'storeAssisted'])
+                ->middleware('can:participante.cadastrar')->name('participants.assisted');
         });
         Route::get('participants/{id}', [ParticipantController::class, 'show'])
             ->middleware('can:participante.ler')->name('participants.show');
