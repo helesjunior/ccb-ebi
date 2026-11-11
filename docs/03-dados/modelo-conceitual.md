@@ -60,7 +60,7 @@ erDiagram
 ### Participantes e responsáveis
 | Entidade | Campos-chave |
 |---|---|
-| `participante` | id, matricula, nome, nome_social, data_nascimento, status, igreja_referencia_id (opcional), origem_cadastro (responsavel, assistido), cadastrado_por, evidencia_consentimento_id *(origem e evidência novas na 2.2, ADR-0015; era `crianca`; ver [ADR-0003](../06-arquitetura/decisoes/ADR-0003-entidade-participante.md))* |
+| `participante` | id, matricula, nome, nome_social, data_nascimento, status (ativo, inativo, mesclado), igreja_referencia_id (opcional), origem_cadastro (responsavel, assistido), cadastrado_por, evidencia_consentimento_id (FK real para `arquivo` — E03), snapshot_mesclagem (json, reversão da mesclagem) *(origem e evidência novas na 2.2, ADR-0015; era `crianca`; ver [ADR-0003](../06-arquitetura/decisoes/ADR-0003-entidade-participante.md))* |
 | `excecao_etaria` | id, participante_id, tipo_necessidade (categoria geral), apoios_necessarios, justificativa_funcional, status, solicitado_por, decidido_por (coordenadora), responsavel_concordante_id, decidido_em, vigente_ate (opcional), revisao_prevista_em, revogado_em, motivo *(decisão pela coordenadora com o responsável, ADR-0012)* |
 | `dado_sensivel_participante` | id, participante_id, tipo, conteudo_cifrado ou referencia_segura, finalidade, base_legal, controle_acesso, prazo_retencao |
 | `responsavel_participante` | id, usuario_id (opcional), nome, telefone, participante_id, tipo_relacao, permissoes, restricoes, status, validacao, inicio, fim *(`usuario_id` opcional para responsável sem conta no cadastro assistido, ADR-0015)* |
@@ -90,7 +90,7 @@ erDiagram
 | `atividade` | id, autor_id, título, descrição, referência_bíblica, tema, faixa_etaria, origem_igreja_id, origem_setor_id, origem_regional_id, data_original, status *(tema, faixa e origem completa novos)* |
 | `atividade_tag` | atividade_id, tag *(novo)* |
 | `atividade_versao` | id, atividade_id, número, arquivo_id, hash, créditos, declaracao_direitos, publicado_em |
-| `arquivo` | id, chave_storage, mime, tamanho, sha256, status_antivirus |
+| `arquivo` | id, finalidade, nome_original, mime, tamanho, sha256, chave_storage, bucket, cifrado, status_antivirus (pendente, limpo, infectado, invalido), enviado_por *(fluxo do pipeline na Etapa 5; [ADR-0005](../06-arquitetura/decisoes/ADR-0005-armazenamento-e-antivirus.md))* |
 | `utilizacao_atividade` | id, atividade_versao_id, sessao_id, adaptacao_local, registrado_por, registrado_em *(adaptacao_local nova)* |
 | `avaliacao_atividade` | id, utilizacao_id, usuario_id, estrelas, atualizado_em |
 | `denuncia` | id, alvo (atividade, versão, avaliação), autor_id, motivo, status, decidido_por *(novo, RF-10 e RF-12)* |
