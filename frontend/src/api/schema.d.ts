@@ -1964,6 +1964,596 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/participants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Buscar participantes por nome/data (dedup, CA-27)
+         * @description Busca candidatos por nome normalizado (sem acento, minúsculas) e, se informado, data de nascimento. Exige a operação `participante.ler` e a finalidade declarada (`finalidade`), registrada na auditoria.
+         */
+        get: {
+            parameters: {
+                query: {
+                    q: string;
+                    data_nascimento?: string;
+                    igreja_referencia_id?: string;
+                    /** @description Finalidade declarada da leitura identificável (matriz `*` da leitura), registrada na auditoria. Não reusa a finalidade do termo de consentimento. */
+                    finalidade: components["parameters"]["FinalidadeLeitura"];
+                };
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Candidatos */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["Participante"][];
+                        };
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        /**
+         * Cadastrar participante (RF-02)
+         * @description O responsável cadastra um participante. Gera a matrícula nacional e registra auditoria. Exige a operação `participante.cadastrar`; escrita idempotente (`Idempotency-Key`).
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ParticipanteInput"];
+                };
+            };
+            responses: {
+                /** @description Participante cadastrado */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Participante"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/participants/assisted": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cadastro assistido com evidência (FL-01, CA-16)
+         * @description A coordenadora cadastra um participante presencialmente com a evidência de aceite obrigatória (arquivo, que passa pelo pipeline de storage). O responsável pode existir sem conta. Exige `participante.cadastrar`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "multipart/form-data": components["schemas"]["CadastroAssistidoInput"];
+                };
+            };
+            responses: {
+                /** @description Participante cadastrado (assistido) */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Participante"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/participants/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Consultar participante (RF-02)
+         * @description Leitura por operador, sob a operação `participante.ler` (territorial). O caminho do responsável é por propriedade (`/me/participants`). Exige a finalidade declarada, registrada na auditoria.
+         */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Finalidade declarada da leitura identificável (matriz `*` da leitura), registrada na auditoria. Não reusa a finalidade do termo de consentimento. */
+                    finalidade: components["parameters"]["FinalidadeLeitura"];
+                };
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                };
+                path: {
+                    id: components["parameters"]["ParticipanteId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Participante */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Participante"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/participants/{id}/guardians": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Solicitar vínculo de responsável (RF-03)
+         * @description O responsável autenticado pede o vínculo com um participante. O vínculo nasce `pendente` e só libera acesso após aprovação (CA-04). Escrita idempotente.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: components["parameters"]["ParticipanteId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["VinculoResponsavelInput"];
+                };
+            };
+            responses: {
+                /** @description Vínculo solicitado (pendente) */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ResponsavelParticipante"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/participants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dependentes do responsável (autorização por propriedade, CA-04)
+         * @description Lista os participantes que o usuário representa por vínculo `aprovada` e vigente. Nunca usa território nem o conhecimento da matrícula.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Dependentes */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["Participante"][];
+                        };
+                    };
+                };
+                401: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/guardian-requests/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Decidir pedido de vínculo (RF-03)
+         * @description A coordenadora aprova, recusa, pede documento, revoga ou contesta um vínculo. Exige a operação `vinculo.gerenciar`.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                };
+                path: {
+                    id: components["parameters"]["VinculoResponsavelId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DecisaoVinculoInput"];
+                };
+            };
+            responses: {
+                /** @description Vínculo atualizado */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ResponsavelParticipante"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        trace?: never;
+    };
+    "/participants/{id}/age-exceptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Solicitar exceção inclusiva (FL-06)
+         * @description O responsável solicita a exceção inclusiva para um participante. Nasce `solicitada`. Escrita idempotente.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: components["parameters"]["ParticipanteId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ExcecaoEtariaInput"];
+                };
+            };
+            responses: {
+                /** @description Exceção solicitada */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ExcecaoEtaria"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/age-exceptions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Decidir exceção inclusiva (FL-06, CA-17)
+         * @description A coordenadora aprova, recusa, suspende ou revoga a exceção. Exige a operação `excecao.decidir`.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                };
+                path: {
+                    id: components["parameters"]["ExcecaoEtariaId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DecisaoExcecaoInput"];
+                };
+            };
+            responses: {
+                /** @description Exceção atualizada */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ExcecaoEtaria"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        trace?: never;
+    };
+    "/participants/{id}/merge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mesclar duplicados (CA-27)
+         * @description Funde o duplicado no principal, preservando um snapshot para desfazer. Exige `participante.mesclar`; escrita idempotente e auditada.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: components["parameters"]["ParticipanteId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["MesclagemInput"];
+                };
+            };
+            responses: {
+                /** @description Participante principal após a mesclagem */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Participante"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/participants/{id}/merge/undo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Desfazer mesclagem (CA-27)
+         * @description Restaura o estado anterior gravado na última mesclagem. Exige `participante.mesclar`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: components["parameters"]["ParticipanteId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Participante principal restaurado */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Participante"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                409: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/arquivos/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * URL assinada de download da evidência/arquivo
+         * @description Devolve uma URL assinada de curta duração (5 min) para o arquivo já liberado pelo pipeline (`status_antivirus = limpo`). O arquivo nunca é servido diretamente; exige a operação `evidencia.ler` (territorial). Arquivo em quarentena, infectado ou inválido não é servido (409).
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                };
+                path: {
+                    id: components["parameters"]["ArquivoId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description URL assinada e sua expiração */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UrlArquivo"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                409: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1974,6 +2564,15 @@ export interface components {
             status?: number;
             detail?: string;
             code?: string;
+        };
+        UrlArquivo: {
+            /** @description URL assinada de curta duração (bucket cifrado). */
+            url: string;
+            /**
+             * Format: date-time
+             * @description Instante de expiração da URL.
+             */
+            expira_em: string;
         };
         Usuario: {
             id?: string;
@@ -2243,6 +2842,100 @@ export interface components {
                 proximo_cursor?: string | null;
             };
         };
+        Participante: {
+            id: string;
+            /** @description 8 caracteres Crockford + dígito verificador. */
+            matricula?: string;
+            nome: string;
+            nome_social?: string | null;
+            /** Format: date */
+            data_nascimento: string;
+            status?: string;
+            /** @enum {string} */
+            origem_cadastro?: "responsavel" | "assistido";
+            igreja_referencia_id?: string | null;
+        };
+        ParticipanteInput: {
+            nome: string;
+            nome_social?: string | null;
+            /** Format: date */
+            data_nascimento: string;
+            igreja_referencia_id?: string | null;
+        };
+        CadastroAssistidoInput: {
+            nome: string;
+            nome_social?: string | null;
+            /** Format: date */
+            data_nascimento: string;
+            igreja_referencia_id?: string | null;
+            responsavel_nome: string;
+            responsavel_telefone?: string | null;
+            tipo_relacao: string;
+            /**
+             * Format: binary
+             * @description Arquivo da evidência de aceite (PDF/JPEG/PNG). Obrigatório.
+             */
+            evidencia: string;
+        };
+        ResponsavelParticipante: {
+            id?: string;
+            usuario_id?: string | null;
+            participante_id?: string;
+            nome?: string;
+            tipo_relacao?: string;
+            status?: string;
+            /** @enum {string} */
+            validacao?: "pendente" | "aprovada" | "aguardando_documento" | "recusada";
+            /** Format: date-time */
+            conferido_em?: string | null;
+            /** Format: date */
+            inicio?: string | null;
+            /** Format: date */
+            fim?: string | null;
+        };
+        VinculoResponsavelInput: {
+            nome: string;
+            tipo_relacao: string;
+            telefone?: string | null;
+        };
+        DecisaoVinculoInput: {
+            /** @enum {string} */
+            decisao: "aprovar" | "recusar" | "pedir_documento" | "revogar" | "contestar";
+            motivo?: string | null;
+        };
+        ExcecaoEtaria: {
+            id?: string;
+            participante_id?: string;
+            tipo_necessidade?: string;
+            /** @enum {string} */
+            status?: "solicitada" | "aprovada" | "recusada" | "suspensa" | "revogada" | "expirada";
+            decidido_por?: string | null;
+            /** Format: date-time */
+            decidido_em?: string | null;
+            /** Format: date */
+            vigente_ate?: string | null;
+            /** Format: date-time */
+            revogado_em?: string | null;
+            motivo?: string | null;
+        };
+        ExcecaoEtariaInput: {
+            tipo_necessidade: string;
+            apoios_necessarios?: string | null;
+            justificativa_funcional?: string | null;
+        };
+        DecisaoExcecaoInput: {
+            /** @enum {string} */
+            decisao: "aprovar" | "recusar" | "suspender" | "revogar";
+            /** Format: date */
+            vigente_ate?: string | null;
+            /** Format: date */
+            revisao_prevista_em?: string | null;
+            responsavel_concordante_id?: string | null;
+            motivo?: string | null;
+        };
+        MesclagemInput: {
+            duplicado_id: string;
+        };
     };
     responses: {
         /** @description Erro no formato RFC 9457 */
@@ -2271,6 +2964,12 @@ export interface components {
         ConviteId: string;
         VinculoId: string;
         ConsentimentoId: string;
+        ParticipanteId: string;
+        VinculoResponsavelId: string;
+        ExcecaoEtariaId: string;
+        ArquivoId: string;
+        /** @description Finalidade declarada da leitura identificável (matriz `*` da leitura), registrada na auditoria. Não reusa a finalidade do termo de consentimento. */
+        FinalidadeLeitura: string;
     };
     requestBodies: never;
     headers: never;

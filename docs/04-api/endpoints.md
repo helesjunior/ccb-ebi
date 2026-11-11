@@ -55,16 +55,19 @@ Proposta inicial, prefixo `/api/v1`. Rotas marcadas *novo* não existiam na vers
 ## Participantes e responsáveis
 | Método | Rota | Finalidade | RF |
 |---|---|---|---|
-| GET | `/me/participants` | Dependentes vinculados (era `/me/children`) | RF-13 |
+| GET | `/me/participants` | Dependentes vinculados (era `/me/children`) (`no OpenAPI`) | RF-13 |
 | GET | `/me/participants/{id}/attendance` | Histórico do dependente *novo* | RF-13 |
-| POST | `/participants` | Solicitar cadastro (era `/children`) | RF-02 |
-| GET | `/participants?q=` | Pesquisa no escopo do operador *novo* | RF-02 |
-| POST | `/participants/{id}/guardians` | Solicitar vínculo | RF-03 |
-| PATCH | `/guardian-requests/{id}` | Aprovar, recusar, contestar ou revogar *novo* | RF-03 |
-| POST | `/participants/{id}/age-exceptions` | Solicitar exceção inclusiva *novo* | RF-02 |
-| PATCH | `/age-exceptions/{id}` | Coordenadora decide (com o responsável), suspende ou revoga *novo* | RF-02 |
-| POST | `/participants/assisted` | Cadastro assistido pela coordenadora *novo (2.2)* | RF-02 |
-| POST | `/participants/{id}/merge` | Mesclar duplicidade (coordenadora) *novo (2.2)* | RF-02 |
+| POST | `/participants` | Solicitar cadastro (era `/children`) (`no OpenAPI`) | RF-02 |
+| GET | `/participants` | Pesquisa no escopo do operador *novo* (`no OpenAPI`) | RF-02 |
+| GET | `/participants/{id}` | Consultar participante (`no OpenAPI`) | RF-02 |
+| POST | `/participants/{id}/guardians` | Solicitar vínculo (`no OpenAPI`) | RF-03 |
+| PATCH | `/guardian-requests/{id}` | Aprovar, recusar, contestar ou revogar *novo* (`no OpenAPI`) | RF-03 |
+| POST | `/participants/{id}/age-exceptions` | Solicitar exceção inclusiva *novo* (`no OpenAPI`) | RF-02 |
+| PATCH | `/age-exceptions/{id}` | Coordenadora decide (com o responsável), suspende ou revoga *novo* (`no OpenAPI`) | RF-02 |
+| POST | `/participants/assisted` | Cadastro assistido pela coordenadora *novo (2.2)* (`no OpenAPI`) | RF-02 |
+| POST | `/participants/{id}/merge` | Mesclar duplicidade (coordenadora) *novo (2.2)* (`no OpenAPI`) | RF-02 |
+| POST | `/participants/{id}/merge/undo` | Desfazer mesclagem *novo (2.2)* (`no OpenAPI`) | RF-02 |
+| GET | `/arquivos/{id}` | URL assinada de download da evidência *novo (2.2)* (`no OpenAPI`) | RF-02 |
 
 ## Agenda, sessões e presença
 | Método | Rota | Finalidade | RF |

@@ -26,30 +26,44 @@ class AutorizadorOperacao implements AutorizarOperacao
             Operacoes::USUARIO_LER, Operacoes::USUARIO_GERENCIAR,
             Operacoes::CONVITE_GERENCIAR, Operacoes::ACESSO_GERENCIAR,
             Operacoes::CONSENTIMENTO_LER, Operacoes::AUDITORIA_LER,
+            Operacoes::PARTICIPANTE_LER, Operacoes::PARTICIPANTE_CADASTRAR,
+            Operacoes::PARTICIPANTE_CORRIGIR, Operacoes::PARTICIPANTE_MESCLAR,
+            Operacoes::VINCULO_GERENCIAR, Operacoes::EXCECAO_LER,
+            Operacoes::EXCECAO_DECIDIR, Operacoes::EVIDENCIA_LER,
         ],
         'adm_regional' => [
             Operacoes::ORGANIZACAO_LER, Operacoes::ORGANIZACAO_GERENCIAR,
             Operacoes::USUARIO_LER, Operacoes::USUARIO_GERENCIAR,
             Operacoes::CONVITE_GERENCIAR, Operacoes::ACESSO_GERENCIAR,
             Operacoes::CONSENTIMENTO_LER, Operacoes::AUDITORIA_LER,
+            Operacoes::PARTICIPANTE_LER, Operacoes::EXCECAO_LER,
         ],
         'adm_setor' => [
             Operacoes::ORGANIZACAO_LER, Operacoes::ORGANIZACAO_GERENCIAR,
             Operacoes::USUARIO_LER, Operacoes::USUARIO_GERENCIAR,
             Operacoes::CONVITE_GERENCIAR, Operacoes::ACESSO_GERENCIAR,
             Operacoes::CONSENTIMENTO_LER, Operacoes::AUDITORIA_LER,
+            Operacoes::PARTICIPANTE_LER, Operacoes::EXCECAO_LER,
         ],
         'adm_igreja' => [
             Operacoes::ORGANIZACAO_LER,
             Operacoes::USUARIO_LER, Operacoes::USUARIO_GERENCIAR,
             Operacoes::CONVITE_GERENCIAR, Operacoes::ACESSO_GERENCIAR,
             Operacoes::CONSENTIMENTO_LER,
+            Operacoes::PARTICIPANTE_LER, Operacoes::PARTICIPANTE_CADASTRAR,
+            Operacoes::EXCECAO_LER, Operacoes::EVIDENCIA_LER,
         ],
         'coordenadora' => [
             Operacoes::ORGANIZACAO_LER, Operacoes::USUARIO_LER,
+            Operacoes::PARTICIPANTE_LER, Operacoes::PARTICIPANTE_CADASTRAR,
+            Operacoes::PARTICIPANTE_CORRIGIR, Operacoes::PARTICIPANTE_MESCLAR,
+            Operacoes::VINCULO_GERENCIAR, Operacoes::EXCECAO_LER,
+            Operacoes::EXCECAO_DECIDIR, Operacoes::EVIDENCIA_LER,
         ],
         'auxiliar' => [
             Operacoes::ORGANIZACAO_LER,
+            Operacoes::PARTICIPANTE_LER, Operacoes::PARTICIPANTE_CADASTRAR,
+            Operacoes::EXCECAO_LER,
         ],
         'ministerio_central' => [
             Operacoes::ORGANIZACAO_LER,
@@ -62,8 +76,13 @@ class AutorizadorOperacao implements AutorizarOperacao
         ],
         'ministerio_local' => [
             Operacoes::ORGANIZACAO_LER,
+            Operacoes::PARTICIPANTE_LER, Operacoes::EXCECAO_LER,
         ],
-        'responsavel' => [],
+        'responsavel' => [
+            // Cadastro do dependente (RF-02, FL-01): cria o participante e o
+            // vinculo. A leitura/edicao depois e por propriedade (CA-04).
+            Operacoes::PARTICIPANTE_CADASTRAR,
+        ],
     ];
 
     public function permite(

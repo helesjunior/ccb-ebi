@@ -35,3 +35,10 @@ Classificação de sensibilidade e retenção por entidade. Os prazos são o pad
 |---|---|---|---|---|---|---|
 | `participante.matricula` | texto (opaco) | sim | Pessoal de criança | 8 caracteres em base32 Crockford + 1 dígito verificador, nunca derivados de sequência, data ou dado pessoal; unicidade nacional ([RF-02](../01-requisitos/funcionais/RF-02-cadastro-de-participantes.md), [CA-25](../01-requisitos/criterios-de-aceite.md#ca-25)) | sistema | imutável; nunca serve como credencial |
 | `participante.data_nascimento` | data | sim | Pessoal de criança | não futura | responsável ou operador | base da RN-13 |
+| `participante.origem_cadastro` | enum | sim | Metadado | `responsavel` ou `assistido` ([ADR-0015](../06-arquitetura/decisoes/ADR-0015-cadastro-assistido.md)) | sistema | `assistido` exige `evidencia_consentimento_id` |
+| `participante.evidencia_consentimento_id` | FK `arquivo` | quando `assistido` | Metadado | FK real (E03) | operador (upload) | só após o pipeline de storage promover o arquivo a `limpo` |
+| `participante.status` | enum | sim | Pessoal de criança | `ativo`, `inativo`, `mesclado` | sistema/operador | `mesclado` marca o duplicado de uma mesclagem reversível |
+| `participante.snapshot_mesclagem` | json | não | Metadado | estado anterior do principal + duplicado | sistema | usado apenas por desfazer a mesclagem |
+| `arquivo.status_antivirus` | enum | sim | Metadado | `pendente`, `limpo`, `infectado`, `invalido` | sistema | decide a promoção ao bucket cifrado ([ADR-0005](../06-arquitetura/decisoes/ADR-0005-armazenamento-e-antivirus.md)) |
+| `arquivo.cifrado` | booleano | sim | Metadado | verdadeiro só no bucket `laudos` (SSE) | sistema | quarentena sem cifra |
+| `arquivo.sha256` | texto | não | Metadado | sha-256 do conteúdo promovido | sistema | integridade |

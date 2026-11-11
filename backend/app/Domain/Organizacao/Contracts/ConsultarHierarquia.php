@@ -25,6 +25,13 @@ interface ConsultarHierarquia
     public function ancestrais(string $tipo, string $id): array;
 
     /**
+     * ID da EBI sediada na igreja, ou null quando a igreja nao tem EBI. Usado
+     * para resolver o escopo de um participante (igreja de referencia -> EBI)
+     * quando o ator atua no nivel da EBI (E03).
+     */
+    public function ebiDaigreja(string $igrejaId): ?string;
+
+    /**
      * ID da Central Nacional (unica). Devolve null quando ainda nao existe.
      * Superficie opaca (so o id) para outros modulos (ADR-0002).
      */

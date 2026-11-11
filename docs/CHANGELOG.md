@@ -2,6 +2,20 @@
 
 Formato: versão, data, autor e mudanças. Itens mais recentes primeiro.
 
+## 2.16 — 11/11/2026
+
+Etapa 5 — Participantes e responsáveis (E03).
+
+- **Cadastro do participante (RF-02):** `POST /participants` com matrícula nacional de **8 caracteres Crockford + dígito verificador** (gerada com retry em colisão; nunca derivada de sequência/data), origem `responsavel`/`assistido`, auditoria da escrita.
+- **Vínculos do responsável (RF-03, CA-04):** `responsavel_participante` (situação corrente) + `solicitacao_vinculo` (log append-only). O vínculo nasce `pendente`; a coordenadora aprova/recusa/pede documento/revoga/contesta. **Autorização por propriedade** — `GET /me/participants` e `VerificadorPropriedadeParticipante` (não por território nem por conhecer a matrícula).
+- **Elegibilidade etária e exceção inclusiva (RN-16, CA-17, CA-19):** `AvaliadorElegibilidade` decide a idade no **fuso da igreja**, com regra de 29/02; `< 3` bloqueado sempre (ADR-0013); `>= 12` só com exceção `aprovada` e vigente. Exceção inclusiva decidida pela coordenadora (ADR-0012).
+- **Dedup + mesclagem reversível (CA-27, ADR-0007):** detecção por nome normalizado + data; mesclar funde, move vínculos e marca o duplicado `mesclado` guardando **snapshot**; desfazer restaura. Auditado.
+- **Cadastro assistido (FL-01, CA-16):** `POST /participants/assisted` com **evidência de aceite obrigatória**; responsável **sem conta** e vínculo nasce `aprovada`; consentimento com usuário nulo e origem `assistido`.
+- **Pipeline de storage (E08, ADR-0005):** `App\Support\Arquivo` — quarentena → validação de tipo real (magic number) → antivírus (clamd) → bucket privado **cifrado** (SSE-S3). Infectado/inválido é apagado e auditado.
+- **Finalidade declarada na leitura (`*` da matriz):** leituras identificáveis exigem `finalidade` e gravam `participante.lido`; a finalidade de leitura **não** reusa a do termo.
+- **Contrato e portal:** OpenAPI com 11 operações de participante (59 no total); telas de Participantes, Dependentes, Cadastro assistido, Vínculos, Exceção inclusiva e Mesclagem.
+- **Dívidas (E03 e além):** exceção completa do ADR-0029 (CCB/DPO), `*` nas demais leituras, RF-15 (aviso antes do 12º aniversário), anexo de laudo (FL-06), concordância do adulto, reuso do pipeline pela E08, escopo de mesclagem por presença (E04), cifra client-side vs SSE-S3. Escopo e dívidas no [ADR-0032](06-arquitetura/decisoes/ADR-0032-vinculos-responsavel-e-participante.md).
+
 ## 2.15 — 11/11/2026
 
 Frontend — fundação de UI (Tailwind + shadcn).

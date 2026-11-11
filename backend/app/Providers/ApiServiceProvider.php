@@ -8,6 +8,7 @@ use App\Policies\AuditoriaPolicy;
 use App\Policies\ConsentimentoPolicy;
 use App\Policies\ConvitePolicy;
 use App\Policies\OrganizacaoPolicy;
+use App\Policies\ParticipantePolicy;
 use App\Policies\UsuarioPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -33,5 +34,13 @@ class ApiServiceProvider extends ServiceProvider
         Gate::define(Operacoes::ACESSO_GERENCIAR, [AccessGrantPolicy::class, 'gerenciar']);
         Gate::define(Operacoes::CONSENTIMENTO_LER, [ConsentimentoPolicy::class, 'ler']);
         Gate::define(Operacoes::AUDITORIA_LER, [AuditoriaPolicy::class, 'ler']);
+        Gate::define(Operacoes::PARTICIPANTE_LER, [ParticipantePolicy::class, 'ler']);
+        Gate::define(Operacoes::PARTICIPANTE_CADASTRAR, [ParticipantePolicy::class, 'cadastrar']);
+        Gate::define(Operacoes::PARTICIPANTE_CORRIGIR, [ParticipantePolicy::class, 'corrigir']);
+        Gate::define(Operacoes::PARTICIPANTE_MESCLAR, [ParticipantePolicy::class, 'mesclar']);
+        Gate::define(Operacoes::VINCULO_GERENCIAR, [ParticipantePolicy::class, 'gerenciarVinculo']);
+        Gate::define(Operacoes::EXCECAO_DECIDIR, [ParticipantePolicy::class, 'decidirExcecao']);
+        Gate::define(Operacoes::EXCECAO_LER, [ParticipantePolicy::class, 'lerExcecao']);
+        Gate::define(Operacoes::EVIDENCIA_LER, [ParticipantePolicy::class, 'lerEvidencia']);
     }
 }

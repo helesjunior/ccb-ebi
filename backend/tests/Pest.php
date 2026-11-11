@@ -23,6 +23,9 @@ foreach ([
 use App\Domain\Identidade\Models\Papel;
 use App\Domain\Identidade\Models\Usuario;
 use App\Domain\Identidade\Models\VinculoAcesso;
+use App\Domain\Organizacao\Models\Ebi;
+use App\Domain\Organizacao\Models\Igreja;
+use App\Domain\Participantes\Models\Participante;
 use Database\Seeders\PapelSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -73,4 +76,32 @@ function criarUsuarioComPapel(
     ]);
 
     return $usuario;
+}
+
+/**
+ * Cria uma igreja + EBI e devolve `['igreja' => Igreja, 'ebi' => Ebi]`. Usado
+ * pelos testes de escopo territorial de participante (a igreja de referencia do
+ * participante resolve a EBI do ator).
+ *
+ * @return array{igreja: Igreja, ebi: Ebi}
+ */
+function igrejaComEbi(): array
+{
+    $igreja = Igreja::factory()->create();
+    $ebi = Ebi::factory()->create(['igreja_id' => $igreja->id]);
+
+    return ['igreja' => $igreja, 'ebi' => $ebi];
+}
+
+/**
+ * Cria um participante com igreja de referencia definida.
+ *
+ * @param  array<string, mixed>  $atributos
+ */
+function participanteNaIgreja(Igreja $igreja, array $atributos = []): Participante
+{
+    return Participante::factory()->create([
+        'igreja_referencia_id' => $igreja->id,
+        ...$atributos,
+    ]);
 }

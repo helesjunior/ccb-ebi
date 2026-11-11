@@ -62,6 +62,34 @@ return [
             'report' => false,
         ],
 
+        // Quarentena (E08): recebe o upload bruto, sem cifra, ate o antivirus.
+        'quarentena' => [
+            'driver' => 's3',
+            'key' => env('AWS_ACCESS_KEY_ID'),
+            'secret' => EnvArquivo::obter('AWS_SECRET_ACCESS_KEY'),
+            'region' => env('AWS_DEFAULT_REGION'),
+            'bucket' => env('AWS_BUCKET_QUARENTENA', env('AWS_BUCKET')),
+            'endpoint' => env('AWS_ENDPOINT'),
+            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+            'throw' => false,
+            'report' => false,
+        ],
+
+        // Bucket de laudos/evidencias: cifrado em repouso (SSE) e privado.
+        'laudos' => [
+            'driver' => 's3',
+            'key' => env('AWS_ACCESS_KEY_ID'),
+            'secret' => EnvArquivo::obter('AWS_SECRET_ACCESS_KEY'),
+            'region' => env('AWS_DEFAULT_REGION'),
+            'bucket' => env('AWS_BUCKET_LAUDOS', env('AWS_BUCKET')),
+            'endpoint' => env('AWS_ENDPOINT'),
+            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+            'visibility' => 'private',
+            'options' => ['ServerSideEncryption' => 'AES256'],
+            'throw' => false,
+            'report' => false,
+        ],
+
     ],
 
     /*

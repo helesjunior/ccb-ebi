@@ -14,14 +14,16 @@ readonly class EvidenciaAceite
         public string $ip,
         public string $userAgent,
         public ?string $termoHash = null,
+        public ?string $arquivoId = null,
     ) {}
 
-    public static function deRequest(Request $r, string $termoHash): self
+    public static function deRequest(Request $r, string $termoHash, ?string $arquivoId = null): self
     {
         return new self(
             ip: (string) $r->ip(),
             userAgent: (string) $r->userAgent(),
             termoHash: $termoHash,
+            arquivoId: $arquivoId,
         );
     }
 }

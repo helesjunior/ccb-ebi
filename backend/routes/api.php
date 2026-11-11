@@ -2,16 +2,22 @@
 
 use App\Domain\Identidade\Services\DesafioMfa;
 use App\Http\Controllers\Api\V1\AccessGrantController;
+use App\Http\Controllers\Api\V1\AgeExceptionController;
+use App\Http\Controllers\Api\V1\ArquivoController;
 use App\Http\Controllers\Api\V1\AuditEventController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CentralController;
 use App\Http\Controllers\Api\V1\ChurchController;
 use App\Http\Controllers\Api\V1\EbiController;
+use App\Http\Controllers\Api\V1\GuardianController;
+use App\Http\Controllers\Api\V1\GuardianRequestController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\InvitationAcceptController;
 use App\Http\Controllers\Api\V1\InvitationController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MfaController;
+use App\Http\Controllers\Api\V1\ParticipantController;
+use App\Http\Controllers\Api\V1\ParticipantMergeController;
 use App\Http\Controllers\Api\V1\PasswordController;
 use App\Http\Controllers\Api\V1\PrivacyConsentController;
 use App\Http\Controllers\Api\V1\PrivacyRequestController;
@@ -141,5 +147,52 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
             ->middleware('can:organizacao.gerenciar,setor,{id}')->name('sectors.update');
         Route::patch('ebis/{id}', [EbiController::class, 'update'])
             ->middleware('can:organizacao.gerenciar,ebi,{id}')->name('ebis.update');
+
+        // Participantes (RF-02, RF-03). Cadastro pelo responsavel sob
+        // idempotencia; leitura por operador sob `participante.ler` (matriz).
+        Route::middleware(IdempotenciaMiddleware::class)->group(function (): void {
+            Route::post('participants', [ParticipantController::class, 'store'])
+                ->middleware('can:participante.cadastrar')->name('participants.store');
+            Route::post('participants/assisted', [ParticipantController::class, 'storeAssisted'])
+                ->middleware('can:participante.cadastrar')->name('participants.assisted');
+        });
+        Route::get('participants/{id}', [ParticipantController::class, 'show'])
+            ->middleware('can:participante.ler')->name('participants.show');
+
+        // Busca/dedup e mesclagem (CA-27). Busca e leitura; mesclagem e escrita
+        // sob `participante.mesclar`, idempotente e reversivel.
+        Route::get('participants', [ParticipantController::class, 'index'])
+            ->middleware('can:participante.ler')->name('participants.index');
+        Route::middleware(IdempotenciaMiddleware::class)->group(function (): void {
+            Route::post('participants/{id}/merge', [ParticipantMergeController::class, 'store'])
+                ->middleware('can:participante.mesclar')->name('participants.merge');
+            Route::post('participants/{id}/merge/undo', [ParticipantMergeController::class, 'undo'])
+                ->middleware('can:participante.mesclar')->name('participants.merge.undo');
+        });
+
+        // Vinculos do responsavel (RF-03). A solicitacao parte do responsavel
+        // autenticado; a decisao e da coordenadora (`vinculo.gerenciar`).
+        Route::middleware(IdempotenciaMiddleware::class)->group(function (): void {
+            Route::post('participants/{participantId}/guardians', [GuardianController::class, 'store'])
+                ->name('guardians.store');
+        });
+        Route::get('me/participants', [GuardianController::class, 'meusDependentes'])
+            ->name('me.participants.index');
+        Route::patch('guardian-requests/{id}', [GuardianRequestController::class, 'update'])
+            ->middleware('can:vinculo.gerenciar')->name('guardian-requests.update');
+
+        // Excecao inclusiva (FL-06): solicitacao pelo responsavel; decisao pela
+        // coordenadora (`excecao.decidir`).
+        Route::middleware(IdempotenciaMiddleware::class)->group(function (): void {
+            Route::post('participants/{participantId}/age-exceptions', [AgeExceptionController::class, 'store'])
+                ->name('age-exceptions.store');
+        });
+        Route::patch('age-exceptions/{id}', [AgeExceptionController::class, 'update'])
+            ->middleware('can:excecao.decidir')->name('age-exceptions.update');
+
+        // Evidencia/arquivo (E08, design §6.5): download so por URL assinada de
+        // curta duracao, apos autorizacao (`evidencia.ler`).
+        Route::get('arquivos/{id}', [ArquivoController::class, 'show'])
+            ->middleware('can:evidencia.ler')->name('arquivos.show');
     });
 });

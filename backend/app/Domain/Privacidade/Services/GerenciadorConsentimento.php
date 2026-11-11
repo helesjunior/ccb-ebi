@@ -15,11 +15,12 @@ class GerenciadorConsentimento implements ConsultarConsentimentos, RegistrarCons
     public function __construct(private readonly GerirTermos $termos) {}
 
     public function registrar(
-        string $usuarioId,
+        ?string $usuarioId,
         string $termoVersaoId,
         string $decisao,
         string $origem,
         EvidenciaAceite $evidencia,
+        ?string $participanteId = null,
     ): ManifestacaoPrivacidade {
         $termo = TermoVersao::query()->find($termoVersaoId)
             ?? throw new ProblemException(
@@ -45,6 +46,7 @@ class GerenciadorConsentimento implements ConsultarConsentimentos, RegistrarCons
 
         return ManifestacaoPrivacidade::query()->create([
             'usuario_id' => $usuarioId,
+            'participante_id' => $participanteId,
             'termo_versao_id' => $termo->id,
             'decisao' => $decisao,
             'origem' => $origem,
@@ -104,11 +106,12 @@ class GerenciadorConsentimento implements ConsultarConsentimentos, RegistrarCons
         };
 
         return sprintf(
-            '%s digital ip=%s ua=%s termo=%s',
+            '%s digital ip=%s ua=%s termo=%s%s',
             $acao,
             $evidencia->ip,
             $evidencia->userAgent,
             $evidencia->termoHash ?? $termo->texto_hash,
+            $evidencia->arquivoId !== null ? ' arquivo='.$evidencia->arquivoId : '',
         );
     }
 }

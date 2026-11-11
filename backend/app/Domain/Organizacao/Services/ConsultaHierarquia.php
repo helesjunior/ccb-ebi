@@ -34,6 +34,11 @@ class ConsultaHierarquia implements ConsultarHierarquia
         return CentralNacional::query()->value('id');
     }
 
+    public function ebiDaigreja(string $igrejaId): ?string
+    {
+        return Ebi::query()->where('igreja_id', $igrejaId)->value('id');
+    }
+
     public function garantirCentralId(): string
     {
         $central = CentralNacional::query()->firstOrCreate(['nome' => 'Central (Brás)']);
