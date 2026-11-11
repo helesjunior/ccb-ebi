@@ -11,6 +11,8 @@
     "gen:api": "node tools/gen-api.mjs ../docs/04-api/openapi.yaml -o src/api/schema.d.ts"
   },
   "dependencies": {
+    "@radix-ui/react-slot": "^1.2.4",
+    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "openapi-fetch": "^0.17.0",
     "react": "^19.3.1",
