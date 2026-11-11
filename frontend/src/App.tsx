@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
 
-import './App.css'
 import { api } from './api/client'
 import {
   cabecalhos,
