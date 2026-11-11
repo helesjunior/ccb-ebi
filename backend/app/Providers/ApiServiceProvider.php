@@ -39,5 +39,8 @@ class ApiServiceProvider extends ServiceProvider
         Gate::define(Operacoes::PARTICIPANTE_CORRIGIR, [ParticipantePolicy::class, 'corrigir']);
         Gate::define(Operacoes::PARTICIPANTE_MESCLAR, [ParticipantePolicy::class, 'mesclar']);
         Gate::define(Operacoes::VINCULO_GERENCIAR, [ParticipantePolicy::class, 'gerenciarVinculo']);
+        Gate::define(Operacoes::EXCECAO_DECIDIR, [ParticipantePolicy::class, 'decidirExcecao']);
+        Gate::define(Operacoes::EXCECAO_LER, [ParticipantePolicy::class, 'lerExcecao']);
+        Gate::define(Operacoes::EVIDENCIA_LER, [ParticipantePolicy::class, 'lerEvidencia']);
     }
 }

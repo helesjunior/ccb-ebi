@@ -2,6 +2,7 @@
 
 use App\Domain\Identidade\Services\DesafioMfa;
 use App\Http\Controllers\Api\V1\AccessGrantController;
+use App\Http\Controllers\Api\V1\AgeExceptionController;
 use App\Http\Controllers\Api\V1\AuditEventController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CentralController;
@@ -164,5 +165,14 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
             ->name('me.participants.index');
         Route::patch('guardian-requests/{id}', [GuardianRequestController::class, 'update'])
             ->middleware('can:vinculo.gerenciar')->name('guardian-requests.update');
+
+        // Excecao inclusiva (FL-06): solicitacao pelo responsavel; decisao pela
+        // coordenadora (`excecao.decidir`).
+        Route::middleware(IdempotenciaMiddleware::class)->group(function (): void {
+            Route::post('participants/{participantId}/age-exceptions', [AgeExceptionController::class, 'store'])
+                ->name('age-exceptions.store');
+        });
+        Route::patch('age-exceptions/{id}', [AgeExceptionController::class, 'update'])
+            ->middleware('can:excecao.decidir')->name('age-exceptions.update');
     });
 });

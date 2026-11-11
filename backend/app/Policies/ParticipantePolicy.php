@@ -49,6 +49,21 @@ class ParticipantePolicy
         return $this->decidir(Operacoes::VINCULO_GERENCIAR, $tipoRecurso, $recursoId);
     }
 
+    public function decidirExcecao(?Authenticatable $usuario, ?string $tipoRecurso = null, ?string $recursoId = null): bool
+    {
+        return $this->decidir(Operacoes::EXCECAO_DECIDIR, $tipoRecurso, $recursoId);
+    }
+
+    public function lerExcecao(?Authenticatable $usuario, ?string $tipoRecurso = null, ?string $recursoId = null): bool
+    {
+        return $this->decidir(Operacoes::EXCECAO_LER, $tipoRecurso, $recursoId);
+    }
+
+    public function lerEvidencia(?Authenticatable $usuario, ?string $tipoRecurso = null, ?string $recursoId = null): bool
+    {
+        return $this->decidir(Operacoes::EVIDENCIA_LER, $tipoRecurso, $recursoId);
+    }
+
     private function decidir(string $operacao, ?string $tipoRecurso, ?string $recursoId): bool
     {
         $contexto = $this->request->attributes->get('contexto_atuacao');
