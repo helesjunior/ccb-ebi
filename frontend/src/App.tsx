@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
 
-import './App.css'
 import { api } from './api/client'
 import {
   cabecalhos,
@@ -18,6 +17,7 @@ import { Equipe } from './pages/Equipe'
 import { Login } from './pages/Login'
 import { MeuPerfil } from './pages/MeuPerfil'
 import { Privacidade } from './pages/Privacidade'
+import { Button } from '@/components/ui/button'
 
 type Tela = 'inicio' | 'perfil' | 'dispositivos' | 'equipe' | 'privacidade' | 'auditoria'
 
@@ -113,9 +113,9 @@ function App() {
         <button type="button" onClick={() => setTela('auditoria')}>
           Auditoria
         </button>
-        <button type="button" onClick={sair}>
+        <Button variant="outline" type="button" onClick={sair}>
           Sair
-        </button>
+        </Button>
       </nav>
 
       <label htmlFor="escopo">Contexto de atuação</label>

@@ -1,3 +1,6 @@
+import path from 'node:path'
+
+import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
@@ -13,7 +16,12 @@ import { defineConfig } from 'vite'
 const outDir = process.env.VITE_OUT_DIR ?? '../backend/public/spa'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
+  resolve: {
+    alias: {
+      '@': path.resolve(import.meta.dirname, './src'),
+    },
+  },
   base: outDir.endsWith('dist') ? '/' : '/spa/',
   build: {
     outDir,

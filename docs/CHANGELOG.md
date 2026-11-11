@@ -2,6 +2,17 @@
 
 Formato: versão, data, autor e mudanças. Itens mais recentes primeiro.
 
+## 2.15 — 11/11/2026
+
+Frontend — fundação de UI (Tailwind + shadcn).
+
+- **Tailwind CSS v4** integrado ao build (plugin `@tailwindcss/vite`), preservando o build multi-destino (`/spa/` para o Laravel, `/` para o nginx).
+- **shadcn/ui configurado** (`components.json`, utilitário `cn()` em `src/lib/utils.ts`, estilo `new-york`) e **alias de import `@/*` → `src/*`**.
+- **Tema único** no estilo shadcn (`src/index.css`), com o roxo atual (`#aa3bff`) como `--primary`; **tema escuro automático** (`prefers-color-scheme`), sem toggle. Uma camada base preserva o visual das telas ainda não migradas.
+- **Componente-piloto** `Button` (shadcn) renderizado no botão "Sair" da casca.
+- Remoção do CSS morto (`App.css`).
+- **Dívidas:** migrar a casca e as 7 telas para componentes shadcn; runner/cobertura de teste de frontend; biblioteca de componentes além do `button`.
+
 ## 2.14 — 10/11/2026
 
 Etapa 4 — Privacidade e auditoria (sub-etapa A2).
