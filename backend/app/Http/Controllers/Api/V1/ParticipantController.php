@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Auditoria\Contracts\RegistrarEvento;
+use App\Domain\Identidade\Services\ContextoAtuacao;
 use App\Domain\Participantes\Contracts\GerirParticipante;
 use App\Http\Requests\Participantes\CadastrarAssistidoRequest;
 use App\Http\Requests\Participantes\CadastrarParticipanteRequest;
 use App\Http\Resources\ParticipanteResource;
 use App\Support\Arquivo\Contracts\ArmazenarArquivo;
+use App\Support\Participantes\AutorizacaoParticipante;
 use App\Support\ProblemException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,6 +20,7 @@ class ParticipantController
         private readonly GerirParticipante $participantes,
         private readonly ArmazenarArquivo $arquivos,
         private readonly RegistrarEvento $auditoria,
+        private readonly AutorizacaoParticipante $autorizacao,
     ) {}
 
     public function store(CadastrarParticipanteRequest $request): JsonResponse
@@ -61,6 +64,15 @@ class ParticipantController
             $request->query('igreja_referencia_id'),
         );
 
+        // H3: o resultado so inclui o que o escopo do ator cobre (o dedup nao
+        // pode revelar cadastros de terceiros fora do territorio).
+        $contexto = $this->contexto($request);
+        $usuarioId = $this->usuarioId($request);
+        $candidatos = array_values(array_filter(
+            $candidatos,
+            fn ($p): bool => $this->autorizacao->pode($contexto, $usuarioId, $p, 'participante.ler'),
+        ));
+
         $this->auditarLeitura($request, $finalidade, array_map(
             fn ($p): string => (string) $p->id,
             $candidatos,
@@ -80,9 +92,26 @@ class ParticipantController
         $participante = $this->participantes->encontrar($id)
             ?? throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Participante não encontrado.');
 
+        // H3: a leitura territorial precisa do recurso-alvo (igreja de
+        // referencia). O responsavel com vinculo aprovado tambem passa
+        // (propriedade, CA-04).
+        $this->autorizacao->exigir(
+            $this->contexto($request),
+            $this->usuarioId($request),
+            $participante,
+            'participante.ler',
+        );
+
         $this->auditarLeitura($request, $finalidade, [(string) $participante->id]);
 
         return (new ParticipanteResource($participante))->response();
+    }
+
+    private function contexto(Request $request): ?ContextoAtuacao
+    {
+        $contexto = $request->attributes->get('contexto_atuacao');
+
+        return $contexto instanceof ContextoAtuacao ? $contexto : null;
     }
 
     private function usuarioId(Request $request): string

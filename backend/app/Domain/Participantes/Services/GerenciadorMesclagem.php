@@ -5,6 +5,7 @@ namespace App\Domain\Participantes\Services;
 use App\Domain\Auditoria\Contracts\RegistrarEvento;
 use App\Domain\Participantes\Contracts\GerirMesclagem;
 use App\Domain\Participantes\Models\Participante;
+use App\Domain\Participantes\Models\ResponsavelParticipante;
 use App\Support\ProblemException;
 use Illuminate\Support\Facades\DB;
 
@@ -47,7 +48,10 @@ class GerenciadorMesclagem implements GerirMesclagem
             }
 
             // Snapshot do estado anterior (reversao, ADR-0007): campos do
-            // principal + id/status do duplicado.
+            // principal + id/status do duplicado + ids dos vinculos movidos
+            // (para devolve-los ao duplicado ao desfazer).
+            $vinculosMovidos = $duplicado->responsaveis()->pluck('id')->all();
+
             $snapshot = [
                 'principal' => [
                     'nome' => $principal->nome,
@@ -59,6 +63,7 @@ class GerenciadorMesclagem implements GerirMesclagem
                     'id' => $duplicado->id,
                     'status' => $duplicado->status,
                 ],
+                'vinculos_movidos' => $vinculosMovidos,
             ];
 
             // Funde campos ausentes no principal.
@@ -98,10 +103,21 @@ class GerenciadorMesclagem implements GerirMesclagem
             $principal->snapshot_mesclagem = null;
             $principal->save();
 
-            // Devolve o duplicado ao estado anterior e repoe seus vinculos.
+            // Devolve o duplicado ao estado anterior, repoe seus vinculos e
+            // restaura os campos do principal.
             if ($duplicado instanceof Participante) {
                 $duplicado->status = $snapshot['duplicado']['status'] ?? 'ativo';
                 $duplicado->save();
+
+                $vinculosMovidos = is_array($snapshot['vinculos_movidos'] ?? null)
+                    ? $snapshot['vinculos_movidos']
+                    : [];
+
+                if ($vinculosMovidos !== []) {
+                    ResponsavelParticipante::query()
+                        ->whereIn('id', $vinculosMovidos)
+                        ->update(['participante_id' => $duplicado->id]);
+                }
             }
 
             $this->registrar('participante.mesclagem_desfeita', $atorId, $principal, [

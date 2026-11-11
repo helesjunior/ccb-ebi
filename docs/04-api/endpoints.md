@@ -67,6 +67,7 @@ Proposta inicial, prefixo `/api/v1`. Rotas marcadas *novo* não existiam na vers
 | POST | `/participants/assisted` | Cadastro assistido pela coordenadora *novo (2.2)* (`no OpenAPI`) | RF-02 |
 | POST | `/participants/{id}/merge` | Mesclar duplicidade (coordenadora) *novo (2.2)* (`no OpenAPI`) | RF-02 |
 | POST | `/participants/{id}/merge/undo` | Desfazer mesclagem *novo (2.2)* (`no OpenAPI`) | RF-02 |
+| GET | `/arquivos/{id}` | URL assinada de download da evidência *novo (2.2)* (`no OpenAPI`) | RF-02 |
 
 ## Agenda, sessões e presença
 | Método | Rota | Finalidade | RF |

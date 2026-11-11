@@ -18,6 +18,9 @@ interface ArmazenarArquivo
      */
     public function enfileirar(UploadedFile $arquivo, string $finalidade, ?string $enviadoPor): Arquivo;
 
+    /** Registro de arquivo pelo id, ou null. Superficie para a camada HTTP. */
+    public function localizar(string $id): ?Arquivo;
+
     /** URL assinada de curta duracao para o arquivo ja limpo. */
     public function urlAssinada(Arquivo $arquivo, int $minutos = 5): string;
 }

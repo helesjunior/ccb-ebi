@@ -41,6 +41,11 @@ class PipelineArquivo implements ArmazenarArquivo
         return $registro;
     }
 
+    public function localizar(string $id): ?Arquivo
+    {
+        return Arquivo::query()->find($id);
+    }
+
     public function urlAssinada(Arquivo $arquivo, int $minutos = 5): string
     {
         return Storage::disk('laudos')->temporaryUrl(

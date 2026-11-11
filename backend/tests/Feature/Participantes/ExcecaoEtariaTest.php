@@ -3,6 +3,7 @@
 use App\Domain\Auditoria\Models\EventoAuditoria;
 use App\Domain\Participantes\Models\ExcecaoEtaria;
 use App\Domain\Participantes\Models\Participante;
+use App\Domain\Participantes\Models\ResponsavelParticipante;
 
 beforeEach(function () {
     $this->coordenadora = criarUsuarioComPapel('coordenadora', 'ebi', (string) Str::ulid());
@@ -12,8 +13,13 @@ beforeEach(function () {
     $this->authResp = ['Authorization' => 'Bearer '.$this->responsavel->createToken('t')->plainTextToken];
 });
 
-it('responsavel solicita excecao inclusiva', function () {
+it('responsavel com vinculo aprovado solicita excecao inclusiva', function () {
     $participante = Participante::factory()->create(['data_nascimento' => '2014-06-15']);
+
+    ResponsavelParticipante::factory()->aprovado()->create([
+        'usuario_id' => $this->responsavel->id,
+        'participante_id' => $participante->id,
+    ]);
 
     $this->postJson("/api/v1/participants/{$participante->id}/age-exceptions", [
         'tipo_necessidade' => 'neurodivergencia',

@@ -2506,6 +2506,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/arquivos/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * URL assinada de download da evidência/arquivo
+         * @description Devolve uma URL assinada de curta duração (5 min) para o arquivo já liberado pelo pipeline (`status_antivirus = limpo`). O arquivo nunca é servido diretamente; exige a operação `evidencia.ler` (territorial). Arquivo em quarentena, infectado ou inválido não é servido (409).
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                };
+                path: {
+                    id: components["parameters"]["ArquivoId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description URL assinada e sua expiração */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UrlArquivo"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                409: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2516,6 +2564,15 @@ export interface components {
             status?: number;
             detail?: string;
             code?: string;
+        };
+        UrlArquivo: {
+            /** @description URL assinada de curta duração (bucket cifrado). */
+            url: string;
+            /**
+             * Format: date-time
+             * @description Instante de expiração da URL.
+             */
+            expira_em: string;
         };
         Usuario: {
             id?: string;
@@ -2910,6 +2967,7 @@ export interface components {
         ParticipanteId: string;
         VinculoResponsavelId: string;
         ExcecaoEtariaId: string;
+        ArquivoId: string;
         /** @description Finalidade declarada da leitura identificável (matriz `*` da leitura), registrada na auditoria. Não reusa a finalidade do termo de consentimento. */
         FinalidadeLeitura: string;
     };

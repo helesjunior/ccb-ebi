@@ -1183,6 +1183,30 @@ paths:
         '401': { $ref: '#/components/responses/Problem' }
         '403': { $ref: '#/components/responses/Problem' }
         '409': { $ref: '#/components/responses/Problem' }
+  /arquivos/{id}:
+    get:
+      tags: [participants]
+      summary: URL assinada de download da evidência/arquivo
+      description: >-
+        Devolve uma URL assinada de curta duração (5 min) para o arquivo já
+        liberado pelo pipeline (`status_antivirus = limpo`). O arquivo nunca é
+        servido diretamente; exige a operação `evidencia.ler` (territorial).
+        Arquivo em quarentena, infectado ou inválido não é servido (409).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/ArquivoId'
+      responses:
+        '200':
+          description: URL assinada e sua expiração
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UrlArquivo' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
 components:
   securitySchemes:
     bearerAuth:
@@ -1278,6 +1302,11 @@ components:
       in: path
       required: true
       schema: { type: string }
+    ArquivoId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
     FinalidadeLeitura:
       name: finalidade
       in: query
@@ -1301,6 +1330,17 @@ components:
         status: { type: integer }
         detail: { type: string }
         code: { type: string }
+    UrlArquivo:
+      type: object
+      required: [url, expira_em]
+      properties:
+        url:
+          type: string
+          description: URL assinada de curta duração (bucket cifrado).
+        expira_em:
+          type: string
+          format: date-time
+          description: Instante de expiração da URL.
     Usuario:
       type: object
       properties:
