@@ -2583,6 +2583,8 @@ export interface components {
             /** @enum {string} */
             status?: "ativo" | "suspenso";
             papeis?: string[];
+            /** @description Indica se o usuario tem fator TOTP confirmado. */
+            mfa_ativo?: boolean;
         };
         LoginResponse: {
             mfa_required?: boolean;

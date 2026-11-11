@@ -1352,6 +1352,9 @@ components:
         papeis:
           type: array
           items: { type: string }
+        mfa_ativo:
+          type: boolean
+          description: Indica se o usuario tem fator TOTP confirmado.
     LoginResponse:
       type: object
       properties:

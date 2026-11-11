@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Identidade\Contracts\ConsultarVinculos;
+use App\Domain\Identidade\Contracts\ExigirMfa;
 use App\Http\Resources\ContextoAtuacaoResource;
 use App\Http\Resources\UsuarioResource;
 use App\Support\ProblemException;
@@ -12,12 +13,16 @@ use Illuminate\Http\Request;
 
 class MeController
 {
-    public function __construct(private readonly ConsultarVinculos $vinculos) {}
+    public function __construct(
+        private readonly ConsultarVinculos $vinculos,
+        private readonly ExigirMfa $mfa,
+    ) {}
 
     public function me(Request $request): UsuarioResource
     {
         $usuario = $this->usuario($request);
         $usuario->loadMissing('vinculosVigentes.papel');
+        $usuario->setAttribute('mfa_ativo', $this->mfa->temFatorValidado($usuario));
 
         return UsuarioResource::make($usuario);
     }
