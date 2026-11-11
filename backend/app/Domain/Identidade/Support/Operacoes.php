@@ -24,5 +24,22 @@ final class Operacoes
 
     public const AUDITORIA_LER = 'auditoria.ler';
 
+    // E03 — Participantes e responsáveis (RF-02, RF-03).
+    public const PARTICIPANTE_LER = 'participante.ler';
+
+    public const PARTICIPANTE_CADASTRAR = 'participante.cadastrar';
+
+    public const PARTICIPANTE_CORRIGIR = 'participante.corrigir';
+
+    public const PARTICIPANTE_MESCLAR = 'participante.mesclar';
+
+    public const VINCULO_GERENCIAR = 'vinculo.gerenciar';
+
+    public const EXCECAO_LER = 'excecao.ler';
+
+    public const EXCECAO_DECIDIR = 'excecao.decidir';
+
+    public const EVIDENCIA_LER = 'evidencia.ler';
+
     private function __construct() {}
 }

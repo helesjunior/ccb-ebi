@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\InvitationAcceptController;
 use App\Http\Controllers\Api\V1\InvitationController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MfaController;
+use App\Http\Controllers\Api\V1\ParticipantController;
 use App\Http\Controllers\Api\V1\PasswordController;
 use App\Http\Controllers\Api\V1\PrivacyConsentController;
 use App\Http\Controllers\Api\V1\PrivacyRequestController;
@@ -141,5 +142,14 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
             ->middleware('can:organizacao.gerenciar,setor,{id}')->name('sectors.update');
         Route::patch('ebis/{id}', [EbiController::class, 'update'])
             ->middleware('can:organizacao.gerenciar,ebi,{id}')->name('ebis.update');
+
+        // Participantes (RF-02, RF-03). Cadastro pelo responsavel sob
+        // idempotencia; leitura por operador sob `participante.ler` (matriz).
+        Route::middleware(IdempotenciaMiddleware::class)->group(function (): void {
+            Route::post('participants', [ParticipantController::class, 'store'])
+                ->middleware('can:participante.cadastrar')->name('participants.store');
+        });
+        Route::get('participants/{id}', [ParticipantController::class, 'show'])
+            ->middleware('can:participante.ler')->name('participants.show');
     });
 });
