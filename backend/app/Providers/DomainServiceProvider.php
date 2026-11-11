@@ -6,6 +6,12 @@ use App\Domain\Auditoria\Contracts\ConsultarAuditoria;
 use App\Domain\Auditoria\Contracts\RegistrarEvento;
 use App\Domain\Auditoria\Services\ConsultaAuditoria;
 use App\Domain\Auditoria\Services\RegistradorAuditoria;
+use App\Domain\DadosSensiveis\Contracts\ArmazenarDadoSensivel;
+use App\Domain\DadosSensiveis\Contracts\ExpurgarRetencao;
+use App\Domain\DadosSensiveis\Contracts\LerDadoSensivel;
+use App\Domain\DadosSensiveis\Services\ArmazenadorDadoSensivel;
+use App\Domain\DadosSensiveis\Services\ExpurgadorRetencao;
+use App\Domain\DadosSensiveis\Services\LeitorDadoSensivel;
 use App\Domain\Identidade\Contracts\AceitarConvite;
 use App\Domain\Identidade\Contracts\Autenticar;
 use App\Domain\Identidade\Contracts\AutorizarOperacao;
@@ -83,5 +89,8 @@ class DomainServiceProvider extends ServiceProvider
         $this->app->bind(RegistrarConsentimento::class, GerenciadorConsentimento::class);
         $this->app->bind(ConsultarConsentimentos::class, GerenciadorConsentimento::class);
         $this->app->bind(SolicitarDireitoTitular::class, GerenciadorSolicitacao::class);
+        $this->app->bind(ArmazenarDadoSensivel::class, ArmazenadorDadoSensivel::class);
+        $this->app->bind(LerDadoSensivel::class, LeitorDadoSensivel::class);
+        $this->app->bind(ExpurgarRetencao::class, ExpurgadorRetencao::class);
     }
 }

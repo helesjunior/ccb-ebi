@@ -2,6 +2,16 @@
 
 Formato: versão, data, autor e mudanças. Itens mais recentes primeiro.
 
+## 2.14 — 10/11/2026
+
+Etapa 4 — Privacidade e auditoria (sub-etapa A2).
+
+- **Dados sensíveis com chave própria:** módulo `App\Domain\DadosSensiveis` com `SENSITIVE_DATA_KEY` (variante `_FILE`), **separada da `APP_KEY`**, cifra AES-256-GCM e **sem fallback** — ausente/inválida falha explicitamente ([ADR-0006](06-arquitetura/decisoes/ADR-0006-segredos-backups-e-observabilidade.md)).
+- **Entidade `dado_sensivel_participante`** (conteúdo cifrado ou referência segura; `finalidade`, `base_legal`, `controle_acesso`, `prazo_retencao`; `participante_id` sem FK real até o E03) e serviços de **armazenar** e **ler**.
+- **Leitura de dado sensível auditada (via contrato):** `LerDadoSensivel` decifra, aplica o `controle_acesso` (403 fora da lista) e grava `acao=dado_sensivel.ler` com `ator_id` e finalidade; leitura sem ator é erro. A garantia vale para leituras pelo contrato (consumidores futuros devem ler por ele); a tabela segue consultável por model direto. Fecha a condição "pronto" da Etapa 4 (RNF-07).
+- **Retenção configurável e desligada por padrão:** `config/privacidade.php` (`retencao.ativa` default `false`; mapa de prazos tipo→mês **reservado**, ainda não consultado — o vencimento é decidido por `prazo_retencao` por linha) e comando `php artisan privacidade:expurgar [--force]` (expurgo/anonimização **idempotente** e **auditado**; sem `--force` com a retenção desligada, apenas relata).
+- **Dívidas (A2 e além):** consumidor real (E03/E08); prazos aprovados pelo DPO; bucket próprio/antivírus (E08); frontend e rota com contrato OpenAPI; rework da consulta de auditoria (herdado da A1, gatilho de volume). Escopo e dívidas no [ADR-0031](06-arquitetura/decisoes/ADR-0031-dados-sensiveis-e-retencao.md).
+
 ## 2.13 — 09/11/2026
 
 Etapa 4 — Privacidade e auditoria (sub-etapa A1).

@@ -34,6 +34,11 @@ pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->in('Feature');
 
+// Teste de unidade que depende do container (config(), etc.) mas nao do banco.
+// Restrito a este arquivo: os demais testes de Unit seguem sem boot do app.
+pest()->extend(TestCase::class)
+    ->in('Unit/CofreChaveSensivelTest.php');
+
 // Limpa o cache antes de cada teste para isolar o rate limiter
 // (o store em memória persiste entre testes no mesmo processo).
 beforeEach(function () {
