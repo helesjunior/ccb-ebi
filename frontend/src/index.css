@@ -41,27 +41,10 @@
   --ring: #aa3bff;
 }
 
-/* Dark automático (comportamento atual do app, sem toggle) + classe .dark do shadcn. */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #16171d;
-    --foreground: #f3f4f6;
-    --primary: #c084fc;
-    --primary-foreground: #16171d;
-    --secondary: #1f2028;
-    --secondary-foreground: #f3f4f6;
-    --muted: #1f2028;
-    --muted-foreground: #9ca3af;
-    --accent: #1f2028;
-    --accent-foreground: #f3f4f6;
-    --destructive: #ff6467;
-    --border: #2e303a;
-    --input: #2e303a;
-    --ring: #c084fc;
-  }
-}
-
+/* Tema claro é o padrão; o escuro vem da classe `.dark` no <html>, aplicada
+   por lib/tema.ts (com script anti-flash em index.html). Uma única fonte. */
 .dark {
+  color-scheme: dark;
   --background: #16171d;
   --foreground: #f3f4f6;
   --primary: #c084fc;
@@ -81,7 +64,7 @@
 /* Preservação das telas ainda não migradas (o Preflight do Tailwind zera o estilo global). */
 @layer base {
   :root {
-    color-scheme: light dark;
+    color-scheme: light;
     font-synthesis: none;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
