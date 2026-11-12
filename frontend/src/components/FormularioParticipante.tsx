@@ -4,6 +4,8 @@ import { api } from '../api/client'
 import { lerErro } from '../api/erro'
 import { cabecalhos } from '../api/sessao'
 import type { components } from '../api/schema'
+import { Obrigatorio } from './Obrigatorio'
+import { hojeIso } from '@/lib/formatos'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -72,11 +74,14 @@ export function FormularioParticipante({
   }
 
   return (
-    <form onSubmit={enviar} noValidate className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="participante-nome">Nome completo</Label>
+    <form onSubmit={enviar} noValidate className="grid gap-4 sm:grid-cols-2">
+      <div className="flex flex-col gap-2 sm:col-span-2">
+        <Label htmlFor="participante-nome">
+          Nome completo <Obrigatorio />
+        </Label>
         <Input
           id="participante-nome"
+          autoComplete="off"
           value={dados.nome}
           onChange={campo('nome')}
           required
@@ -91,16 +96,19 @@ export function FormularioParticipante({
         />
       </div>
       <div className="flex flex-col gap-2">
-        <Label htmlFor="participante-nascimento">Data de nascimento</Label>
+        <Label htmlFor="participante-nascimento">
+          Data de nascimento <Obrigatorio />
+        </Label>
         <Input
           id="participante-nascimento"
           type="date"
+          max={hojeIso()}
           value={dados.data_nascimento}
           onChange={campo('data_nascimento')}
           required
         />
       </div>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 sm:col-span-2">
         <Label htmlFor="participante-igreja">Igreja de referência (opcional)</Label>
         <Input
           id="participante-igreja"
@@ -109,11 +117,15 @@ export function FormularioParticipante({
         />
       </div>
       {erro && (
-        <Alert variant="destructive">
+        <Alert variant="destructive" role="alert" className="sm:col-span-2">
           <AlertDescription>{erro}</AlertDescription>
         </Alert>
       )}
-      <Button type="submit" disabled={enviando} className="self-start">
+      <Button
+        type="submit"
+        disabled={enviando || !dados.nome.trim() || !dados.data_nascimento}
+        className="sm:col-span-2 sm:justify-self-start"
+      >
         {enviando ? 'Cadastrando…' : 'Cadastrar participante'}
       </Button>
     </form>

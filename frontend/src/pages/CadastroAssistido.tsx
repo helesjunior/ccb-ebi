@@ -1,8 +1,12 @@
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import { FileUpIcon, UserPlusIcon } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { api } from '../api/client'
 import { lerErro } from '../api/erro'
+import { Obrigatorio } from '../components/Obrigatorio'
+import { Sugestoes } from '../components/Sugestoes'
+import { hojeIso, SUGESTOES_RELACAO } from '@/lib/formatos'
 import { cabecalhos } from '../api/sessao'
 import type { components } from '../api/schema'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -34,6 +38,8 @@ export function CadastroAssistido() {
   const [criado, setCriado] = useState<Participante | null>(null)
   const [erro, setErro] = useState<string | null>(null)
   const [enviando, setEnviando] = useState(false)
+  const formularioRef = useRef<HTMLFormElement>(null)
+  const completo = nome.trim() && dataNascimento && responsavelNome.trim() && tipoRelacao.trim() && evidencia
 
   async function enviar(evento: FormEvent) {
     evento.preventDefault()
@@ -66,6 +72,8 @@ export function CadastroAssistido() {
     }
 
     setCriado(data)
+    toast.success(`${data.nome} cadastrado(a) com evidência.`)
+    formularioRef.current?.reset()
     setNome('')
     setDataNascimento('')
     setResponsavelNome('')
@@ -81,14 +89,23 @@ export function CadastroAssistido() {
             Cadastro assistido
           </CardTitle>
           <CardDescription>
-            Cadastro presencial pela coordenação, com evidência de aceite obrigatória.
+            Cadastro presencial pela coordenação. Anexe a foto ou o PDF do termo assinado pelo
+            responsável. Campos com <Obrigatorio /> são obrigatórios.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={enviar} noValidate className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="assistido-nome">Nome completo</Label>
+          <form
+            ref={formularioRef}
+            onSubmit={enviar}
+            noValidate
+            className="grid gap-4 sm:grid-cols-2"
+          >
+            <div className="flex flex-col gap-2 sm:col-span-2">
+              <Label htmlFor="assistido-nome">
+                Nome completo da criança <Obrigatorio />
+              </Label>
               <Input
+                autoComplete="off"
                 id="assistido-nome"
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
@@ -96,9 +113,12 @@ export function CadastroAssistido() {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="assistido-nascimento">Data de nascimento</Label>
+              <Label htmlFor="assistido-nascimento">
+                Data de nascimento <Obrigatorio />
+              </Label>
               <Input
                 id="assistido-nascimento"
+                max={hojeIso()}
                 type="date"
                 value={dataNascimento}
                 onChange={(e) => setDataNascimento(e.target.value)}
@@ -106,8 +126,11 @@ export function CadastroAssistido() {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="assistido-responsavel">Nome do responsável</Label>
+              <Label htmlFor="assistido-responsavel">
+                Nome do responsável <Obrigatorio />
+              </Label>
               <Input
+                autoComplete="off"
                 id="assistido-responsavel"
                 value={responsavelNome}
                 onChange={(e) => setResponsavelNome(e.target.value)}
@@ -115,33 +138,48 @@ export function CadastroAssistido() {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="assistido-relacao">Tipo de relação</Label>
+              <Label htmlFor="assistido-relacao">
+                Relação com a criança <Obrigatorio />
+              </Label>
+              <Sugestoes id="assistido-relacao-sugestoes" opcoes={SUGESTOES_RELACAO} />
               <Input
+                list="assistido-relacao-sugestoes"
                 id="assistido-relacao"
                 value={tipoRelacao}
                 onChange={(e) => setTipoRelacao(e.target.value)}
                 required
               />
             </div>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 sm:col-span-2">
               <Label htmlFor="assistido-evidencia" className="flex items-center gap-2">
                 <FileUpIcon className="size-4" aria-hidden="true" />
-                Evidência de aceite (PDF/JPEG/PNG)
+                Evidência de aceite <Obrigatorio />
               </Label>
               <Input
                 id="assistido-evidencia"
                 type="file"
                 accept="application/pdf,image/jpeg,image/png"
                 onChange={(e) => setEvidencia(e.target.files?.[0] ?? null)}
+                aria-describedby="assistido-evidencia-ajuda"
+                className="cursor-pointer file:mr-3 file:cursor-pointer file:rounded file:bg-secondary file:px-2"
                 required
               />
+              <p id="assistido-evidencia-ajuda" className="text-xs text-muted-foreground">
+                {evidencia
+                  ? `Selecionado: ${evidencia.name} (${Math.ceil(evidencia.size / 1024)} KB)`
+                  : 'PDF, JPEG ou PNG. O arquivo é verificado e guardado cifrado.'}
+              </p>
             </div>
             {erro && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" role="alert" className="sm:col-span-2">
                 <AlertDescription>{erro}</AlertDescription>
               </Alert>
             )}
-            <Button type="submit" disabled={enviando} className="self-start">
+            <Button
+              type="submit"
+              disabled={enviando || !completo}
+              className="sm:col-span-2 sm:justify-self-start"
+            >
               {enviando ? 'Enviando…' : 'Cadastrar com evidência'}
             </Button>
           </form>

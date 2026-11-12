@@ -3,6 +3,8 @@ import { UsersIcon } from 'lucide-react'
 
 import { api } from '../api/client'
 import { lerErro } from '../api/erro'
+import { EstadoTabela } from '../components/EstadoTabela'
+import { formatarData } from '@/lib/formatos'
 import { cabecalhos } from '../api/sessao'
 import type { components } from '../api/schema'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -32,9 +34,11 @@ type Participante = components['schemas']['Participante']
 export function Dependentes() {
   const [dependentes, setDependentes] = useState<Participante[]>([])
   const [erro, setErro] = useState<string | null>(null)
+  const [carregando, setCarregando] = useState(true)
 
   const carregar = useCallback(async () => {
     const { data, error } = await api.GET('/me/participants', { headers: cabecalhos() })
+    setCarregando(false)
     if (error || !data) {
       setErro(lerErro(error, 'Não foi possível carregar seus dependentes.').detail)
       return
@@ -58,14 +62,21 @@ export function Dependentes() {
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           {erro && (
-            <Alert variant="destructive">
+            <Alert variant="destructive" role="alert">
               <AlertDescription>{erro}</AlertDescription>
             </Alert>
           )}
-          {dependentes.length === 0 && !erro ? (
-            <p data-testid="sem-dependentes" className="text-sm text-muted-foreground">
-              Nenhum dependente vinculado.
-            </p>
+          {dependentes.length === 0 && !erro && !carregando ? (
+            <div
+              data-testid="sem-dependentes"
+              className="flex flex-col items-center gap-2 rounded-lg border border-dashed p-8 text-center"
+            >
+              <UsersIcon className="size-8 text-muted-foreground opacity-60" aria-hidden="true" />
+              <p className="font-medium">Nenhum dependente vinculado.</p>
+              <p className="max-w-sm text-sm text-muted-foreground">
+                Quando a coordenação aprovar um pedido de vínculo, a criança aparecerá aqui.
+              </p>
+            </div>
           ) : (
             <Table data-testid="dependentes">
               <TableHeader>
@@ -76,11 +87,14 @@ export function Dependentes() {
                 </TableRow>
               </TableHeader>
               <TableBody>
+                <EstadoTabela colunas={3} carregando={carregando} vazio={false} mensagemVazio="" />
                 {dependentes.map((p) => (
                   <TableRow key={p.id}>
-                    <TableCell>{p.nome}</TableCell>
-                    <TableCell>{p.data_nascimento}</TableCell>
-                    <TableCell>{p.matricula}</TableCell>
+                    <TableCell className="font-medium whitespace-normal">{p.nome}</TableCell>
+                    <TableCell>{formatarData(p.data_nascimento)}</TableCell>
+                    <TableCell>
+                      <code>{p.matricula}</code>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

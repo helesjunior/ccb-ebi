@@ -2,6 +2,18 @@
 
 Formato: versão, data, autor e mudanças. Itens mais recentes primeiro.
 
+## 2.17 — 12/11/2026
+
+Portal Web — usabilidade (sem mudança de estrutura, rotas ou contrato).
+
+- **Navegação:** menu agrupado (Participantes, Administração, Minha conta) com ícones, marca do portal, contexto de atuação com rótulos legíveis ("Coordenação · Igreja") e menu do usuário com iniciais.
+- **Tela inicial:** saudação neutra, papéis do usuário, aviso para ativar MFA e atalhos para as telas permitidas ao perfil.
+- **Feedback:** estados de carregamento e de lista vazia nas tabelas, toasts de sucesso, confirmação antes de ações difíceis de desfazer (revogar sessão, cancelar convite, mesclar, retirar consentimento).
+- **Formulários:** campos obrigatórios marcados, papel do convite em seletor, sugestões para relação e finalidade, busca por Enter, data de nascimento limitada a hoje, nome do arquivo de evidência exibido.
+- **Leitura:** datas em dd/mm/aaaa, códigos (papel, status, escopo) com rótulos em português, colunas secundárias ocultas no celular.
+- **Acessibilidade (RNF-05):** link "Pular para o conteúdo", foco no título ao trocar de tela, `document.title` por tela, `role="alert"` nos erros, rótulos "Fechar" em português, respeito a `prefers-reduced-motion`, roxo primário ajustado para contraste AA (5,4:1).
+- **Correção:** tokens `--card` e `--popover` ausentes no tema deixavam cartões, menus e seletores com fundo transparente.
+
 ## 2.16 — 11/11/2026
 
 Etapa 5 — Participantes e responsáveis (E03).

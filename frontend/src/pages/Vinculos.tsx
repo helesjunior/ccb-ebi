@@ -1,8 +1,12 @@
 import { useState } from 'react'
 import { LinkIcon } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { api } from '../api/client'
 import { lerErro } from '../api/erro'
+import { Obrigatorio } from '../components/Obrigatorio'
+import { Sugestoes } from '../components/Sugestoes'
+import { formatarData, rotuloStatus, SUGESTOES_RELACAO } from '@/lib/formatos'
 import { cabecalhos } from '../api/sessao'
 import type { components } from '../api/schema'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -68,6 +72,7 @@ export function Vinculos() {
       return
     }
     setVinculo(data)
+    toast.success('Pedido de vínculo enviado. A coordenação vai analisar.')
     setNome('')
     setTelefone('')
   }
@@ -86,21 +91,22 @@ export function Vinculos() {
       return
     }
     setVinculo(data)
+    toast.success(`Vínculo atualizado: ${rotuloStatus(data.validacao).toLowerCase()}.`)
     setMotivo('')
   }
 
   return (
     <section className="mx-auto flex max-w-2xl flex-col gap-6">
       {erro && (
-        <Alert variant="destructive">
+        <Alert variant="destructive" role="alert">
           <AlertDescription>{erro}</AlertDescription>
         </Alert>
       )}
       {vinculo && (
         <Alert role="status" data-testid="vinculo-situacao">
           <AlertDescription>
-            Vínculo {vinculo.id}: {vinculo.validacao}{' '}
-            {vinculo.fim ? `(encerrado em ${vinculo.fim})` : ''}
+            Vínculo <code>{vinculo.id}</code>: <strong>{rotuloStatus(vinculo.validacao)}</strong>
+            {vinculo.fim ? ` · encerrado em ${formatarData(vinculo.fim)}` : ''}
           </AlertDescription>
         </Alert>
       )}
@@ -115,16 +121,23 @@ export function Vinculos() {
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <Label htmlFor="vinculo-participante">ID do participante</Label>
+            <Label htmlFor="vinculo-participante">
+              ID do participante <Obrigatorio />
+            </Label>
             <Input
               id="vinculo-participante"
+              autoComplete="off"
+              spellCheck={false}
+              className="font-mono"
               value={participanteId}
               onChange={(e) => setParticipanteId(e.target.value)}
               required
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="vinculo-nome">Seu nome</Label>
+            <Label htmlFor="vinculo-nome">
+              Seu nome <Obrigatorio />
+            </Label>
             <Input
               id="vinculo-nome"
               value={nome}
@@ -133,8 +146,12 @@ export function Vinculos() {
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="vinculo-relacao">Tipo de relação</Label>
+            <Label htmlFor="vinculo-relacao">
+              Relação com a criança <Obrigatorio />
+            </Label>
+            <Sugestoes id="vinculo-relacao-sugestoes" opcoes={SUGESTOES_RELACAO} />
             <Input
+              list="vinculo-relacao-sugestoes"
               id="vinculo-relacao"
               value={tipoRelacao}
               onChange={(e) => setTipoRelacao(e.target.value)}
@@ -145,6 +162,10 @@ export function Vinculos() {
             <Label htmlFor="vinculo-telefone">Telefone (opcional)</Label>
             <Input
               id="vinculo-telefone"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              placeholder="(61) 90000-0000"
               value={telefone}
               onChange={(e) => setTelefone(e.target.value)}
             />
@@ -155,7 +176,7 @@ export function Vinculos() {
             disabled={ocupado || !participanteId || !nome || !tipoRelacao}
             className="self-start"
           >
-            Solicitar
+            {ocupado ? 'Enviando…' : 'Solicitar vínculo'}
           </Button>
         </CardContent>
       </Card>
@@ -167,9 +188,14 @@ export function Vinculos() {
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <Label htmlFor="vinculo-id">ID do vínculo</Label>
+            <Label htmlFor="vinculo-id">
+              ID do vínculo <Obrigatorio />
+            </Label>
             <Input
               id="vinculo-id"
+              autoComplete="off"
+              spellCheck={false}
+              className="font-mono"
               value={vinculoId}
               onChange={(e) => setVinculoId(e.target.value)}
               required
@@ -204,7 +230,7 @@ export function Vinculos() {
             disabled={ocupado || !vinculoId}
             className="self-start"
           >
-            Decidir
+            {ocupado ? 'Salvando…' : 'Registrar decisão'}
           </Button>
         </CardContent>
       </Card>
