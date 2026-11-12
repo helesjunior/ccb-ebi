@@ -17,17 +17,17 @@ class GerenciadorMfa implements GerenciarMfa
 {
     private const QTD_CODIGOS_RECUPERACAO = 10;
 
-    public function exige(Usuario $usuario): bool
+    public function exige(Authenticatable $usuario): bool
     {
-        return $usuario->vinculosVigentes()
+        return $this->comoUsuario($usuario)->vinculosVigentes()
             ->whereHas('papel', fn ($q) => $q->where('codigo', '!=', 'responsavel'))
             ->exists();
     }
 
-    public function temFatorValidado(Usuario $usuario): bool
+    public function temFatorValidado(Authenticatable $usuario): bool
     {
         return FatorMfa::query()
-            ->where('usuario_id', $usuario->id)
+            ->where('usuario_id', $this->comoUsuario($usuario)->id)
             ->whereNotNull('confirmado_em')
             ->exists();
     }

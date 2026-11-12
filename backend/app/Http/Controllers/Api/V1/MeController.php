@@ -5,12 +5,12 @@ namespace App\Http\Controllers\Api\V1;
 use App\Domain\Identidade\Contracts\ConsultarVinculos;
 use App\Domain\Identidade\Contracts\ExigirMfa;
 use App\Domain\Identidade\Contracts\GerirPerfil;
-use App\Domain\Identidade\Models\Usuario;
 use App\Http\Requests\Identidade\PerfilAtualizarRequest;
 use App\Http\Requests\Identidade\PerfilSenhaRequest;
 use App\Http\Resources\ContextoAtuacaoResource;
 use App\Http\Resources\UsuarioResource;
 use App\Support\ProblemException;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -59,11 +59,11 @@ class MeController
         ]);
     }
 
-    private function usuario(Request $request): Usuario
+    private function usuario(Request $request): Authenticatable
     {
         $usuario = $request->user();
 
-        if (! $usuario instanceof Usuario) {
+        if ($usuario === null) {
             throw new ProblemException('unauthorized', 'Não autenticado', 401);
         }
 
