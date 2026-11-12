@@ -205,6 +205,26 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Usuario' }
         '401': { $ref: '#/components/responses/Problem' }
+    patch:
+      tags: [identity]
+      summary: Atualizar meu perfil
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nome: { type: string, maxLength: 255 }
+                email: { type: string, format: email }
+      responses:
+        '200':
+          description: Perfil atualizado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Usuario' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
   /me/scopes:
     get:
       tags: [identity]
