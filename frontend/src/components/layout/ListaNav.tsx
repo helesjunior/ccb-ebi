@@ -24,23 +24,39 @@ interface ItemNav {
 }
 
 /**
- * Itens de navegação e os papéis que os enxergam. A filtragem é só de
- * apresentação: a autoridade real é do servidor (`can:` / matriz de acesso),
- * que recusa o que estiver fora do escopo de qualquer forma.
+ * Itens de navegação e os papéis que os enxergam, espelhando a matriz de
+ * autorização (`AutorizadorOperacao::MATRIZ` + `docs/05-seguranca-e-privacidade/
+ * matriz-de-autorizacao.md`) por operação que cada tela servidor exige. A
+ * filtragem é só de apresentação: a autoridade real é do servidor (`can:`), que
+ * recusa o que estiver fora do escopo de qualquer forma.
  */
+const EQUIPE = ['super_admin', 'adm_regional', 'adm_setor', 'adm_igreja']
+const PARTICIPANTES = [
+  'super_admin',
+  'adm_regional',
+  'adm_setor',
+  'adm_igreja',
+  'coordenadora',
+  'auxiliar',
+  'ministerio_local',
+]
+const CADASTRO = ['super_admin', 'adm_igreja', 'coordenadora', 'auxiliar', 'responsavel']
+const MESCLAGEM = ['super_admin', 'coordenadora']
+const AUDITORIA = ['super_admin', 'adm_regional', 'adm_setor']
+
 const ITENS: ItemNav[] = [
   { id: 'inicio', rotulo: 'Início', papeis: [] },
   { id: 'perfil', rotulo: 'Meu perfil', papeis: [] },
   { id: 'dispositivos', rotulo: 'Dispositivos', papeis: [] },
   { id: 'privacidade', rotulo: 'Privacidade', papeis: [] },
   { id: 'dependentes', rotulo: 'Dependentes', papeis: [] },
-  { id: 'participantes', rotulo: 'Participantes', papeis: ['coordenadora', 'adm_igreja', 'adm_regional', 'super_admin'] },
-  { id: 'cadastro-assistido', rotulo: 'Cadastro assistido', papeis: ['coordenadora', 'adm_igreja', 'adm_regional', 'super_admin'] },
-  { id: 'mesclagem', rotulo: 'Mesclagem', papeis: ['coordenadora', 'adm_igreja', 'adm_regional', 'super_admin'] },
-  { id: 'equipe', rotulo: 'Equipe', papeis: ['adm_igreja', 'adm_regional', 'super_admin'] },
-  { id: 'vinculos', rotulo: 'Vínculos', papeis: ['adm_igreja', 'adm_regional', 'super_admin'] },
-  { id: 'excecao', rotulo: 'Exceção inclusiva', papeis: ['adm_igreja', 'adm_regional', 'super_admin'] },
-  { id: 'auditoria', rotulo: 'Auditoria', papeis: ['adm_igreja', 'adm_regional', 'super_admin'] },
+  { id: 'participantes', rotulo: 'Participantes', papeis: PARTICIPANTES },
+  { id: 'cadastro-assistido', rotulo: 'Cadastro assistido', papeis: CADASTRO },
+  { id: 'mesclagem', rotulo: 'Mesclagem', papeis: MESCLAGEM },
+  { id: 'equipe', rotulo: 'Equipe', papeis: EQUIPE },
+  { id: 'vinculos', rotulo: 'Vínculos', papeis: EQUIPE },
+  { id: 'excecao', rotulo: 'Exceção inclusiva', papeis: PARTICIPANTES },
+  { id: 'auditoria', rotulo: 'Auditoria', papeis: AUDITORIA },
 ]
 
 /** Itens que o conjunto de papéis do usuário pode ver. */

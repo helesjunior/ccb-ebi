@@ -86,7 +86,8 @@ class GerenciadorPerfil implements GerirPerfil
         DB::transaction(function () use ($usuario, $novaSenha, $tokenAtual): void {
             $usuario->forceFill(['senha' => Hash::make($novaSenha)])->save();
 
-            // Preserva a sessao atual e revoga as demais (RF-05).
+            // Preserva a sessao atual e revoga as demais (RF-05). Os tokens de
+            // desafio de MFA tambem caem: foram emitidos sob a senha antiga.
             $usuario->tokens()
                 ->when($tokenAtual !== null, fn ($q) => $q->whereKeyNot($tokenAtual))
                 ->delete();

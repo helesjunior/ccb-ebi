@@ -14,6 +14,23 @@ export function aplicarTema(tema: Tema): void {
   document.documentElement.classList.toggle('dark', escuro)
 }
 
+/**
+ * Passa a reagir à mudança do tema do sistema quando a preferência é
+ * `system` (o padrão). Devolve a função de limpeza; o callback deixa o
+ * consumidor re-renderizar (o toaster lê `.dark` no render).
+ */
+export function observarTemaSistema(aoMudar: () => void): () => void {
+  const consulta = window.matchMedia('(prefers-color-scheme: dark)')
+  const ouvinte = () => {
+    if (lerTema() === 'system') {
+      aplicarTema('system')
+      aoMudar()
+    }
+  }
+  consulta.addEventListener('change', ouvinte)
+  return () => consulta.removeEventListener('change', ouvinte)
+}
+
 export function alternarTema(): Tema {
   const atual = lerTema()
   const proximo: Tema =

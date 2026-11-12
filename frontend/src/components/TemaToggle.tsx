@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { MoonIcon, SunIcon, MonitorIcon } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import { alternarTema, lerTema, rotuloTema, type Tema } from '@/lib/tema'
+import { alternarTema, lerTema, observarTemaSistema, rotuloTema, type Tema } from '@/lib/tema'
 
 const ICONES: Record<Tema, typeof SunIcon> = {
   light: SunIcon,
@@ -18,6 +18,10 @@ const ICONES: Record<Tema, typeof SunIcon> = {
 export function TemaToggle() {
   const [tema, setTema] = useState<Tema>(lerTema)
   const Icone = ICONES[tema]
+
+  // No modo automático, acompanha a mudança de tema do sistema operacional.
+  // O re-render também atualiza componentes que leem `.dark` (ex.: Toaster).
+  useEffect(() => observarTemaSistema(() => setTema((atual) => atual)), [])
 
   return (
     <Button

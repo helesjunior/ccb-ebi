@@ -34,9 +34,11 @@ class MeController
 
     public function atualizarPerfil(PerfilAtualizarRequest $request): UsuarioResource
     {
-        return UsuarioResource::make(
-            $this->gerirPerfil->atualizar($this->usuario($request), $request->validated()),
-        );
+        $usuario = $this->usuario($request);
+        $this->gerirPerfil->atualizar($usuario, $request->validated());
+        $usuario->setAttribute('mfa_ativo', $this->mfa->temFatorValidado($usuario));
+
+        return UsuarioResource::make($usuario);
     }
 
     public function alterarSenha(PerfilSenhaRequest $request): Response

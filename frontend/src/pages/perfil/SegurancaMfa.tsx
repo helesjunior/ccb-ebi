@@ -108,6 +108,19 @@ export function SegurancaMfa({ usuario, onAtualizado }: SegurancaMfaProps) {
     void inscrever()
   }
 
+  /**
+   * Desiste da inscrição/renovação. Recarrega o perfil: entre iniciar e
+   * confirmar o backend mantém o fator antigo ativo, e o estado local não pode
+   * continuar mostrando uma inscrição abandonada.
+   */
+  async function cancelar() {
+    reiniciar()
+    const { data } = await api.GET('/me', { headers: cabecalhos() })
+    if (data) {
+      onAtualizado(data)
+    }
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -157,7 +170,7 @@ export function SegurancaMfa({ usuario, onAtualizado }: SegurancaMfaProps) {
               <Button type="button" onClick={confirmar} disabled={enviando || !codigo}>
                 Confirmar
               </Button>
-              <Button type="button" variant="ghost" onClick={reiniciar} disabled={enviando}>
+              <Button type="button" variant="ghost" onClick={cancelar} disabled={enviando}>
                 Cancelar
               </Button>
             </div>

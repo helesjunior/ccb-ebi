@@ -3,6 +3,7 @@
 use App\Domain\Auditoria\Models\EventoAuditoria;
 use App\Domain\Identidade\Models\FatorMfa;
 use App\Domain\Identidade\Models\Usuario;
+use App\Domain\Identidade\Services\DesafioMfa;
 use Illuminate\Support\Facades\Hash;
 
 use function Pest\Laravel\getJson;
@@ -30,6 +31,22 @@ it('expoe mfa_ativo verdadeiro com fator confirmado', function () {
 
     getJson('/api/v1/me', $auth)
         ->assertOk()
+        ->assertJsonPath('mfa_ativo', true);
+});
+
+it('devolve mfa_ativo atualizado no PATCH /me', function () {
+    $usuario = criarUsuarioComPapel('coordenadora');
+    FatorMfa::query()->create([
+        'usuario_id' => $usuario->id,
+        'tipo' => FatorMfa::TIPO_TOTP,
+        'segredo_cifrado' => 'JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP',
+        'confirmado_em' => now(),
+    ]);
+    $auth = ['Authorization' => 'Bearer '.$usuario->createToken('t')->plainTextToken];
+
+    patchJson('/api/v1/me', ['nome' => 'Maria Silva', 'email' => 'maria@exemplo.test'], $auth)
+        ->assertOk()
+        ->assertJsonPath('nome', 'Maria Silva')
         ->assertJsonPath('mfa_ativo', true);
 });
 
@@ -102,6 +119,24 @@ it('troca a senha mantendo a sessao atual viva', function () {
     getJson('/api/v1/me', $auth)->assertOk();
     $this->app['auth']->forgetGuards();
     getJson('/api/v1/me', ['Authorization' => 'Bearer '.$outraToken])->assertStatus(401);
+});
+
+it('revoga os tokens de desafio de MFA ao trocar a senha', function () {
+    $usuario = criarUsuarioComPapel('coordenadora');
+    $atual = $usuario->createToken('atual')->plainTextToken;
+    $desafio = app(DesafioMfa::class)->emitir($usuario);
+
+    postJson('/api/v1/me/password', [
+        'senha_atual' => 'senha-bem-longa-123',
+        'nova_senha' => 'outra-senha-longa-456',
+        'nova_senha_confirmation' => 'outra-senha-longa-456',
+    ], ['Authorization' => 'Bearer '.$atual])->assertNoContent();
+
+    // O desafio emitido antes da troca não conclui o segundo fator (a senha era
+    // a credencial que o sustentava).
+    $this->app['auth']->forgetGuards();
+    postJson('/api/v1/auth/mfa/verify', ['codigo' => '000000'], ['Authorization' => 'Bearer '.$desafio])
+        ->assertStatus(401);
 });
 
 it('recusa senha atual incorreta com 422 e nao troca nada', function () {

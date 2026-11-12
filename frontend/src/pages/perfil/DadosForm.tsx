@@ -104,7 +104,7 @@ export function DadosForm({ usuario, onAtualizado }: DadosFormProps) {
           {avisoVerificacao && (
             <Alert>
               <AlertDescription>
-                Enviamos um link de verificação ao novo e-mail.
+                Seu e-mail foi alterado. A verificação do novo endereço está pendente.
               </AlertDescription>
             </Alert>
           )}
