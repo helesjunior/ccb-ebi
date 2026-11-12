@@ -4,6 +4,10 @@ import { api } from '../api/client'
 import { lerErro } from '../api/erro'
 import { cabecalhos } from '../api/sessao'
 import type { components } from '../api/schema'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 export type Participante = components['schemas']['Participante']
 
@@ -68,46 +72,50 @@ export function FormularioParticipante({
   }
 
   return (
-    <form onSubmit={enviar} noValidate>
-      <p>
-        <label htmlFor="participante-nome">Nome completo</label>
-        <input
+    <form onSubmit={enviar} noValidate className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="participante-nome">Nome completo</Label>
+        <Input
           id="participante-nome"
           value={dados.nome}
           onChange={campo('nome')}
           required
         />
-      </p>
-      <p>
-        <label htmlFor="participante-nome-social">Nome social (opcional)</label>
-        <input
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="participante-nome-social">Nome social (opcional)</Label>
+        <Input
           id="participante-nome-social"
           value={dados.nome_social}
           onChange={campo('nome_social')}
         />
-      </p>
-      <p>
-        <label htmlFor="participante-nascimento">Data de nascimento</label>
-        <input
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="participante-nascimento">Data de nascimento</Label>
+        <Input
           id="participante-nascimento"
           type="date"
           value={dados.data_nascimento}
           onChange={campo('data_nascimento')}
           required
         />
-      </p>
-      <p>
-        <label htmlFor="participante-igreja">Igreja de referência (opcional)</label>
-        <input
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="participante-igreja">Igreja de referência (opcional)</Label>
+        <Input
           id="participante-igreja"
           value={dados.igreja_referencia_id}
           onChange={campo('igreja_referencia_id')}
         />
-      </p>
-      {erro && <p role="alert">{erro}</p>}
-      <button type="submit" disabled={enviando}>
+      </div>
+      {erro && (
+        <Alert variant="destructive">
+          <AlertDescription>{erro}</AlertDescription>
+        </Alert>
+      )}
+      <Button type="submit" disabled={enviando} className="self-start">
         {enviando ? 'Cadastrando…' : 'Cadastrar participante'}
-      </button>
+      </Button>
     </form>
   )
 }

@@ -1,9 +1,28 @@
 import { useState } from 'react'
+import { AccessibilityIcon } from 'lucide-react'
 
 import { api } from '../api/client'
 import { lerErro } from '../api/erro'
 import { cabecalhos } from '../api/sessao'
 import type { components } from '../api/schema'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 type Excecao = components['schemas']['ExcecaoEtaria']
 type Decisao = components['schemas']['DecisaoExcecaoInput']['decisao']
@@ -74,83 +93,121 @@ export function ExcecaoInclusiva() {
   }
 
   return (
-    <main>
-      <h1>Exceção inclusiva</h1>
-
-      <h2>Solicitar (responsável)</h2>
-      <p>
-        <label htmlFor="excecao-participante">ID do participante</label>
-        <input
-          id="excecao-participante"
-          value={participanteId}
-          onChange={(e) => setParticipanteId(e.target.value)}
-          required
-        />
-      </p>
-      <p>
-        <label htmlFor="excecao-tipo">Tipo de necessidade</label>
-        <input
-          id="excecao-tipo"
-          value={tipoNecessidade}
-          onChange={(e) => setTipoNecessidade(e.target.value)}
-          required
-        />
-      </p>
-      <p>
-        <label htmlFor="excecao-apoios">Apoios necessários (opcional)</label>
-        <textarea id="excecao-apoios" value={apoios} onChange={(e) => setApoios(e.target.value)} />
-      </p>
-      <button
-        type="button"
-        onClick={solicitar}
-        disabled={ocupado || !participanteId || !tipoNecessidade}
-      >
-        Solicitar exceção
-      </button>
-
-      <h2>Decidir (coordenadora)</h2>
-      <p>
-        <label htmlFor="excecao-id">ID da exceção</label>
-        <input id="excecao-id" value={excecaoId} onChange={(e) => setExcecaoId(e.target.value)} required />
-      </p>
-      <p>
-        <label htmlFor="excecao-decisao">Decisão</label>
-        <select
-          id="excecao-decisao"
-          value={decisao}
-          onChange={(e) => setDecisao(e.target.value as Decisao)}
-        >
-          {DECISOES.map((d) => (
-            <option key={d.valor} value={d.valor}>
-              {d.rotulo}
-            </option>
-          ))}
-        </select>
-      </p>
-      <p>
-        <label htmlFor="excecao-vigencia">Vigente até (opcional)</label>
-        <input
-          id="excecao-vigencia"
-          type="date"
-          value={vigenteAte}
-          onChange={(e) => setVigenteAte(e.target.value)}
-        />
-      </p>
-      <p>
-        <label htmlFor="excecao-motivo">Motivo (opcional)</label>
-        <input id="excecao-motivo" value={motivo} onChange={(e) => setMotivo(e.target.value)} />
-      </p>
-      <button type="button" onClick={decidir} disabled={ocupado || !excecaoId}>
-        Decidir
-      </button>
-
-      {erro && <p role="alert">{erro}</p>}
-      {excecao && (
-        <p role="status" data-testid="excecao-situacao">
-          Exceção {excecao.id}: {excecao.status}
-          {excecao.vigente_ate ? ` · vigente até ${excecao.vigente_ate}` : ''}
-        </p>
+    <section className="mx-auto flex max-w-2xl flex-col gap-6">
+      {erro && (
+        <Alert variant="destructive">
+          <AlertDescription>{erro}</AlertDescription>
+        </Alert>
       )}
-    </main>
+      {excecao && (
+        <Alert role="status" data-testid="excecao-situacao">
+          <AlertDescription>
+            Exceção {excecao.id}: {excecao.status}
+            {excecao.vigente_ate ? ` · vigente até ${excecao.vigente_ate}` : ''}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <AccessibilityIcon className="size-5" aria-hidden="true" />
+            Solicitar (responsável)
+          </CardTitle>
+          <CardDescription>Peça a exceção inclusiva para um participante.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="excecao-participante">ID do participante</Label>
+            <Input
+              id="excecao-participante"
+              value={participanteId}
+              onChange={(e) => setParticipanteId(e.target.value)}
+              required
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="excecao-tipo">Tipo de necessidade</Label>
+            <Input
+              id="excecao-tipo"
+              value={tipoNecessidade}
+              onChange={(e) => setTipoNecessidade(e.target.value)}
+              required
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="excecao-apoios">Apoios necessários (opcional)</Label>
+            <textarea
+              id="excecao-apoios"
+              value={apoios}
+              onChange={(e) => setApoios(e.target.value)}
+              className="min-h-20 rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:bg-input/30"
+            />
+          </div>
+          <Button
+            type="button"
+            onClick={solicitar}
+            disabled={ocupado || !participanteId || !tipoNecessidade}
+            className="self-start"
+          >
+            Solicitar exceção
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Decidir (coordenadora)</CardTitle>
+          <CardDescription>Aprove, recuse, suspenda ou revogue a exceção.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="excecao-id">ID da exceção</Label>
+            <Input
+              id="excecao-id"
+              value={excecaoId}
+              onChange={(e) => setExcecaoId(e.target.value)}
+              required
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="excecao-decisao">Decisão</Label>
+            <Select value={decisao} onValueChange={(v) => setDecisao(v as Decisao)}>
+              <SelectTrigger id="excecao-decisao" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {DECISOES.map((d) => (
+                  <SelectItem key={d.valor} value={d.valor}>
+                    {d.rotulo}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="excecao-vigencia">Vigente até (opcional)</Label>
+            <Input
+              id="excecao-vigencia"
+              type="date"
+              value={vigenteAte}
+              onChange={(e) => setVigenteAte(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="excecao-motivo">Motivo (opcional)</Label>
+            <Input id="excecao-motivo" value={motivo} onChange={(e) => setMotivo(e.target.value)} />
+          </div>
+          <Button
+            type="button"
+            onClick={decidir}
+            disabled={ocupado || !excecaoId}
+            className="self-start"
+          >
+            Decidir
+          </Button>
+        </CardContent>
+      </Card>
+    </section>
   )
 }

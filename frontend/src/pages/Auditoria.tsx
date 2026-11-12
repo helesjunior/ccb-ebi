@@ -1,9 +1,29 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { ScrollTextIcon } from 'lucide-react'
 
 import { api } from '../api/client'
 import { lerErro } from '../api/erro'
 import { cabecalhos } from '../api/sessao'
 import type { components } from '../api/schema'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 
 type EventoAuditoria = components['schemas']['EventoAuditoria']
 
@@ -82,80 +102,108 @@ export function Auditoria() {
 
   if (semPermissao) {
     return (
-      <main>
-        <h1>Auditoria</h1>
-        <p role="alert" data-testid="auditoria-sem-permissao">
-          Você não tem permissão para consultar a trilha de auditoria.
-        </p>
-      </main>
+      <section className="mx-auto flex max-w-4xl flex-col gap-6">
+        <Alert variant="destructive" role="alert" data-testid="auditoria-sem-permissao">
+          <AlertDescription>
+            Você não tem permissão para consultar a trilha de auditoria.
+          </AlertDescription>
+        </Alert>
+      </section>
     )
   }
 
   return (
-    <main>
-      <h1>Auditoria</h1>
-      {erro && <p role="alert">{erro}</p>}
+    <section className="mx-auto flex max-w-4xl flex-col gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ScrollTextIcon className="size-5" aria-hidden="true" />
+            Auditoria
+          </CardTitle>
+          <CardDescription>Trilha append-only de eventos do sistema.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          {erro && (
+            <Alert variant="destructive">
+              <AlertDescription>{erro}</AlertDescription>
+            </Alert>
+          )}
+          <form onSubmit={filtrar} noValidate className="grid gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="auditoria-recurso">Recurso</Label>
+              <Input
+                id="auditoria-recurso"
+                value={filtros.recurso}
+                onChange={(e) => setFiltros({ ...filtros, recurso: e.target.value })}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="auditoria-ator">Ator</Label>
+              <Input
+                id="auditoria-ator"
+                value={filtros.ator_id}
+                onChange={(e) => setFiltros({ ...filtros, ator_id: e.target.value })}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="auditoria-de">De</Label>
+              <Input
+                id="auditoria-de"
+                type="datetime-local"
+                value={filtros.de}
+                onChange={(e) => setFiltros({ ...filtros, de: e.target.value })}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="auditoria-ate">Até</Label>
+              <Input
+                id="auditoria-ate"
+                type="datetime-local"
+                value={filtros.ate}
+                onChange={(e) => setFiltros({ ...filtros, ate: e.target.value })}
+              />
+            </div>
+            <Button type="submit" disabled={carregando} className="sm:col-span-2 sm:justify-self-start">
+              Filtrar
+            </Button>
+          </form>
 
-      <form onSubmit={filtrar} noValidate>
-        <p>
-          <label htmlFor="auditoria-recurso">Recurso</label>
-          <input
-            id="auditoria-recurso"
-            value={filtros.recurso}
-            onChange={(e) => setFiltros({ ...filtros, recurso: e.target.value })}
-          />
-        </p>
-        <p>
-          <label htmlFor="auditoria-ator">Ator</label>
-          <input
-            id="auditoria-ator"
-            value={filtros.ator_id}
-            onChange={(e) => setFiltros({ ...filtros, ator_id: e.target.value })}
-          />
-        </p>
-        <p>
-          <label htmlFor="auditoria-de">De</label>
-          <input
-            id="auditoria-de"
-            type="datetime-local"
-            value={filtros.de}
-            onChange={(e) => setFiltros({ ...filtros, de: e.target.value })}
-          />
-        </p>
-        <p>
-          <label htmlFor="auditoria-ate">Até</label>
-          <input
-            id="auditoria-ate"
-            type="datetime-local"
-            value={filtros.ate}
-            onChange={(e) => setFiltros({ ...filtros, ate: e.target.value })}
-          />
-        </p>
-        <button type="submit" disabled={carregando}>
-          Filtrar
-        </button>
-      </form>
+          <Table data-testid="eventos-auditoria">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Seq.</TableHead>
+                <TableHead>Data</TableHead>
+                <TableHead>Ação</TableHead>
+                <TableHead>Recurso</TableHead>
+                <TableHead>Origem</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {eventos.map((ev) => (
+                <TableRow key={ev.id}>
+                  <TableCell>#{ev.sequencia}</TableCell>
+                  <TableCell>{new Date(ev.ocorrido_em).toLocaleString('pt-BR')}</TableCell>
+                  <TableCell className="font-medium">{ev.acao}</TableCell>
+                  <TableCell>{ev.recurso}</TableCell>
+                  <TableCell>{ev.origem}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
 
-      <ul data-testid="eventos-auditoria">
-        {eventos.map((ev) => (
-          <li key={ev.id}>
-            <span>
-              #{ev.sequencia} — {new Date(ev.ocorrido_em).toLocaleString('pt-BR')} —{' '}
-              <strong>{ev.acao}</strong> em {ev.recurso} ({ev.origem})
-            </span>
-          </li>
-        ))}
-      </ul>
-
-      {cursor && (
-        <button
-          type="button"
-          onClick={() => carregar(aplicados, cursor, true)}
-          disabled={carregando}
-        >
-          {carregando ? 'Carregando…' : 'Carregar mais'}
-        </button>
-      )}
-    </main>
+          {cursor && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => carregar(aplicados, cursor, true)}
+              disabled={carregando}
+              className="self-start"
+            >
+              {carregando ? 'Carregando…' : 'Carregar mais'}
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+    </section>
   )
 }

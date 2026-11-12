@@ -1,8 +1,26 @@
 import { useCallback, useEffect, useState } from 'react'
+import { MonitorSmartphoneIcon } from 'lucide-react'
 
 import { api } from '../api/client'
 import { lerErro } from '../api/erro'
 import { cabecalhos } from '../api/sessao'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 
 interface SessaoLogin {
   id?: string
@@ -45,19 +63,43 @@ export function Dispositivos() {
   }
 
   return (
-    <main>
-      <h1>Dispositivos</h1>
-      {erro && <p role="alert">{erro}</p>}
-      <ul data-testid="sessoes">
-        {sessoes.map((s) => (
-          <li key={s.id}>
-            <span>{s.dispositivo ?? 'Dispositivo'}</span>
-            <button type="button" onClick={() => s.id && revogar(s.id)}>
-              Revogar
-            </button>
-          </li>
-        ))}
-      </ul>
-    </main>
+    <section className="mx-auto flex max-w-4xl flex-col gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MonitorSmartphoneIcon className="size-5" aria-hidden="true" />
+            Dispositivos
+          </CardTitle>
+          <CardDescription>Sessões vigentes na sua conta. Revogue as que não reconhece.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          {erro && (
+            <Alert variant="destructive">
+              <AlertDescription>{erro}</AlertDescription>
+            </Alert>
+          )}
+          <Table data-testid="sessoes">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Dispositivo</TableHead>
+                <TableHead aria-label="Ações" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sessoes.map((s) => (
+                <TableRow key={s.id}>
+                  <TableCell>{s.dispositivo ?? 'Dispositivo'}</TableCell>
+                  <TableCell className="text-right">
+                    <Button type="button" variant="outline" size="sm" onClick={() => s.id && revogar(s.id)}>
+                      Revogar
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </section>
   )
 }

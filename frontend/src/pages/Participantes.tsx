@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { SearchIcon, UserPlusIcon } from 'lucide-react'
 
 import { api } from '../api/client'
 import { lerErro } from '../api/erro'
@@ -7,6 +8,25 @@ import {
   FormularioParticipante,
   type Participante,
 } from '../components/FormularioParticipante'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 
 /**
  * Participantes: cadastra um participante e busca por nome (dedup, CA-27).
@@ -39,46 +59,82 @@ export function Participantes() {
   }
 
   return (
-    <main>
-      <h1>Participantes</h1>
+    <section className="mx-auto flex max-w-4xl flex-col gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <UserPlusIcon className="size-5" aria-hidden="true" />
+            Cadastrar
+          </CardTitle>
+          <CardDescription>Cadastre um participante sob sua responsabilidade.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <FormularioParticipante onCriado={setCriado} />
+          {criado && (
+            <Alert role="status" data-testid="participante-criado">
+              <AlertDescription>
+                Cadastrado: {criado.nome} — matrícula <code>{criado.matricula}</code>
+              </AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
 
-      <h2>Cadastrar</h2>
-      <FormularioParticipante onCriado={setCriado} />
-      {criado && (
-        <p role="status" data-testid="participante-criado">
-          Cadastrado: {criado.nome} — matrícula <code>{criado.matricula}</code>
-        </p>
-      )}
-
-      <h2>Buscar (dedup)</h2>
-      <p>
-        <label htmlFor="busca-termo">Nome</label>
-        <input
-          id="busca-termo"
-          value={termo}
-          onChange={(e) => setTermo(e.target.value)}
-        />
-      </p>
-      <p>
-        <label htmlFor="busca-finalidade">Finalidade da leitura</label>
-        <input
-          id="busca-finalidade"
-          value={finalidade}
-          onChange={(e) => setFinalidade(e.target.value)}
-          required
-        />
-      </p>
-      <button type="button" onClick={buscar} disabled={buscando || !termo || !finalidade}>
-        {buscando ? 'Buscando…' : 'Buscar'}
-      </button>
-      {erroBusca && <p role="alert">{erroBusca}</p>}
-      <ul data-testid="resultados">
-        {resultados.map((p) => (
-          <li key={p.id}>
-            {p.nome} — {p.data_nascimento} — {p.matricula}
-          </li>
-        ))}
-      </ul>
-    </main>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <SearchIcon className="size-5" aria-hidden="true" />
+            Buscar (dedup)
+          </CardTitle>
+          <CardDescription>Confira se já existe cadastro antes de criar um novo.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="busca-termo">Nome</Label>
+            <Input id="busca-termo" value={termo} onChange={(e) => setTermo(e.target.value)} />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="busca-finalidade">Finalidade da leitura</Label>
+            <Input
+              id="busca-finalidade"
+              value={finalidade}
+              onChange={(e) => setFinalidade(e.target.value)}
+              required
+            />
+          </div>
+          <Button
+            type="button"
+            onClick={buscar}
+            disabled={buscando || !termo || !finalidade}
+            className="self-start"
+          >
+            {buscando ? 'Buscando…' : 'Buscar'}
+          </Button>
+          {erroBusca && (
+            <Alert variant="destructive">
+              <AlertDescription>{erroBusca}</AlertDescription>
+            </Alert>
+          )}
+          <Table data-testid="resultados">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead>Nascimento</TableHead>
+                <TableHead>Matrícula</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {resultados.map((p) => (
+                <TableRow key={p.id}>
+                  <TableCell>{p.nome}</TableCell>
+                  <TableCell>{p.data_nascimento}</TableCell>
+                  <TableCell>{p.matricula}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </section>
   )
 }
