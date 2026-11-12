@@ -1,9 +1,28 @@
 import { useState } from 'react'
+import { LinkIcon } from 'lucide-react'
 
 import { api } from '../api/client'
 import { lerErro } from '../api/erro'
 import { cabecalhos } from '../api/sessao'
 import type { components } from '../api/schema'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 type Vinculo = components['schemas']['ResponsavelParticipante']
 type Decisao = components['schemas']['DecisaoVinculoInput']['decisao']
@@ -71,77 +90,124 @@ export function Vinculos() {
   }
 
   return (
-    <main>
-      <h1>Vínculos de responsável</h1>
-
-      <h2>Solicitar vínculo</h2>
-      <p>
-        <label htmlFor="vinculo-participante">ID do participante</label>
-        <input
-          id="vinculo-participante"
-          value={participanteId}
-          onChange={(e) => setParticipanteId(e.target.value)}
-          required
-        />
-      </p>
-      <p>
-        <label htmlFor="vinculo-nome">Seu nome</label>
-        <input id="vinculo-nome" value={nome} onChange={(e) => setNome(e.target.value)} required />
-      </p>
-      <p>
-        <label htmlFor="vinculo-relacao">Tipo de relação</label>
-        <input
-          id="vinculo-relacao"
-          value={tipoRelacao}
-          onChange={(e) => setTipoRelacao(e.target.value)}
-          required
-        />
-      </p>
-      <p>
-        <label htmlFor="vinculo-telefone">Telefone (opcional)</label>
-        <input id="vinculo-telefone" value={telefone} onChange={(e) => setTelefone(e.target.value)} />
-      </p>
-      <button
-        type="button"
-        onClick={solicitar}
-        disabled={ocupado || !participanteId || !nome || !tipoRelacao}
-      >
-        Solicitar
-      </button>
-
-      <h2>Decidir pedido</h2>
-      <p>
-        <label htmlFor="vinculo-id">ID do vínculo</label>
-        <input id="vinculo-id" value={vinculoId} onChange={(e) => setVinculoId(e.target.value)} required />
-      </p>
-      <p>
-        <label htmlFor="vinculo-decisao">Decisão</label>
-        <select
-          id="vinculo-decisao"
-          value={decisao}
-          onChange={(e) => setDecisao(e.target.value as Decisao)}
-        >
-          {DECISOES.map((d) => (
-            <option key={d.valor} value={d.valor}>
-              {d.rotulo}
-            </option>
-          ))}
-        </select>
-      </p>
-      <p>
-        <label htmlFor="vinculo-motivo">Motivo (opcional)</label>
-        <input id="vinculo-motivo" value={motivo} onChange={(e) => setMotivo(e.target.value)} />
-      </p>
-      <button type="button" onClick={decidir} disabled={ocupado || !vinculoId}>
-        Decidir
-      </button>
-
-      {erro && <p role="alert">{erro}</p>}
-      {vinculo && (
-        <p role="status" data-testid="vinculo-situacao">
-          Vínculo {vinculo.id}: {vinculo.validacao} {vinculo.fim ? `(encerrado em ${vinculo.fim})` : ''}
-        </p>
+    <section className="mx-auto flex max-w-2xl flex-col gap-6">
+      {erro && (
+        <Alert variant="destructive">
+          <AlertDescription>{erro}</AlertDescription>
+        </Alert>
       )}
-    </main>
+      {vinculo && (
+        <Alert role="status" data-testid="vinculo-situacao">
+          <AlertDescription>
+            Vínculo {vinculo.id}: {vinculo.validacao}{' '}
+            {vinculo.fim ? `(encerrado em ${vinculo.fim})` : ''}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <LinkIcon className="size-5" aria-hidden="true" />
+            Solicitar vínculo
+          </CardTitle>
+          <CardDescription>Peça o vínculo de responsável com um participante.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="vinculo-participante">ID do participante</Label>
+            <Input
+              id="vinculo-participante"
+              value={participanteId}
+              onChange={(e) => setParticipanteId(e.target.value)}
+              required
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="vinculo-nome">Seu nome</Label>
+            <Input
+              id="vinculo-nome"
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
+              required
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="vinculo-relacao">Tipo de relação</Label>
+            <Input
+              id="vinculo-relacao"
+              value={tipoRelacao}
+              onChange={(e) => setTipoRelacao(e.target.value)}
+              required
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="vinculo-telefone">Telefone (opcional)</Label>
+            <Input
+              id="vinculo-telefone"
+              value={telefone}
+              onChange={(e) => setTelefone(e.target.value)}
+            />
+          </div>
+          <Button
+            type="button"
+            onClick={solicitar}
+            disabled={ocupado || !participanteId || !nome || !tipoRelacao}
+            className="self-start"
+          >
+            Solicitar
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Decidir pedido</CardTitle>
+          <CardDescription>Aprove, recuse ou encerre o vínculo solicitado.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="vinculo-id">ID do vínculo</Label>
+            <Input
+              id="vinculo-id"
+              value={vinculoId}
+              onChange={(e) => setVinculoId(e.target.value)}
+              required
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="vinculo-decisao">Decisão</Label>
+            <Select value={decisao} onValueChange={(v) => setDecisao(v as Decisao)}>
+              <SelectTrigger id="vinculo-decisao" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {DECISOES.map((d) => (
+                  <SelectItem key={d.valor} value={d.valor}>
+                    {d.rotulo}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="vinculo-motivo">Motivo (opcional)</Label>
+            <Input
+              id="vinculo-motivo"
+              value={motivo}
+              onChange={(e) => setMotivo(e.target.value)}
+            />
+          </div>
+          <Button
+            type="button"
+            onClick={decidir}
+            disabled={ocupado || !vinculoId}
+            className="self-start"
+          >
+            Decidir
+          </Button>
+        </CardContent>
+      </Card>
+    </section>
   )
 }

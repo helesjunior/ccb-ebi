@@ -23,6 +23,8 @@ Proposta inicial, prefixo `/api/v1`. Rotas marcadas *novo* não existiam na vers
 | DELETE | `/me/sessions/{id}` | Revogar dispositivo *novo* (`no OpenAPI`) | RF-05 |
 | GET | `/me/scopes` | Contextos de atuação disponíveis *novo* (`no OpenAPI`) | RN-11 |
 | GET | `/me` | Ator autenticado (`no OpenAPI`) | — |
+| PATCH | `/me` | Atualizar meu perfil (`no OpenAPI`) | RF-05 |
+| POST | `/me/password` | Trocar minha senha (`no OpenAPI`) | RF-05 |
 | GET | `/health` | Estado dos serviços (`no OpenAPI`) | — |
 
 ## Organização

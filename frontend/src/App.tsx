@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 
 import { api } from './api/client'
+import { AppShell } from './components/layout/AppShell'
+import type { IdTela } from './components/layout/ListaNav'
 import {
   cabecalhos,
   guardarEscopo,
@@ -23,21 +25,24 @@ import { MeuPerfil } from './pages/MeuPerfil'
 import { Participantes } from './pages/Participantes'
 import { Privacidade } from './pages/Privacidade'
 import { Vinculos } from './pages/Vinculos'
-import { Button } from '@/components/ui/button'
 
-type Tela =
-  | 'inicio'
-  | 'perfil'
-  | 'dispositivos'
-  | 'equipe'
-  | 'privacidade'
-  | 'auditoria'
-  | 'participantes'
-  | 'dependentes'
-  | 'cadastro-assistido'
-  | 'vinculos'
-  | 'excecao'
-  | 'mesclagem'
+type Tela = IdTela
+
+/** Título humano de cada tela, exibido no cabeçalho da casca. */
+const ROTULOS: Record<Tela, string> = {
+  inicio: 'Início',
+  perfil: 'Meu perfil',
+  dispositivos: 'Dispositivos',
+  equipe: 'Equipe',
+  privacidade: 'Privacidade',
+  auditoria: 'Auditoria',
+  participantes: 'Participantes',
+  dependentes: 'Dependentes',
+  'cadastro-assistido': 'Cadastro assistido',
+  vinculos: 'Vínculos',
+  excecao: 'Exceção inclusiva',
+  mesclagem: 'Mesclagem',
+}
 
 interface ConvitePendente {
   id: string
@@ -111,67 +116,30 @@ function App() {
   }
 
   return (
-    <>
-      <nav>
-        <button type="button" onClick={() => setTela('inicio')}>
-          Início
-        </button>
-        <button type="button" onClick={() => setTela('perfil')}>
-          Meu perfil
-        </button>
-        <button type="button" onClick={() => setTela('dispositivos')}>
-          Dispositivos
-        </button>
-        <button type="button" onClick={() => setTela('equipe')}>
-          Equipe
-        </button>
-        <button type="button" onClick={() => setTela('privacidade')}>
-          Privacidade
-        </button>
-        <button type="button" onClick={() => setTela('participantes')}>
-          Participantes
-        </button>
-        <button type="button" onClick={() => setTela('dependentes')}>
-          Dependentes
-        </button>
-        <button type="button" onClick={() => setTela('cadastro-assistido')}>
-          Cadastro assistido
-        </button>
-        <button type="button" onClick={() => setTela('vinculos')}>
-          Vínculos
-        </button>
-        <button type="button" onClick={() => setTela('excecao')}>
-          Exceção inclusiva
-        </button>
-        <button type="button" onClick={() => setTela('mesclagem')}>
-          Mesclagem
-        </button>
-        <button type="button" onClick={() => setTela('auditoria')}>
-          Auditoria
-        </button>
-        <Button variant="outline" type="button" onClick={sair}>
-          Sair
-        </Button>
-      </nav>
-
-      <label htmlFor="escopo">Contexto de atuação</label>
-      <select id="escopo" value={escopo ? chaveEscopo(escopo) : ''} onChange={(e) => trocarEscopo(e.target.value)}>
-        <option value="">Todos os vínculos</option>
-        {escopos.map((e) => (
-          <option key={chaveEscopo(e)} value={chaveEscopo(e)}>
-            {e.papel} — {e.tipo_escopo}:{e.escopo_id}
-          </option>
-        ))}
-      </select>
-
+    <AppShell
+      titulo={ROTULOS[tela]}
+      tela={tela}
+      usuario={usuario}
+      escopos={escopos}
+      escopo={escopo}
+      onSelecionarTela={setTela}
+      onTrocarEscopo={trocarEscopo}
+      onIrPerfil={() => setTela('perfil')}
+      onSair={sair}
+    >
       {tela === 'inicio' && (
-        <main>
-          <h1>Bem-vinda</h1>
-          <p data-testid="usuario-nome">{usuario.nome}</p>
-          <p>{usuario.email}</p>
-        </main>
+        <section className="mx-auto max-w-2xl">
+          <h2 className="text-2xl font-semibold">Bem-vinda</h2>
+          <p className="mt-2 text-muted-foreground" data-testid="usuario-nome">
+            {usuario.nome}
+          </p>
+          <p className="text-muted-foreground">{usuario.email}</p>
+          <p className="mt-4 text-sm text-muted-foreground">
+            Use o menu para navegar. O contexto de atuação e o tema ficam no cabeçalho.
+          </p>
+        </section>
       )}
-      {tela === 'perfil' && <MeuPerfil usuario={usuario} />}
+      {tela === 'perfil' && <MeuPerfil usuario={usuario} onAtualizado={setUsuario} />}
       {tela === 'dispositivos' && <Dispositivos />}
       {tela === 'equipe' && <Equipe />}
       {tela === 'privacidade' && <Privacidade />}
@@ -182,7 +150,7 @@ function App() {
       {tela === 'excecao' && <ExcecaoInclusiva />}
       {tela === 'mesclagem' && <Mesclagem />}
       {tela === 'auditoria' && <Auditoria />}
-    </>
+    </AppShell>
   )
 }
 

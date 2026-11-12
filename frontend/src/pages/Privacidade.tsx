@@ -1,9 +1,27 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { ShieldCheckIcon } from 'lucide-react'
 
 import { api } from '../api/client'
 import { lerErro } from '../api/erro'
 import { cabecalhos } from '../api/sessao'
 import type { components } from '../api/schema'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 type TermoVersao = components['schemas']['TermoVersao']
 type Manifestacao = components['schemas']['ManifestacaoPrivacidade']
@@ -108,93 +126,132 @@ export function Privacidade() {
   }
 
   return (
-    <main>
-      <h1>Privacidade</h1>
-      {erro && <p role="alert">{erro}</p>}
+    <section className="mx-auto flex max-w-3xl flex-col gap-6">
+      {erro && (
+        <Alert variant="destructive">
+          <AlertDescription>{erro}</AlertDescription>
+        </Alert>
+      )}
 
-      <h2>Termo de cadastro</h2>
-      {termo ? (
-        <div data-testid="termo-vigente">
-          <p>
-            Versão {termo.versao ?? '—'} · base legal {termo.base_legal ?? '—'}
-          </p>
-          {termo.vigente_em && (
-            <p>
-              <small>Vigente desde {new Date(termo.vigente_em).toLocaleDateString('pt-BR')}</small>
-            </p>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ShieldCheckIcon className="size-5" aria-hidden="true" />
+            Termo de cadastro
+          </CardTitle>
+          {termo && (
+            <CardDescription>
+              Versão {termo.versao ?? '—'} · base legal {termo.base_legal ?? '—'}
+              {termo.vigente_em
+                ? ` · vigente desde ${new Date(termo.vigente_em).toLocaleDateString('pt-BR')}`
+                : ''}
+            </CardDescription>
           )}
-          {textoTermo ? (
-            <section aria-labelledby="termo-texto-titulo">
-              <h3 id="termo-texto-titulo">Texto do termo</h3>
-              <p data-testid="termo-texto">{textoTermo}</p>
-            </section>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4 text-sm">
+          {termo ? (
+            <div data-testid="termo-vigente" className="flex flex-col gap-2">
+              {textoTermo ? (
+                <section aria-labelledby="termo-texto-titulo">
+                  <h3 id="termo-texto-titulo" className="mb-1 font-medium">
+                    Texto do termo
+                  </h3>
+                  <p data-testid="termo-texto" className="text-muted-foreground">
+                    {textoTermo}
+                  </p>
+                </section>
+              ) : (
+                <p data-testid="termo-texto-indisponivel" className="text-muted-foreground">
+                  O texto integral do termo não está disponível no momento.
+                </p>
+              )}
+            </div>
           ) : (
-            <p data-testid="termo-texto-indisponivel">
-              <small>O texto integral do termo não está disponível no momento.</small>
-            </p>
+            <p className="text-muted-foreground">Nenhum termo vigente para o cadastro.</p>
           )}
-        </div>
-      ) : (
-        <p>Nenhum termo vigente para o cadastro.</p>
-      )}
+        </CardContent>
+      </Card>
 
-      <h2>Seu consentimento</h2>
-      <p data-testid="consentimento-atual">
-        {manifestacaoCadastro
-          ? `Situação atual: ${aceito ? 'aceito' : manifestacaoCadastro.decisao}`
-          : 'Você ainda não registrou uma manifestação.'}
-      </p>
-      <button
-        type="button"
-        onClick={() => registrar('aceito', aceito)}
-        disabled={enviando || !termo?.id}
-      >
-        {aceito ? 'Retirar consentimento' : 'Aceitar termo'}
-      </button>
-      {!aceito && (
-        <button
-          type="button"
-          onClick={() => registrar('recusado', false)}
-          disabled={enviando || !termo?.id}
-        >
-          Recusar termo
-        </button>
-      )}
-
-      <h2>Solicitação</h2>
-      <form onSubmit={abrirSolicitacao} noValidate>
-        <p>
-          <label htmlFor="solicitacao-tipo">Tipo de solicitação</label>
-          <select
-            id="solicitacao-tipo"
-            value={tipo}
-            onChange={(e) => setTipo(e.target.value as TipoSolicitacao)}
+      <Card>
+        <CardHeader>
+          <CardTitle>Seu consentimento</CardTitle>
+          <CardDescription data-testid="consentimento-atual">
+            {manifestacaoCadastro
+              ? `Situação atual: ${aceito ? 'aceito' : manifestacaoCadastro.decisao}`
+              : 'Você ainda não registrou uma manifestação.'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant={aceito ? 'destructive' : 'default'}
+            onClick={() => registrar('aceito', aceito)}
+            disabled={enviando || !termo?.id}
           >
-            {TIPOS_SOLICITACAO.map((t) => (
-              <option key={t.valor} value={t.valor}>
-                {t.rotulo}
-              </option>
-            ))}
-          </select>
-        </p>
-        <p>
-          <label htmlFor="solicitacao-descricao">Descrição (opcional)</label>
-          <textarea
-            id="solicitacao-descricao"
-            value={descricao}
-            onChange={(e) => setDescricao(e.target.value)}
-          />
-        </p>
-        {erroSolicitacao && <p role="alert">{erroSolicitacao}</p>}
-        <button type="submit" disabled={enviando}>
-          {enviando ? 'Enviando…' : 'Abrir solicitação'}
-        </button>
-      </form>
-      {protocolo && (
-        <p role="status" data-testid="protocolo">
-          Solicitação aberta. Protocolo: <code>{protocolo}</code>
-        </p>
-      )}
-    </main>
+            {aceito ? 'Retirar consentimento' : 'Aceitar termo'}
+          </Button>
+          {!aceito && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => registrar('recusado', false)}
+              disabled={enviando || !termo?.id}
+            >
+              Recusar termo
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Solicitação</CardTitle>
+          <CardDescription>Abra uma solicitação de direito sobre os seus dados.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={abrirSolicitacao} noValidate className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="solicitacao-tipo">Tipo de solicitação</Label>
+              <Select value={tipo} onValueChange={(v) => setTipo(v as TipoSolicitacao)}>
+                <SelectTrigger id="solicitacao-tipo" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {TIPOS_SOLICITACAO.map((t) => (
+                    <SelectItem key={t.valor} value={t.valor}>
+                      {t.rotulo}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="solicitacao-descricao">Descrição (opcional)</Label>
+              <textarea
+                id="solicitacao-descricao"
+                value={descricao}
+                onChange={(e) => setDescricao(e.target.value)}
+                className="min-h-20 rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:bg-input/30"
+              />
+            </div>
+            {erroSolicitacao && (
+              <Alert variant="destructive">
+                <AlertDescription>{erroSolicitacao}</AlertDescription>
+              </Alert>
+            )}
+            <Button type="submit" disabled={enviando} className="self-start">
+              {enviando ? 'Enviando…' : 'Abrir solicitação'}
+            </Button>
+          </form>
+          {protocolo && (
+            <Alert className="mt-4" role="status" data-testid="protocolo">
+              <AlertDescription>
+                Solicitação aberta. Protocolo: <code>{protocolo}</code>
+              </AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
+    </section>
   )
 }

@@ -1,5 +1,7 @@
 <?php
 
+use App\Domain\Identidade\Models\CodigoRecuperacao;
+use App\Domain\Identidade\Models\FatorMfa;
 use App\Domain\Identidade\Models\Usuario;
 use App\Domain\Identidade\Support\Totp;
 use Database\Seeders\PapelSeeder;
@@ -129,4 +131,99 @@ it('nao sinaliza inscricao pendente quando o usuario ja tem fator validado', fun
         ->assertOk()
         ->assertJsonPath('mfa_required', true)
         ->assertJsonPath('mfa_inscricao_pendente', false);
+});
+
+/**
+ * Renovar o MFA com um fator já confirmado: ao iniciar a nova inscrição o fator
+ * ativo continua valendo (design §6.4); a substituição só acontece ao confirmar
+ * o novo código, sem violar o índice único parcial `fator_mfa_confirmado_unique`.
+ */
+it('renova o MFA substituindo o fator confirmado ao confirmar', function () {
+    $u = criarUsuarioComPapel('coordenadora', 'central', 'central-1');
+    $auth = ['Authorization' => 'Bearer '.$u->createToken('setup', ['*'])->plainTextToken];
+
+    $segredoAntigo = $this->postJson('/api/v1/me/mfa/totp', [], $auth)->assertOk()->json('segredo');
+    $this->postJson('/api/v1/me/mfa/totp/confirm', ['codigo' => Totp::codigoAtual($segredoAntigo)], $auth)
+        ->assertOk();
+
+    // Renova: nova inscrição com o fator antigo já ativo.
+    $segredoNovo = $this->postJson('/api/v1/me/mfa/totp', [], $auth)->assertOk()->json('segredo');
+
+    expect($segredoNovo)->not->toBe($segredoAntigo);
+
+    // Entre iniciar e confirmar o fator antigo segue ativo (sem janela sem MFA).
+    $this->app['auth']->forgetGuards();
+    $this->getJson('/api/v1/me', $auth)->assertOk()->assertJsonPath('mfa_ativo', true);
+    expect(Totp::validar($segredoAntigo, Totp::codigoAtual($segredoAntigo)))->toBeTrue();
+
+    $this->postJson('/api/v1/me/mfa/totp/confirm', ['codigo' => Totp::codigoAtual($segredoNovo)], $auth)
+        ->assertOk()
+        ->assertJsonPath('confirmado', true);
+
+    // Ao confirmar, o fator antigo é revogado: resta só o novo confirmado.
+    $confirmados = FatorMfa::query()
+        ->where('usuario_id', $u->id)
+        ->whereNotNull('confirmado_em')
+        ->get();
+
+    expect($confirmados)->toHaveCount(1)
+        ->and((string) $confirmados->first()->segredo_cifrado)->toBe($segredoNovo)
+        ->and(FatorMfa::query()->where('usuario_id', $u->id)->count())->toBe(1);
+
+    // A sessão plena segue acessando a área operacional.
+    $this->app['auth']->forgetGuards();
+    $this->getJson('/api/v1/me', $auth)->assertOk()->assertJsonPath('mfa_ativo', true);
+});
+
+it('mantem o fator antigo quando a confirmacao da renovacao falha', function () {
+    $u = criarUsuarioComPapel('coordenadora', 'central', 'central-1');
+    $auth = ['Authorization' => 'Bearer '.$u->createToken('setup', ['*'])->plainTextToken];
+
+    $segredoAntigo = $this->postJson('/api/v1/me/mfa/totp', [], $auth)->assertOk()->json('segredo');
+    $this->postJson('/api/v1/me/mfa/totp/confirm', ['codigo' => Totp::codigoAtual($segredoAntigo)], $auth)
+        ->assertOk();
+
+    $this->postJson('/api/v1/me/mfa/totp', [], $auth)->assertOk();
+
+    $this->postJson('/api/v1/me/mfa/totp/confirm', ['codigo' => '000000'], $auth)
+        ->assertStatus(422)
+        ->assertJsonPath('code', 'mfa_invalido');
+
+    // O fator antigo continua válido: o usuário não fica sem segundo fator.
+    $confirmado = FatorMfa::query()
+        ->where('usuario_id', $u->id)
+        ->whereNotNull('confirmado_em')
+        ->sole();
+
+    expect((string) $confirmado->segredo_cifrado)->toBe($segredoAntigo);
+
+    $this->app['auth']->forgetGuards();
+    $this->getJson('/api/v1/me', $auth)->assertOk()->assertJsonPath('mfa_ativo', true);
+});
+
+it('invalida os codigos de recuperacao antigos ao renovar o MFA', function () {
+    $u = criarUsuarioComPapel('coordenadora', 'central', 'central-1');
+    $auth = ['Authorization' => 'Bearer '.$u->createToken('setup', ['*'])->plainTextToken];
+
+    $segredoAntigo = $this->postJson('/api/v1/me/mfa/totp', [], $auth)->assertOk()->json('segredo');
+    $this->postJson('/api/v1/me/mfa/totp/confirm', ['codigo' => Totp::codigoAtual($segredoAntigo)], $auth)
+        ->assertOk();
+    $codigosAntigos = $this->postJson('/api/v1/me/mfa/recovery-codes', [], $auth)
+        ->assertOk()->json('codigos');
+
+    $segredoNovo = $this->postJson('/api/v1/me/mfa/totp', [], $auth)->assertOk()->json('segredo');
+    $this->postJson('/api/v1/me/mfa/totp/confirm', ['codigo' => Totp::codigoAtual($segredoNovo)], $auth)
+        ->assertOk();
+
+    // Nenhum código de recuperação anterior sobrevive à renovação.
+    expect(CodigoRecuperacao::query()->where('usuario_id', $u->id)->count())->toBe(0);
+
+    $desafio = $this->postJson('/api/v1/auth/login', [
+        'email' => $u->email_normalizado,
+        'password' => 'senha-bem-longa-123',
+    ])->assertOk()->json('token_desafio');
+
+    $this->app['auth']->forgetGuards();
+    $this->postJson('/api/v1/auth/mfa/verify', ['codigo' => $codigosAntigos[0]], ['Authorization' => "Bearer {$desafio}"])
+        ->assertStatus(422);
 });

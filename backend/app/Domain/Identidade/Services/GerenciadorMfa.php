@@ -17,17 +17,17 @@ class GerenciadorMfa implements GerenciarMfa
 {
     private const QTD_CODIGOS_RECUPERACAO = 10;
 
-    public function exige(Usuario $usuario): bool
+    public function exige(Authenticatable $usuario): bool
     {
-        return $usuario->vinculosVigentes()
+        return $this->comoUsuario($usuario)->vinculosVigentes()
             ->whereHas('papel', fn ($q) => $q->where('codigo', '!=', 'responsavel'))
             ->exists();
     }
 
-    public function temFatorValidado(Usuario $usuario): bool
+    public function temFatorValidado(Authenticatable $usuario): bool
     {
         return FatorMfa::query()
-            ->where('usuario_id', $usuario->id)
+            ->where('usuario_id', $this->comoUsuario($usuario)->id)
             ->whereNotNull('confirmado_em')
             ->exists();
     }
@@ -38,10 +38,22 @@ class GerenciadorMfa implements GerenciarMfa
 
         $segredo = Totp::gerarSegredo();
 
-        FatorMfa::query()->updateOrCreate(
-            ['usuario_id' => $usuario->id, 'tipo' => FatorMfa::TIPO_TOTP, 'confirmado_em' => null],
-            ['segredo_cifrado' => $segredo],
-        );
+        // Sobrescreve apenas a inscricao TOTP pendente (design §6.4). O fator
+        // confirmado continua valendo ate o novo ser provado em `confirmar()`,
+        // para nao abrir uma janela sem segundo fator se a confirmacao falhar.
+        DB::transaction(function () use ($usuario, $segredo): void {
+            FatorMfa::query()
+                ->where('usuario_id', $usuario->id)
+                ->where('tipo', FatorMfa::TIPO_TOTP)
+                ->whereNull('confirmado_em')
+                ->delete();
+
+            FatorMfa::query()->create([
+                'usuario_id' => $usuario->id,
+                'tipo' => FatorMfa::TIPO_TOTP,
+                'segredo_cifrado' => $segredo,
+            ]);
+        });
 
         $rotulo = rawurlencode((string) $usuario->email_normalizado);
         $uri = sprintf(
@@ -68,7 +80,20 @@ class GerenciadorMfa implements GerenciarMfa
             throw new ProblemException('mfa_invalido', 'Código inválido', 422, 'O código de verificação não confere.');
         }
 
-        $fator->forceFill(['confirmado_em' => now()])->save();
+        DB::transaction(function () use ($usuario, $fator): void {
+            // Revoga o fator ativo anterior (renovacao) e tambem os codigos de
+            // recuperacao antigos, que seriam uma credencial alternativa ao
+            // fator substituido (design §6.4).
+            FatorMfa::query()
+                ->where('usuario_id', $usuario->id)
+                ->where('tipo', FatorMfa::TIPO_TOTP)
+                ->whereKeyNot($fator->getKey())
+                ->delete();
+
+            CodigoRecuperacao::query()->where('usuario_id', $usuario->id)->delete();
+
+            $fator->forceFill(['confirmado_em' => now()])->save();
+        });
     }
 
     public function gerarCodigosRecuperacao(Authenticatable $usuario): array

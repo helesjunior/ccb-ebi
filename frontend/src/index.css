@@ -41,27 +41,10 @@
   --ring: #aa3bff;
 }
 
-/* Dark automático (comportamento atual do app, sem toggle) + classe .dark do shadcn. */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #16171d;
-    --foreground: #f3f4f6;
-    --primary: #c084fc;
-    --primary-foreground: #16171d;
-    --secondary: #1f2028;
-    --secondary-foreground: #f3f4f6;
-    --muted: #1f2028;
-    --muted-foreground: #9ca3af;
-    --accent: #1f2028;
-    --accent-foreground: #f3f4f6;
-    --destructive: #ff6467;
-    --border: #2e303a;
-    --input: #2e303a;
-    --ring: #c084fc;
-  }
-}
-
+/* Tema claro é o padrão; o escuro vem da classe `.dark` no <html>, aplicada
+   por lib/tema.ts (com script anti-flash em index.html). Uma única fonte. */
 .dark {
+  color-scheme: dark;
   --background: #16171d;
   --foreground: #f3f4f6;
   --primary: #c084fc;
@@ -81,7 +64,7 @@
 /* Preservação das telas ainda não migradas (o Preflight do Tailwind zera o estilo global). */
 @layer base {
   :root {
-    color-scheme: light dark;
+    color-scheme: light;
     font-synthesis: none;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
@@ -95,69 +78,20 @@
   body {
     margin: 0;
     font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
-    font-size: 18px;
+    font-size: 16px;
     line-height: 145%;
     letter-spacing: 0.18px;
-    color: var(--muted-foreground);
+    color: var(--foreground);
     background: var(--background);
-  }
-
-  #root {
-    width: 1126px;
-    max-width: 100%;
-    margin: 0 auto;
-    text-align: center;
-    border-inline: 1px solid var(--border);
-    min-height: 100svh;
-    display: flex;
-    flex-direction: column;
-    box-sizing: border-box;
-  }
-
-  h1 {
-    font-weight: 500;
-    font-size: 56px;
-    letter-spacing: -1.68px;
-    margin: 32px 0;
-    color: var(--foreground);
-  }
-
-  h2 {
-    font-weight: 500;
-    font-size: 24px;
-    line-height: 118%;
-    letter-spacing: -0.24px;
-    margin: 0 0 8px;
-    color: var(--foreground);
-  }
-
-  p {
-    margin: 0;
   }
 
   code {
     font-family: ui-monospace, Consolas, monospace;
-    display: inline-flex;
     font-size: 15px;
     line-height: 135%;
     padding: 4px 8px;
     border-radius: 4px;
     color: var(--foreground);
     background: var(--muted);
-  }
-
-  @media (max-width: 1024px) {
-    :root {
-      font-size: 16px;
-    }
-
-    h1 {
-      font-size: 36px;
-      margin: 20px 0;
-    }
-
-    h2 {
-      font-size: 20px;
-    }
   }
 }

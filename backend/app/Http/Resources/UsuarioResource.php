@@ -24,6 +24,7 @@ class UsuarioResource extends JsonResource
             'email_verificado' => $this->resource->email_verificado_em !== null,
             'status' => $this->resource->status,
             'papeis' => $this->papeis(),
+            'mfa_ativo' => (bool) ($this->resource->mfa_ativo ?? false),
         ];
     }
 

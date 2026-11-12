@@ -440,6 +440,83 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
+        /** Atualizar meu perfil */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        nome?: string;
+                        /** Format: email */
+                        email?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Perfil atualizado */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Usuario"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        trace?: never;
+    };
+    "/me/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Trocar minha senha */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: password */
+                        senha_atual: string;
+                        /** Format: password */
+                        nova_senha: string;
+                        /** Format: password */
+                        nova_senha_confirmation: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Senha alterada; demais sessões revogadas */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
         patch?: never;
         trace?: never;
     };
@@ -2583,6 +2660,8 @@ export interface components {
             /** @enum {string} */
             status?: "ativo" | "suspenso";
             papeis?: string[];
+            /** @description Indica se o usuario tem fator TOTP confirmado. */
+            mfa_ativo?: boolean;
         };
         LoginResponse: {
             mfa_required?: boolean;

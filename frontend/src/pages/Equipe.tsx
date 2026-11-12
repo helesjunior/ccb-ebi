@@ -1,8 +1,35 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { UsersIcon } from 'lucide-react'
 
 import { api } from '../api/client'
 import { lerErro } from '../api/erro'
 import { cabecalhos, type ContextoAtuacao, type Usuario } from '../api/sessao'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 
 interface Convite {
   id?: string
@@ -83,81 +110,135 @@ export function Equipe() {
   }
 
   return (
-    <main>
-      <h1>Equipe</h1>
-      {erro && <p role="alert">{erro}</p>}
+    <section className="mx-auto flex max-w-4xl flex-col gap-6">
+      {erro && (
+        <Alert variant="destructive">
+          <AlertDescription>{erro}</AlertDescription>
+        </Alert>
+      )}
 
-      <h2>Usuários</h2>
-      <ul data-testid="usuarios">
-        {usuarios.map((u) => (
-          <li key={u.id}>
-            {u.nome} — {u.email} — {u.status}
-          </li>
-        ))}
-      </ul>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <UsersIcon className="size-5" aria-hidden="true" />
+            Usuários
+          </CardTitle>
+          <CardDescription>Pessoas com acesso no escopo de atuação atual.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table data-testid="usuarios">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead>E-mail</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {usuarios.map((u) => (
+                <TableRow key={u.id}>
+                  <TableCell>{u.nome}</TableCell>
+                  <TableCell>{u.email}</TableCell>
+                  <TableCell>{u.status}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
-      <h2>Convidar</h2>
-      <form onSubmit={convidar} noValidate>
-        <p>
-          <label htmlFor="convite-email">E-mail</label>
-          <input
-            id="convite-email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </p>
-        <p>
-          <label htmlFor="convite-papel">Papel</label>
-          <input
-            id="convite-papel"
-            value={papel}
-            onChange={(e) => setPapel(e.target.value)}
-            required
-          />
-        </p>
-        <p>
-          <label htmlFor="convite-escopo-tipo">Tipo de escopo</label>
-          <select
-            id="convite-escopo-tipo"
-            value={tipoEscopo}
-            onChange={(e) => setTipoEscopo(e.target.value as TipoEscopo)}
-          >
-            {TIPOS_ESCOPO.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
-        </p>
-        <p>
-          <label htmlFor="convite-escopo-id">ID do escopo</label>
-          <input
-            id="convite-escopo-id"
-            value={escopoId}
-            onChange={(e) => setEscopoId(e.target.value)}
-            required
-          />
-        </p>
-        <button type="submit" disabled={enviando}>
-          {enviando ? 'Enviando…' : 'Convidar'}
-        </button>
-      </form>
+      <Card>
+        <CardHeader>
+          <CardTitle>Convidar</CardTitle>
+          <CardDescription>Envie um convite para uma pessoa entrar no escopo.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <form onSubmit={convidar} noValidate className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="convite-email">E-mail</Label>
+              <Input
+                id="convite-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="convite-papel">Papel</Label>
+              <Input
+                id="convite-papel"
+                value={papel}
+                onChange={(e) => setPapel(e.target.value)}
+                required
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="convite-escopo-tipo">Tipo de escopo</Label>
+              <Select value={tipoEscopo} onValueChange={(v) => setTipoEscopo(v as TipoEscopo)}>
+                <SelectTrigger id="convite-escopo-tipo" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {TIPOS_ESCOPO.map((t) => (
+                    <SelectItem key={t} value={t}>
+                      {t}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="convite-escopo-id">ID do escopo</Label>
+              <Input
+                id="convite-escopo-id"
+                value={escopoId}
+                onChange={(e) => setEscopoId(e.target.value)}
+                required
+              />
+            </div>
+            <Button type="submit" disabled={enviando} className="self-start">
+              {enviando ? 'Enviando…' : 'Convidar'}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
 
-      <h2>Convites</h2>
-      <ul data-testid="convites">
-        {convites.map((c) => (
-          <li key={c.id}>
-            <span>
-              {c.email} — {c.papel} @ {c.tipo_escopo}:{c.escopo_id}
-            </span>
-            <button type="button" onClick={() => c.id && cancelarConvite(c.id)}>
-              Cancelar
-            </button>
-          </li>
-        ))}
-      </ul>
-    </main>
+      <Card>
+        <CardHeader>
+          <CardTitle>Convites</CardTitle>
+          <CardDescription>Convites pendentes neste escopo.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table data-testid="convites">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Convite</TableHead>
+                <TableHead aria-label="Ações" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {convites.map((c) => (
+                <TableRow key={c.id}>
+                  <TableCell>
+                    {c.email} — {c.papel} @ {c.tipo_escopo}:{c.escopo_id}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => c.id && cancelarConvite(c.id)}
+                    >
+                      Cancelar
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </section>
   )
 }

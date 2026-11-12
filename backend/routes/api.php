@@ -55,6 +55,8 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
     Route::middleware('auth:sanctum')->group(function (): void {
         Route::post('auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
         Route::get('me', [MeController::class, 'me'])->name('me');
+        Route::patch('me', [MeController::class, 'atualizarPerfil'])->name('me.update');
+        Route::post('me/password', [MeController::class, 'alterarSenha'])->name('me.password');
         Route::get('me/scopes', [MeController::class, 'scopes'])->name('me.scopes');
 
         // Termos de privacidade (RF-04): qualquer usuario autenticado le a

@@ -1,9 +1,29 @@
 import { useState } from 'react'
+import { CombineIcon, Undo2Icon } from 'lucide-react'
 
 import { api } from '../api/client'
 import { lerErro } from '../api/erro'
 import { cabecalhos } from '../api/sessao'
 import type { components } from '../api/schema'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 
 type Participante = components['schemas']['Participante']
 
@@ -88,67 +108,127 @@ export function Mesclagem() {
   }
 
   return (
-    <main>
-      <h1>Mesclagem de duplicados</h1>
+    <section className="mx-auto flex max-w-4xl flex-col gap-6">
+      {erro && (
+        <Alert variant="destructive">
+          <AlertDescription>{erro}</AlertDescription>
+        </Alert>
+      )}
+      {mensagem && (
+        <Alert role="status">
+          <AlertDescription>{mensagem}</AlertDescription>
+        </Alert>
+      )}
 
-      <h2>Candidatos</h2>
-      <p>
-        <label htmlFor="mescla-termo">Nome</label>
-        <input id="mescla-termo" value={termo} onChange={(e) => setTermo(e.target.value)} />
-      </p>
-      <p>
-        <label htmlFor="mescla-nascimento">Data de nascimento (opcional)</label>
-        <input
-          id="mescla-nascimento"
-          type="date"
-          value={dataNascimento}
-          onChange={(e) => setDataNascimento(e.target.value)}
-        />
-      </p>
-      <p>
-        <label htmlFor="mescla-finalidade">Finalidade da leitura</label>
-        <input
-          id="mescla-finalidade"
-          value={finalidade}
-          onChange={(e) => setFinalidade(e.target.value)}
-          required
-        />
-      </p>
-      <button type="button" onClick={buscar} disabled={ocupado || !termo}>
-        Buscar
-      </button>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CombineIcon className="size-5" aria-hidden="true" />
+            Candidatos
+          </CardTitle>
+          <CardDescription>Busque possíveis duplicados por nome e data.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="mescla-termo">Nome</Label>
+            <Input id="mescla-termo" value={termo} onChange={(e) => setTermo(e.target.value)} />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="mescla-nascimento">Data de nascimento (opcional)</Label>
+            <Input
+              id="mescla-nascimento"
+              type="date"
+              value={dataNascimento}
+              onChange={(e) => setDataNascimento(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="mescla-finalidade">Finalidade da leitura</Label>
+            <Input
+              id="mescla-finalidade"
+              value={finalidade}
+              onChange={(e) => setFinalidade(e.target.value)}
+              required
+            />
+          </div>
+          <Button
+            type="button"
+            onClick={buscar}
+            disabled={ocupado || !termo}
+            className="self-start"
+          >
+            Buscar
+          </Button>
 
-      <ul data-testid="candidatos">
-        {candidatos.map((p) => (
-          <li key={p.id}>
-            {p.nome} — {p.data_nascimento} — {p.matricula}{' '}
-            <button type="button" onClick={() => setPrincipalId(p.id)}>
-              principal
-            </button>
-            <button type="button" onClick={() => setDuplicadoId(p.id)}>
-              duplicado
-            </button>
-          </li>
-        ))}
-      </ul>
+          <Table data-testid="candidatos">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead>Nascimento</TableHead>
+                <TableHead>Matrícula</TableHead>
+                <TableHead aria-label="Escolher" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {candidatos.map((p) => (
+                <TableRow key={p.id}>
+                  <TableCell>{p.nome}</TableCell>
+                  <TableCell>{p.data_nascimento}</TableCell>
+                  <TableCell>{p.matricula}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPrincipalId(p.id)}
+                      >
+                        principal
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setDuplicadoId(p.id)}
+                      >
+                        duplicado
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
-      <h2>Mesclar</h2>
-      <p data-testid="escolhidos">
-        Principal: <code>{principalId || '—'}</code> · Duplicado:{' '}
-        <code>{duplicadoId || '—'}</code>
-      </p>
-      {erro && <p role="alert">{erro}</p>}
-      {mensagem && <p role="status">{mensagem}</p>}
-      <button
-        type="button"
-        onClick={mesclar}
-        disabled={ocupado || !principalId || !duplicadoId || principalId === duplicadoId}
-      >
-        Mesclar
-      </button>
-      <button type="button" onClick={desfazer} disabled={ocupado || !principalId}>
-        Desfazer última mesclagem
-      </button>
-    </main>
+      <Card>
+        <CardHeader>
+          <CardTitle>Mesclar</CardTitle>
+          <CardDescription>
+            Principal: <code data-testid="escolhidos">{principalId || '—'}</code> · Duplicado:{' '}
+            <code>{duplicadoId || '—'}</code>
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            onClick={mesclar}
+            disabled={ocupado || !principalId || !duplicadoId || principalId === duplicadoId}
+          >
+            Mesclar
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={desfazer}
+            disabled={ocupado || !principalId}
+          >
+            <Undo2Icon className="size-4" aria-hidden="true" />
+            Desfazer última mesclagem
+          </Button>
+        </CardContent>
+      </Card>
+    </section>
   )
 }
