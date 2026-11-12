@@ -3,6 +3,9 @@ import { AccessibilityIcon } from 'lucide-react'
 
 import { api } from '../api/client'
 import { lerErro } from '../api/erro'
+import { Obrigatorio } from '../components/Obrigatorio'
+import { formatarData, rotuloStatus } from '@/lib/formatos'
+import { toast } from 'sonner'
 import { cabecalhos } from '../api/sessao'
 import type { components } from '../api/schema'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -68,6 +71,7 @@ export function ExcecaoInclusiva() {
       return
     }
     setExcecao(data)
+    toast.success('Pedido de exceção enviado.')
     setApoios('')
   }
 
@@ -89,21 +93,22 @@ export function ExcecaoInclusiva() {
       return
     }
     setExcecao(data)
+    toast.success(`Exceção ${rotuloStatus(data.status).toLowerCase()}.`)
     setMotivo('')
   }
 
   return (
     <section className="mx-auto flex max-w-2xl flex-col gap-6">
       {erro && (
-        <Alert variant="destructive">
+        <Alert variant="destructive" role="alert">
           <AlertDescription>{erro}</AlertDescription>
         </Alert>
       )}
       {excecao && (
         <Alert role="status" data-testid="excecao-situacao">
           <AlertDescription>
-            Exceção {excecao.id}: {excecao.status}
-            {excecao.vigente_ate ? ` · vigente até ${excecao.vigente_ate}` : ''}
+            Exceção <code>{excecao.id}</code>: <strong>{rotuloStatus(excecao.status)}</strong>
+            {excecao.vigente_ate ? ` · vigente até ${formatarData(excecao.vigente_ate)}` : ''}
           </AlertDescription>
         </Alert>
       )}
@@ -118,16 +123,23 @@ export function ExcecaoInclusiva() {
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <Label htmlFor="excecao-participante">ID do participante</Label>
+            <Label htmlFor="excecao-participante">
+              ID do participante <Obrigatorio />
+            </Label>
             <Input
               id="excecao-participante"
+              autoComplete="off"
+              spellCheck={false}
+              className="font-mono"
               value={participanteId}
               onChange={(e) => setParticipanteId(e.target.value)}
               required
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="excecao-tipo">Tipo de necessidade</Label>
+            <Label htmlFor="excecao-tipo">
+              Tipo de necessidade <Obrigatorio />
+            </Label>
             <Input
               id="excecao-tipo"
               value={tipoNecessidade}
@@ -141,7 +153,7 @@ export function ExcecaoInclusiva() {
               id="excecao-apoios"
               value={apoios}
               onChange={(e) => setApoios(e.target.value)}
-              className="min-h-20 rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:bg-input/30"
+              className="min-h-20 rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:bg-input/30"
             />
           </div>
           <Button
@@ -150,7 +162,7 @@ export function ExcecaoInclusiva() {
             disabled={ocupado || !participanteId || !tipoNecessidade}
             className="self-start"
           >
-            Solicitar exceção
+            {ocupado ? 'Enviando…' : 'Solicitar exceção'}
           </Button>
         </CardContent>
       </Card>
@@ -162,9 +174,14 @@ export function ExcecaoInclusiva() {
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <Label htmlFor="excecao-id">ID da exceção</Label>
+            <Label htmlFor="excecao-id">
+              ID da exceção <Obrigatorio />
+            </Label>
             <Input
               id="excecao-id"
+              autoComplete="off"
+              spellCheck={false}
+              className="font-mono"
               value={excecaoId}
               onChange={(e) => setExcecaoId(e.target.value)}
               required
@@ -204,7 +221,7 @@ export function ExcecaoInclusiva() {
             disabled={ocupado || !excecaoId}
             className="self-start"
           >
-            Decidir
+            {ocupado ? 'Salvando…' : 'Registrar decisão'}
           </Button>
         </CardContent>
       </Card>

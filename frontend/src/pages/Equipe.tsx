@@ -1,10 +1,16 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { UsersIcon } from 'lucide-react'
+import { MailPlusIcon, UsersIcon } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { api } from '../api/client'
 import { lerErro } from '../api/erro'
 import { cabecalhos, type ContextoAtuacao, type Usuario } from '../api/sessao'
+import { ConfirmarAcao } from '../components/ConfirmarAcao'
+import { EstadoTabela } from '../components/EstadoTabela'
+import { Obrigatorio } from '../components/Obrigatorio'
+import { PAPEIS_CONHECIDOS, rotuloPapel, rotuloStatus, rotuloTipoEscopo } from '@/lib/formatos'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -58,12 +64,14 @@ export function Equipe() {
   const [escopoId, setEscopoId] = useState('')
   const [erro, setErro] = useState<string | null>(null)
   const [enviando, setEnviando] = useState(false)
+  const [carregando, setCarregando] = useState(true)
 
   const carregar = useCallback(async () => {
     const [u, c] = await Promise.all([
       api.GET('/users', { headers: cabecalhos() }),
       api.GET('/invitations', { headers: cabecalhos() }),
     ])
+    setCarregando(false)
     if (u.error || !u.data) {
       setErro(lerErro(u.error, 'Não foi possível carregar a equipe.').detail)
       return
@@ -91,6 +99,7 @@ export function Equipe() {
       setErro(lerErro(error, 'Não foi possível criar o convite.').detail)
       return
     }
+    toast.success(`Convite enviado para ${email}.`)
     setEmail('')
     setPapel('')
     setEscopoId('')
@@ -106,13 +115,16 @@ export function Equipe() {
       setErro(lerErro(error, 'Não foi possível cancelar o convite.').detail)
       return
     }
+    toast.success('Convite cancelado.')
     await carregar()
   }
+
+  const podeConvidar = email.trim() !== '' && papel !== '' && escopoId.trim() !== ''
 
   return (
     <section className="mx-auto flex max-w-4xl flex-col gap-6">
       {erro && (
-        <Alert variant="destructive">
+        <Alert variant="destructive" role="alert">
           <AlertDescription>{erro}</AlertDescription>
         </Alert>
       )}
@@ -130,16 +142,31 @@ export function Equipe() {
             <TableHeader>
               <TableRow>
                 <TableHead>Nome</TableHead>
-                <TableHead>E-mail</TableHead>
+                <TableHead className="hidden sm:table-cell">E-mail</TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
+              <EstadoTabela
+                colunas={3}
+                carregando={carregando}
+                vazio={usuarios.length === 0}
+                mensagemVazio="Nenhum usuário neste escopo."
+              />
               {usuarios.map((u) => (
                 <TableRow key={u.id}>
-                  <TableCell>{u.nome}</TableCell>
-                  <TableCell>{u.email}</TableCell>
-                  <TableCell>{u.status}</TableCell>
+                  <TableCell className="font-medium whitespace-normal">
+                    {u.nome}
+                    <span className="block text-xs font-normal text-muted-foreground sm:hidden">
+                      {u.email}
+                    </span>
+                  </TableCell>
+                  <TableCell className="hidden sm:table-cell">{u.email}</TableCell>
+                  <TableCell>
+                    <Badge variant={u.status === 'ativo' ? 'secondary' : 'outline'}>
+                      {rotuloStatus(u.status)}
+                    </Badge>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -149,32 +176,52 @@ export function Equipe() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Convidar</CardTitle>
-          <CardDescription>Envie um convite para uma pessoa entrar no escopo.</CardDescription>
+          <CardTitle className="flex items-center gap-2">
+            <MailPlusIcon className="size-5" aria-hidden="true" />
+            Convidar
+          </CardTitle>
+          <CardDescription>
+            A pessoa recebe um e-mail com o link para criar o acesso. Campos com{' '}
+            <Obrigatorio /> são obrigatórios.
+          </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <form onSubmit={convidar} noValidate className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="convite-email">E-mail</Label>
+          <form onSubmit={convidar} noValidate className="grid gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-2 sm:col-span-2">
+              <Label htmlFor="convite-email">
+                E-mail <Obrigatorio />
+              </Label>
               <Input
                 id="convite-email"
                 type="email"
+                autoComplete="off"
+                placeholder="nome@exemplo.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="convite-papel">Papel</Label>
-              <Input
-                id="convite-papel"
-                value={papel}
-                onChange={(e) => setPapel(e.target.value)}
-                required
-              />
+              <Label htmlFor="convite-papel">
+                Papel <Obrigatorio />
+              </Label>
+              <Select value={papel} onValueChange={setPapel}>
+                <SelectTrigger id="convite-papel" className="w-full" aria-required="true">
+                  <SelectValue placeholder="Escolha o papel" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAPEIS_CONHECIDOS.map((p) => (
+                    <SelectItem key={p} value={p}>
+                      {rotuloPapel(p)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="convite-escopo-tipo">Tipo de escopo</Label>
+              <Label htmlFor="convite-escopo-tipo">
+                Tipo de escopo <Obrigatorio />
+              </Label>
               <Select value={tipoEscopo} onValueChange={(v) => setTipoEscopo(v as TipoEscopo)}>
                 <SelectTrigger id="convite-escopo-tipo" className="w-full">
                   <SelectValue />
@@ -182,23 +229,36 @@ export function Equipe() {
                 <SelectContent>
                   {TIPOS_ESCOPO.map((t) => (
                     <SelectItem key={t} value={t}>
-                      {t}
+                      {rotuloTipoEscopo(t)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="convite-escopo-id">ID do escopo</Label>
+            <div className="flex flex-col gap-2 sm:col-span-2">
+              <Label htmlFor="convite-escopo-id">
+                ID do escopo <Obrigatorio />
+              </Label>
               <Input
                 id="convite-escopo-id"
                 value={escopoId}
                 onChange={(e) => setEscopoId(e.target.value)}
+                aria-describedby="convite-escopo-id-ajuda"
+                autoComplete="off"
+                spellCheck={false}
+                className="font-mono"
                 required
               />
+              <p id="convite-escopo-id-ajuda" className="text-xs text-muted-foreground">
+                Identificador da {rotuloTipoEscopo(tipoEscopo).toLowerCase()} onde a pessoa vai atuar.
+              </p>
             </div>
-            <Button type="submit" disabled={enviando} className="self-start">
-              {enviando ? 'Enviando…' : 'Convidar'}
+            <Button
+              type="submit"
+              disabled={enviando || !podeConvidar}
+              className="sm:col-span-2 sm:justify-self-start"
+            >
+              {enviando ? 'Enviando…' : 'Enviar convite'}
             </Button>
           </form>
         </CardContent>
@@ -206,32 +266,46 @@ export function Equipe() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Convites</CardTitle>
-          <CardDescription>Convites pendentes neste escopo.</CardDescription>
+          <CardTitle>Convites pendentes</CardTitle>
+          <CardDescription>Convites enviados que ainda não foram aceitos.</CardDescription>
         </CardHeader>
         <CardContent>
           <Table data-testid="convites">
             <TableHeader>
               <TableRow>
                 <TableHead>Convite</TableHead>
-                <TableHead aria-label="Ações" />
+                <TableHead className="text-right">
+                  <span className="sr-only">Ações</span>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
+              <EstadoTabela
+                colunas={2}
+                carregando={carregando}
+                vazio={convites.length === 0}
+                mensagemVazio="Nenhum convite pendente."
+              />
               {convites.map((c) => (
                 <TableRow key={c.id}>
-                  <TableCell>
-                    {c.email} — {c.papel} @ {c.tipo_escopo}:{c.escopo_id}
+                  <TableCell className="whitespace-normal">
+                    <span className="block font-medium">{c.email}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {rotuloPapel(c.papel)} · {rotuloTipoEscopo(c.tipo_escopo)}{' '}
+                      <code title={c.escopo_id}>{c.escopo_id?.slice(-6)}</code>
+                    </span>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => c.id && cancelarConvite(c.id)}
+                    <ConfirmarAcao
+                      titulo="Cancelar este convite?"
+                      descricao={`O link enviado para ${c.email ?? 'esta pessoa'} deixará de funcionar.`}
+                      rotuloConfirmar="Cancelar convite"
+                      onConfirmar={() => (c.id ? cancelarConvite(c.id) : undefined)}
                     >
-                      Cancelar
-                    </Button>
+                      <Button type="button" variant="outline" size="sm">
+                        Cancelar
+                      </Button>
+                    </ConfirmarAcao>
                   </TableCell>
                 </TableRow>
               ))}

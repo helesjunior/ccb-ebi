@@ -3,6 +3,8 @@ import { ScrollTextIcon } from 'lucide-react'
 
 import { api } from '../api/client'
 import { lerErro } from '../api/erro'
+import { EstadoTabela } from '../components/EstadoTabela'
+import { formatarDataHora } from '@/lib/formatos'
 import { cabecalhos } from '../api/sessao'
 import type { components } from '../api/schema'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -50,7 +52,7 @@ export function Auditoria() {
   const [aplicados, setAplicados] = useState<Filtros>(FILTROS_VAZIOS)
   const [erro, setErro] = useState<string | null>(null)
   const [semPermissao, setSemPermissao] = useState(false)
-  const [carregando, setCarregando] = useState(false)
+  const [carregando, setCarregando] = useState(true)
 
   /** Monta a query omitindo filtros vazios e o cursor quando ausente. */
   const carregar = useCallback(async (base: Filtros, proximo: string | null, acumular: boolean) => {
@@ -124,7 +126,7 @@ export function Auditoria() {
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           {erro && (
-            <Alert variant="destructive">
+            <Alert variant="destructive" role="alert">
               <AlertDescription>{erro}</AlertDescription>
             </Alert>
           )}
@@ -163,29 +165,51 @@ export function Auditoria() {
                 onChange={(e) => setFiltros({ ...filtros, ate: e.target.value })}
               />
             </div>
-            <Button type="submit" disabled={carregando} className="sm:col-span-2 sm:justify-self-start">
-              Filtrar
-            </Button>
+            <div className="flex flex-wrap gap-2 sm:col-span-2">
+              <Button type="submit" disabled={carregando}>
+                Filtrar
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={carregando}
+                onClick={() => {
+                  setFiltros(FILTROS_VAZIOS)
+                  setAplicados(FILTROS_VAZIOS)
+                  void carregar(FILTROS_VAZIOS, null, false)
+                }}
+              >
+                Limpar filtros
+              </Button>
+            </div>
           </form>
 
           <Table data-testid="eventos-auditoria">
             <TableHeader>
               <TableRow>
-                <TableHead>Seq.</TableHead>
+                <TableHead className="hidden sm:table-cell">Seq.</TableHead>
                 <TableHead>Data</TableHead>
                 <TableHead>Ação</TableHead>
                 <TableHead>Recurso</TableHead>
-                <TableHead>Origem</TableHead>
+                <TableHead className="hidden md:table-cell">Origem</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
+              <EstadoTabela
+                colunas={5}
+                carregando={carregando && eventos.length === 0}
+                vazio={eventos.length === 0}
+                mensagemVazio="Nenhum evento encontrado com esses filtros."
+              />
               {eventos.map((ev) => (
                 <TableRow key={ev.id}>
-                  <TableCell>#{ev.sequencia}</TableCell>
-                  <TableCell>{new Date(ev.ocorrido_em).toLocaleString('pt-BR')}</TableCell>
+                  <TableCell className="hidden text-muted-foreground sm:table-cell">
+                    #{ev.sequencia}
+                  </TableCell>
+                  <TableCell>{formatarDataHora(ev.ocorrido_em)}</TableCell>
                   <TableCell className="font-medium">{ev.acao}</TableCell>
                   <TableCell>{ev.recurso}</TableCell>
-                  <TableCell>{ev.origem}</TableCell>
+                  <TableCell className="hidden md:table-cell">{ev.origem}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

@@ -3,6 +3,10 @@ import { ShieldCheckIcon } from 'lucide-react'
 
 import { api } from '../api/client'
 import { lerErro } from '../api/erro'
+import { ConfirmarAcao } from '../components/ConfirmarAcao'
+import { formatarData, rotuloStatus } from '@/lib/formatos'
+import { Badge } from '@/components/ui/badge'
+import { toast } from 'sonner'
 import { cabecalhos } from '../api/sessao'
 import type { components } from '../api/schema'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -104,6 +108,13 @@ export function Privacidade() {
       setErro(lerErro(error, 'Não foi possível registrar sua manifestação.').detail)
       return
     }
+    toast.success(
+      retirar
+        ? 'Consentimento retirado.'
+        : decisao === 'aceito'
+          ? 'Termo aceito. Obrigado!'
+          : 'Recusa registrada.',
+    )
     await carregar()
   }
 
@@ -122,13 +133,14 @@ export function Privacidade() {
       return
     }
     setProtocolo(data.protocolo)
+    toast.success('Solicitação aberta. Guarde o protocolo.')
     setDescricao('')
   }
 
   return (
     <section className="mx-auto flex max-w-3xl flex-col gap-6">
       {erro && (
-        <Alert variant="destructive">
+        <Alert variant="destructive" role="alert">
           <AlertDescription>{erro}</AlertDescription>
         </Alert>
       )}
@@ -143,7 +155,7 @@ export function Privacidade() {
             <CardDescription>
               Versão {termo.versao ?? '—'} · base legal {termo.base_legal ?? '—'}
               {termo.vigente_em
-                ? ` · vigente desde ${new Date(termo.vigente_em).toLocaleDateString('pt-BR')}`
+                ? ` · vigente desde ${formatarData(termo.vigente_em)}`
                 : ''}
             </CardDescription>
           )}
@@ -156,7 +168,11 @@ export function Privacidade() {
                   <h3 id="termo-texto-titulo" className="mb-1 font-medium">
                     Texto do termo
                   </h3>
-                  <p data-testid="termo-texto" className="text-muted-foreground">
+                  <p
+                    data-testid="termo-texto"
+                    className="max-h-72 overflow-y-auto rounded-md border bg-muted/40 p-3 leading-relaxed whitespace-pre-line text-muted-foreground"
+                    tabIndex={0}
+                  >
                     {textoTermo}
                   </p>
                 </section>
@@ -175,21 +191,40 @@ export function Privacidade() {
       <Card>
         <CardHeader>
           <CardTitle>Seu consentimento</CardTitle>
-          <CardDescription data-testid="consentimento-atual">
-            {manifestacaoCadastro
-              ? `Situação atual: ${aceito ? 'aceito' : manifestacaoCadastro.decisao}`
-              : 'Você ainda não registrou uma manifestação.'}
+          <CardDescription data-testid="consentimento-atual" className="flex flex-wrap items-center gap-2">
+            {manifestacaoCadastro ? (
+              <>
+                Situação atual:
+                <Badge variant={aceito ? 'default' : 'outline'}>
+                  {aceito ? 'Aceito' : rotuloStatus(manifestacaoCadastro.decisao)}
+                </Badge>
+              </>
+            ) : (
+              'Você ainda não registrou uma manifestação.'
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
-          <Button
-            type="button"
-            variant={aceito ? 'destructive' : 'default'}
-            onClick={() => registrar('aceito', aceito)}
-            disabled={enviando || !termo?.id}
-          >
-            {aceito ? 'Retirar consentimento' : 'Aceitar termo'}
-          </Button>
+          {aceito ? (
+            <ConfirmarAcao
+              titulo="Retirar o consentimento?"
+              descricao="A retirada fica registrada. Alguns serviços que dependem deste termo podem deixar de funcionar para você."
+              rotuloConfirmar="Retirar consentimento"
+              onConfirmar={() => registrar('aceito', true)}
+            >
+              <Button type="button" variant="destructive" disabled={enviando || !termo?.id}>
+                Retirar consentimento
+              </Button>
+            </ConfirmarAcao>
+          ) : (
+            <Button
+              type="button"
+              onClick={() => registrar('aceito', false)}
+              disabled={enviando || !termo?.id}
+            >
+              Aceitar termo
+            </Button>
+          )}
           {!aceito && (
             <Button
               type="button"
@@ -231,7 +266,7 @@ export function Privacidade() {
                 id="solicitacao-descricao"
                 value={descricao}
                 onChange={(e) => setDescricao(e.target.value)}
-                className="min-h-20 rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:bg-input/30"
+                className="min-h-20 rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:bg-input/30"
               />
             </div>
             {erroSolicitacao && (

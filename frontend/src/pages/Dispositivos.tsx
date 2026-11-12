@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
 import { MonitorSmartphoneIcon } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { api } from '../api/client'
 import { lerErro } from '../api/erro'
 import { cabecalhos } from '../api/sessao'
+import { ConfirmarAcao } from '../components/ConfirmarAcao'
+import { EstadoTabela } from '../components/EstadoTabela'
+import { formatarDataHora } from '@/lib/formatos'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
@@ -36,9 +40,11 @@ interface SessaoLogin {
 export function Dispositivos() {
   const [sessoes, setSessoes] = useState<SessaoLogin[]>([])
   const [erro, setErro] = useState<string | null>(null)
+  const [carregando, setCarregando] = useState(true)
 
   const carregar = useCallback(async () => {
     const { data, error } = await api.GET('/me/sessions', { headers: cabecalhos() })
+    setCarregando(false)
     if (error || !data) {
       setErro(lerErro(error, 'Não foi possível carregar os dispositivos.').detail)
       return
@@ -59,6 +65,7 @@ export function Dispositivos() {
       setErro(lerErro(error, 'Não foi possível revogar o dispositivo.').detail)
       return
     }
+    toast.success('Dispositivo desconectado.')
     await carregar()
   }
 
@@ -82,17 +89,45 @@ export function Dispositivos() {
             <TableHeader>
               <TableRow>
                 <TableHead>Dispositivo</TableHead>
-                <TableHead aria-label="Ações" />
+                <TableHead className="hidden sm:table-cell">Conectado em</TableHead>
+                <TableHead className="hidden sm:table-cell">Expira em</TableHead>
+                <TableHead className="text-right">
+                  <span className="sr-only">Ações</span>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
+              <EstadoTabela
+                colunas={4}
+                carregando={carregando}
+                vazio={sessoes.length === 0 && !erro}
+                mensagemVazio="Nenhuma sessão ativa além desta."
+              />
               {sessoes.map((s) => (
                 <TableRow key={s.id}>
-                  <TableCell>{s.dispositivo ?? 'Dispositivo'}</TableCell>
+                  <TableCell className="font-medium whitespace-normal">
+                    {s.dispositivo ?? 'Dispositivo desconhecido'}
+                    <span className="block text-xs font-normal text-muted-foreground sm:hidden">
+                      Desde {formatarDataHora(s.criada_em)}
+                    </span>
+                  </TableCell>
+                  <TableCell className="hidden text-muted-foreground sm:table-cell">
+                    {formatarDataHora(s.criada_em)}
+                  </TableCell>
+                  <TableCell className="hidden text-muted-foreground sm:table-cell">
+                    {formatarDataHora(s.expira_em)}
+                  </TableCell>
                   <TableCell className="text-right">
-                    <Button type="button" variant="outline" size="sm" onClick={() => s.id && revogar(s.id)}>
-                      Revogar
-                    </Button>
+                    <ConfirmarAcao
+                      titulo="Desconectar este dispositivo?"
+                      descricao="Quem estiver usando a conta nele precisará entrar de novo com e-mail e senha."
+                      rotuloConfirmar="Desconectar"
+                      onConfirmar={() => (s.id ? revogar(s.id) : undefined)}
+                    >
+                      <Button type="button" variant="outline" size="sm">
+                        Revogar
+                      </Button>
+                    </ConfirmarAcao>
                   </TableCell>
                 </TableRow>
               ))}

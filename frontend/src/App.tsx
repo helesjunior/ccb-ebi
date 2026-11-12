@@ -18,6 +18,7 @@ import { CadastroAssistido } from './pages/CadastroAssistido'
 import { Dependentes } from './pages/Dependentes'
 import { Dispositivos } from './pages/Dispositivos'
 import { Equipe } from './pages/Equipe'
+import { Inicio } from './pages/Inicio'
 import { ExcecaoInclusiva } from './pages/ExcecaoInclusiva'
 import { Login } from './pages/Login'
 import { Mesclagem } from './pages/Mesclagem'
@@ -37,7 +38,7 @@ const ROTULOS: Record<Tela, string> = {
   privacidade: 'Privacidade',
   auditoria: 'Auditoria',
   participantes: 'Participantes',
-  dependentes: 'Dependentes',
+  dependentes: 'Meus dependentes',
   'cadastro-assistido': 'Cadastro assistido',
   vinculos: 'Vínculos',
   excecao: 'Exceção inclusiva',
@@ -128,16 +129,7 @@ function App() {
       onSair={sair}
     >
       {tela === 'inicio' && (
-        <section className="mx-auto max-w-2xl">
-          <h2 className="text-2xl font-semibold">Bem-vinda</h2>
-          <p className="mt-2 text-muted-foreground" data-testid="usuario-nome">
-            {usuario.nome}
-          </p>
-          <p className="text-muted-foreground">{usuario.email}</p>
-          <p className="mt-4 text-sm text-muted-foreground">
-            Use o menu para navegar. O contexto de atuação e o tema ficam no cabeçalho.
-          </p>
-        </section>
+        <Inicio usuario={usuario} escopo={escopo} onSelecionarTela={setTela} />
       )}
       {tela === 'perfil' && <MeuPerfil usuario={usuario} onAtualizado={setUsuario} />}
       {tela === 'dispositivos' && <Dispositivos />}
