@@ -139,7 +139,7 @@ function App() {
           </p>
         </section>
       )}
-      {tela === 'perfil' && <MeuPerfil usuario={usuario} />}
+      {tela === 'perfil' && <MeuPerfil usuario={usuario} onAtualizado={setUsuario} />}
       {tela === 'dispositivos' && <Dispositivos />}
       {tela === 'equipe' && <Equipe />}
       {tela === 'privacidade' && <Privacidade />}

@@ -1,114 +1,48 @@
-import { useState, type FormEvent } from 'react'
-
-import { api } from '../api/client'
-import { lerErro } from '../api/erro'
-import { cabecalhos, type Usuario } from '../api/sessao'
+import type { Usuario } from '../api/sessao'
+import { Badge } from '@/components/ui/badge'
+import { DadosForm } from './perfil/DadosForm'
+import { SenhaForm } from './perfil/SenhaForm'
+import { SegurancaMfa } from './perfil/SegurancaMfa'
 
 interface MeuPerfilProps {
   usuario: Usuario
+  onAtualizado: (usuario: Usuario) => void
 }
 
 /**
- * Meu perfil: inscreve e confirma o TOTP e gera códigos de recuperação.
- * A inscrição devolve segredo + URI otpauth; a confirmação valida um código.
+ * Meu perfil: dados pessoais, troca de senha e segurança (MFA). O cabeçalho
+ * resume a identidade; os três cartões cuidam da auto-gestão do usuário.
  */
-export function MeuPerfil({ usuario }: MeuPerfilProps) {
-  const [inscricao, setInscricao] = useState<{ segredo?: string; uri?: string } | null>(null)
-  const [codigo, setCodigo] = useState('')
-  const [codigos, setCodigos] = useState<string[]>([])
-  const [erro, setErro] = useState<string | null>(null)
-  const [enviando, setEnviando] = useState(false)
-
-  async function inscrever() {
-    setErro(null)
-    setEnviando(true)
-    const { data, error } = await api.POST('/me/mfa/totp', { headers: cabecalhos() })
-    setEnviando(false)
-    if (error || !data) {
-      setErro(lerErro(error, 'Não foi possível iniciar a inscrição do MFA.').detail)
-      return
-    }
-    setInscricao(data)
-  }
-
-  async function confirmar(evento: FormEvent) {
-    evento.preventDefault()
-    setErro(null)
-    setEnviando(true)
-    const { error } = await api.POST('/me/mfa/totp/confirm', {
-      headers: cabecalhos(),
-      body: { codigo },
-    })
-    setEnviando(false)
-    if (error) {
-      setErro(lerErro(error, 'Código inválido.').detail)
-      return
-    }
-    await gerarCodigos()
-  }
-
-  async function gerarCodigos() {
-    setErro(null)
-    const { data, error } = await api.POST('/me/mfa/recovery-codes', { headers: cabecalhos() })
-    if (error || !data) {
-      setErro(lerErro(error, 'Não foi possível gerar os códigos de recuperação.').detail)
-      return
-    }
-    setCodigos(data.codigos ?? [])
-  }
+export function MeuPerfil({ usuario, onAtualizado }: MeuPerfilProps) {
+  const papeis = usuario.papeis ?? []
 
   return (
-    <main>
-      <h1>Meu perfil</h1>
-      <p data-testid="perfil-nome">{usuario.nome}</p>
-      <p>{usuario.email}</p>
-      <p>Papéis: {(usuario.papeis ?? []).join(', ') || '—'}</p>
+    <section className="mx-auto flex max-w-4xl flex-col gap-6">
+      <header className="flex flex-col gap-1">
+        <h2 className="text-2xl font-semibold" data-testid="perfil-nome">
+          {usuario.nome}
+        </h2>
+        <p className="text-muted-foreground">{usuario.email}</p>
+        <div className="flex flex-wrap gap-2 pt-1">
+          {papeis.length > 0 ? (
+            papeis.map((p) => (
+              <Badge key={p} variant="secondary">
+                {p}
+              </Badge>
+            ))
+          ) : (
+            <Badge variant="outline">sem papéis</Badge>
+          )}
+        </div>
+      </header>
 
-      <h2>Autenticação em duas etapas</h2>
-      {!inscricao && (
-        <button type="button" onClick={inscrever} disabled={enviando}>
-          Iniciar inscrição do MFA
-        </button>
-      )}
-      {inscricao && (
-        <>
-          <p>
-            Segredo: <code data-testid="totp-segredo">{inscricao.segredo}</code>
-          </p>
-          <p>
-            URI: <code>{inscricao.uri}</code>
-          </p>
-          <form onSubmit={confirmar} noValidate>
-            <p>
-              <label htmlFor="codigo-mfa">Código do aplicativo</label>
-              <input
-                id="codigo-mfa"
-                inputMode="numeric"
-                value={codigo}
-                onChange={(e) => setCodigo(e.target.value)}
-                required
-              />
-            </p>
-            <button type="submit" disabled={enviando}>
-              Confirmar
-            </button>
-          </form>
-        </>
-      )}
-
-      <button type="button" onClick={gerarCodigos}>
-        Gerar códigos de recuperação
-      </button>
-      {codigos.length > 0 && (
-        <ul data-testid="recovery-codes">
-          {codigos.map((c) => (
-            <li key={c}>
-              <code>{c}</code>
-            </li>
-          ))}
-        </ul>
-      )}
-      {erro && <p role="alert">{erro}</p>}
-    </main>
+      <div className="grid gap-6 md:grid-cols-2">
+        <DadosForm usuario={usuario} onAtualizado={onAtualizado} />
+        <SenhaForm />
+        <div className="md:col-span-2">
+          <SegurancaMfa usuario={usuario} onAtualizado={onAtualizado} />
+        </div>
+      </div>
+    </section>
   )
 }
