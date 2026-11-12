@@ -18,4 +18,11 @@ interface GerirPerfil
      * @param  array<string, mixed>  $dados
      */
     public function atualizar(Authenticatable $usuario, array $dados): object;
+
+    /**
+     * Troca a senha do proprio usuario. Senha atual incorreta lanca
+     * ProblemException 422 (code `senha_atual_invalida`). Preserva o token
+     * atual e revoga os demais (RF-05).
+     */
+    public function alterarSenha(Authenticatable $usuario, string $senhaAtual, string $novaSenha): void;
 }

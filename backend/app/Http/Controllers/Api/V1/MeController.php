@@ -7,11 +7,13 @@ use App\Domain\Identidade\Contracts\ExigirMfa;
 use App\Domain\Identidade\Contracts\GerirPerfil;
 use App\Domain\Identidade\Models\Usuario;
 use App\Http\Requests\Identidade\PerfilAtualizarRequest;
+use App\Http\Requests\Identidade\PerfilSenhaRequest;
 use App\Http\Resources\ContextoAtuacaoResource;
 use App\Http\Resources\UsuarioResource;
 use App\Support\ProblemException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class MeController
 {
@@ -35,6 +37,17 @@ class MeController
         return UsuarioResource::make(
             $this->gerirPerfil->atualizar($this->usuario($request), $request->validated()),
         );
+    }
+
+    public function alterarSenha(PerfilSenhaRequest $request): Response
+    {
+        $this->gerirPerfil->alterarSenha(
+            $this->usuario($request),
+            $request->string('senha_atual')->toString(),
+            $request->string('nova_senha')->toString(),
+        );
+
+        return response()->noContent();
     }
 
     public function scopes(Request $request): JsonResponse

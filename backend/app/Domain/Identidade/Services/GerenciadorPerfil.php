@@ -4,10 +4,12 @@ namespace App\Domain\Identidade\Services;
 
 use App\Domain\Auditoria\Contracts\RegistrarEvento;
 use App\Domain\Identidade\Contracts\GerirPerfil;
+use App\Domain\Identidade\Models\SessaoLogin;
 use App\Domain\Identidade\Models\Usuario;
 use App\Support\ProblemException;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 /**
  * Auto-gestao do proprio perfil: nome e e-mail. O e-mail e normalizado e nao
@@ -68,6 +70,45 @@ class GerenciadorPerfil implements GerirPerfil
             }
 
             return $usuario;
+        });
+    }
+
+    public function alterarSenha(Authenticatable $usuario, string $senhaAtual, string $novaSenha): void
+    {
+        $usuario = $this->comoUsuario($usuario);
+
+        if (! Hash::check($senhaAtual, $usuario->getAuthPassword())) {
+            throw new ProblemException('senha_atual_invalida', 'Senha inválida', 422, 'A senha atual não confere.');
+        }
+
+        $tokenAtual = $usuario->currentAccessToken()->getKey();
+
+        DB::transaction(function () use ($usuario, $novaSenha, $tokenAtual): void {
+            $usuario->forceFill(['senha' => Hash::make($novaSenha)])->save();
+
+            // Preserva a sessao atual e revoga as demais (RF-05).
+            $usuario->tokens()
+                ->when($tokenAtual !== null, fn ($q) => $q->whereKeyNot($tokenAtual))
+                ->delete();
+
+            SessaoLogin::query()
+                ->where('usuario_id', $usuario->id)
+                ->whereNull('revogada_em')
+                ->when($tokenAtual !== null, fn ($q) => $q->where('token_id', '!=', $tokenAtual))
+                ->update(['revogada_em' => now()]);
+
+            $this->auditoria->registrar([
+                'acao' => 'alterar_senha',
+                'recurso' => 'usuario',
+                'ator_id' => (string) $usuario->getKey(),
+                'origem' => 'api',
+                'escopo' => null,
+                'motivo' => null,
+                'metadados_minimizados' => [
+                    'usuario_id' => (string) $usuario->getKey(),
+                ],
+                'ocorrido_em' => now(),
+            ]);
         });
     }
 

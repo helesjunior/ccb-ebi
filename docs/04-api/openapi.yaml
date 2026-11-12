@@ -225,6 +225,25 @@ paths:
               schema: { $ref: '#/components/schemas/Usuario' }
         '401': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/Problem' }
+  /me/password:
+    post:
+      tags: [identity]
+      summary: Trocar minha senha
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [senha_atual, nova_senha, nova_senha_confirmation]
+              properties:
+                senha_atual: { type: string, format: password }
+                nova_senha: { type: string, format: password, minLength: 12 }
+                nova_senha_confirmation: { type: string, format: password, minLength: 12 }
+      responses:
+        '204': { description: Senha alterada; demais sessões revogadas }
+        '401': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
   /me/scopes:
     get:
       tags: [identity]

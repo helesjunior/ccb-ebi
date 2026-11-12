@@ -473,6 +473,53 @@ export interface paths {
         };
         trace?: never;
     };
+    "/me/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Trocar minha senha */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: password */
+                        senha_atual: string;
+                        /** Format: password */
+                        nova_senha: string;
+                        /** Format: password */
+                        nova_senha_confirmation: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Senha alterada; demais sessões revogadas */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me/scopes": {
         parameters: {
             query?: never;
