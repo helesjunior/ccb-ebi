@@ -1,15 +1,48 @@
 import { useState, type FormEvent } from 'react'
+import { KeyRoundIcon, ShieldCheckIcon } from 'lucide-react'
 
 import { api } from '../api/client'
 import { lerErro } from '../api/erro'
 import type { components } from '../api/schema'
 import type { Usuario } from '../api/sessao'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 /** Resposta 200 do login: desafio de MFA (sem sessão plena). */
 type LoginDesafio = components['schemas']['LoginResponse']
 
 interface LoginProps {
   onEntrar: (token: string, usuario: Usuario) => void
+}
+
+/** Moldura centrada reusada pelos três estados do login. */
+function MolduraLogin({ children }: { children: React.ReactNode }) {
+  return (
+    <main className="flex min-h-svh items-center justify-center bg-background p-4 text-foreground">
+      <div className="w-full max-w-sm">{children}</div>
+    </main>
+  )
+}
+
+/** Faixa de erro acessível (anunciada por leitores de tela). */
+function ErroAlert({ mensagem }: { mensagem: string | null }) {
+  if (!mensagem) return null
+
+  return (
+    <Alert variant="destructive" aria-live="polite">
+      <AlertDescription>{mensagem}</AlertDescription>
+    </Alert>
+  )
 }
 
 /**
@@ -136,110 +169,148 @@ export function Login({ onEntrar }: LoginProps) {
     // confirma o código. O código confirmado conclui o desafio no mesmo passo.
     if (inscricaoPendente && !segredo) {
       return (
-        <main>
-          <h1>Configurar verificação em duas etapas</h1>
-          <p>
-            Sua conta exige um segundo fator. Configure um aplicativo autenticador
-            (Google Authenticator, Authy, 1Password…) para continuar.
-          </p>
-          {erro && <p role="alert">{erro}</p>}
-          <button type="button" onClick={iniciarInscricao} disabled={enviando}>
-            {enviando ? 'Gerando…' : 'Gerar chave'}
-          </button>
-        </main>
+        <MolduraLogin>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ShieldCheckIcon className="size-5" aria-hidden="true" />
+                Configurar verificação em duas etapas
+              </CardTitle>
+              <CardDescription>
+                Sua conta exige um segundo fator. Configure um aplicativo autenticador
+                (Google Authenticator, Authy, 1Password…) para continuar.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ErroAlert mensagem={erro} />
+            </CardContent>
+            <CardFooter>
+              <Button type="button" onClick={iniciarInscricao} disabled={enviando} className="w-full">
+                {enviando ? 'Gerando…' : 'Gerar chave'}
+              </Button>
+            </CardFooter>
+          </Card>
+        </MolduraLogin>
       )
     }
 
     if (inscricaoPendente && segredo) {
       return (
-        <main>
-          <h1>Configurar verificação em duas etapas</h1>
-          <p>Adicione a chave abaixo ao seu aplicativo autenticador:</p>
-          <p>
-            <code>{segredo}</code>
-          </p>
-          {uri && (
-            <p>
-              <small>Ou use o link otpauth: {uri}</small>
-            </p>
-          )}
-          <form onSubmit={confirmarInscricao} noValidate>
-            <p>
-              <label htmlFor="codigoInscricao">Código gerado pelo aplicativo</label>
-              <input
-                id="codigoInscricao"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                value={codigo}
-                onChange={(e) => setCodigo(e.target.value)}
-                required
-              />
-            </p>
-            {erro && <p role="alert">{erro}</p>}
-            <button type="submit" disabled={enviando}>
-              {enviando ? 'Confirmando…' : 'Confirmar e entrar'}
-            </button>
-          </form>
-        </main>
+        <MolduraLogin>
+          <Card>
+            <CardHeader>
+              <CardTitle>Configurar verificação em duas etapas</CardTitle>
+              <CardDescription>
+                Adicione a chave abaixo ao seu aplicativo autenticador.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1">
+                <Label>Chave</Label>
+                <code className="break-all rounded-md bg-muted px-3 py-2 text-sm">{segredo}</code>
+              </div>
+              {uri && (
+                <p className="break-all text-xs text-muted-foreground">Ou use o link otpauth: {uri}</p>
+              )}
+              <form onSubmit={confirmarInscricao} noValidate className="flex flex-col gap-3">
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="codigoInscricao">Código gerado pelo aplicativo</Label>
+                  <Input
+                    id="codigoInscricao"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    value={codigo}
+                    onChange={(e) => setCodigo(e.target.value)}
+                    required
+                  />
+                </div>
+                <ErroAlert mensagem={erro} />
+                <Button type="submit" disabled={enviando} className="w-full">
+                  {enviando ? 'Confirmando…' : 'Confirmar e entrar'}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </MolduraLogin>
       )
     }
 
     return (
-      <main>
-        <h1>Confirmar acesso</h1>
-        <p>Informe o código do seu aplicativo autenticador ou um código de recuperação.</p>
-        <form onSubmit={enviarCodigo} noValidate>
-          <p>
-            <label htmlFor="codigo">Código</label>
-            <input
-              id="codigo"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              value={codigo}
-              onChange={(e) => setCodigo(e.target.value)}
-              required
-            />
-          </p>
-          {erro && <p role="alert">{erro}</p>}
-          <button type="submit" disabled={enviando}>
-            {enviando ? 'Validando…' : 'Validar'}
-          </button>
-        </form>
-      </main>
+      <MolduraLogin>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <KeyRoundIcon className="size-5" aria-hidden="true" />
+              Confirmar acesso
+            </CardTitle>
+            <CardDescription>
+              Informe o código do seu aplicativo autenticador ou um código de recuperação.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={enviarCodigo} noValidate className="flex flex-col gap-3">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="codigo">Código</Label>
+                <Input
+                  id="codigo"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  autoFocus
+                  value={codigo}
+                  onChange={(e) => setCodigo(e.target.value)}
+                  required
+                />
+              </div>
+              <ErroAlert mensagem={erro} />
+              <Button type="submit" disabled={enviando} className="w-full">
+                {enviando ? 'Validando…' : 'Validar'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </MolduraLogin>
     )
   }
 
   return (
-    <main>
-      <h1>Entrar</h1>
-      <form onSubmit={enviarCredenciais} noValidate>
-        <p>
-          <label htmlFor="email">E-mail</label>
-          <input
-            id="email"
-            type="email"
-            autoComplete="username"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </p>
-        <p>
-          <label htmlFor="senha">Senha</label>
-          <input
-            id="senha"
-            type="password"
-            autoComplete="current-password"
-            value={senha}
-            onChange={(e) => setSenha(e.target.value)}
-            required
-          />
-        </p>
-        {erro && <p role="alert">{erro}</p>}
-        <button type="submit" disabled={enviando}>
-          {enviando ? 'Entrando…' : 'Entrar'}
-        </button>
-      </form>
-    </main>
+    <MolduraLogin>
+      <Card>
+        <CardHeader>
+          <CardTitle>Entrar</CardTitle>
+          <CardDescription>Acesse a plataforma EBI.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={enviarCredenciais} noValidate className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="email">E-mail</Label>
+              <Input
+                id="email"
+                type="email"
+                autoComplete="username"
+                autoFocus
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="senha">Senha</Label>
+              <Input
+                id="senha"
+                type="password"
+                autoComplete="current-password"
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+                required
+              />
+            </div>
+            <ErroAlert mensagem={erro} />
+            <Button type="submit" disabled={enviando} className="w-full">
+              {enviando ? 'Entrando…' : 'Entrar'}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </MolduraLogin>
   )
 }
