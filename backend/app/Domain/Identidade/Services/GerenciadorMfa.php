@@ -38,10 +38,19 @@ class GerenciadorMfa implements GerenciarMfa
 
         $segredo = Totp::gerarSegredo();
 
-        FatorMfa::query()->updateOrCreate(
-            ['usuario_id' => $usuario->id, 'tipo' => FatorMfa::TIPO_TOTP, 'confirmado_em' => null],
-            ['segredo_cifrado' => $segredo],
-        );
+        // Renovar/substituir: descarta fatores TOTP anteriores (confirmado ou
+        // pendente) antes de criar o novo pendente. Sem isso, a confirmação
+        // viola o índice único parcial `fator_mfa_confirmado_unique`.
+        FatorMfa::query()
+            ->where('usuario_id', $usuario->id)
+            ->where('tipo', FatorMfa::TIPO_TOTP)
+            ->delete();
+
+        FatorMfa::query()->create([
+            'usuario_id' => $usuario->id,
+            'tipo' => FatorMfa::TIPO_TOTP,
+            'segredo_cifrado' => $segredo,
+        ]);
 
         $rotulo = rawurlencode((string) $usuario->email_normalizado);
         $uri = sprintf(

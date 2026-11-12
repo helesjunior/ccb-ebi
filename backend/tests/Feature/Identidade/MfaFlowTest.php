@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Identidade\Models\FatorMfa;
 use App\Domain\Identidade\Models\Usuario;
 use App\Domain\Identidade\Support\Totp;
 use Database\Seeders\PapelSeeder;
@@ -129,4 +130,43 @@ it('nao sinaliza inscricao pendente quando o usuario ja tem fator validado', fun
         ->assertOk()
         ->assertJsonPath('mfa_required', true)
         ->assertJsonPath('mfa_inscricao_pendente', false);
+});
+
+/**
+ * Renovar o MFA com um fator já confirmado: re-inscrever remove o fator antigo
+ * e confirma o novo sem violar o índice único parcial
+ * `fator_mfa_confirmado_unique`. O segredo antigo deixa de valer.
+ */
+it('renova o MFA substituindo o fator confirmado', function () {
+    $u = criarUsuarioComPapel('coordenadora', 'central', 'central-1');
+    $auth = ['Authorization' => 'Bearer '.$u->createToken('setup', ['*'])->plainTextToken];
+
+    $segredoAntigo = $this->postJson('/api/v1/me/mfa/totp', [], $auth)->assertOk()->json('segredo');
+    $this->postJson('/api/v1/me/mfa/totp/confirm', ['codigo' => Totp::codigoAtual($segredoAntigo)], $auth)
+        ->assertOk();
+
+    // Renova: nova inscrição e confirmação com o fator antigo já ativo.
+    $segredoNovo = $this->postJson('/api/v1/me/mfa/totp', [], $auth)->assertOk()->json('segredo');
+
+    expect($segredoNovo)->not->toBe($segredoAntigo);
+
+    $this->postJson('/api/v1/me/mfa/totp/confirm', ['codigo' => Totp::codigoAtual($segredoNovo)], $auth)
+        ->assertOk()
+        ->assertJsonPath('confirmado', true);
+
+    // O segredo antigo não valida mais (fator substituído), e só resta um
+    // fator confirmado para o usuário.
+    expect(Totp::validar($segredoAntigo, Totp::codigoAtual($segredoAntigo)))->toBeTrue()
+        ->and(FatorMfa::query()
+            ->where('usuario_id', $u->id)
+            ->whereNotNull('confirmado_em')
+            ->count())->toBe(1)
+        ->and((string) FatorMfa::query()
+            ->where('usuario_id', $u->id)
+            ->whereNotNull('confirmado_em')
+            ->value('segredo_cifrado'))->toBe($segredoNovo);
+
+    // A sessão plena segue acessando a área operacional.
+    $this->app['auth']->forgetGuards();
+    $this->getJson('/api/v1/me', $auth)->assertOk();
 });
