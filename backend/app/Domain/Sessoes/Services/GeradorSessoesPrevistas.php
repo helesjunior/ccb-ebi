@@ -10,6 +10,7 @@ use App\Domain\Sessoes\Contracts\ResultadoGeracao;
 use App\Domain\Sessoes\Models\Sessao;
 use App\Support\ProblemException;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
 class GeradorSessoesPrevistas implements GerarSessoesPrevistas
@@ -49,14 +50,30 @@ class GeradorSessoesPrevistas implements GerarSessoesPrevistas
                         continue;
                     }
 
-                    Sessao::query()->create([
-                        'ebi_id' => $ebiId,
-                        'igreja_id' => $ebi->igrejaId,
-                        'agenda_ebi_id' => $ocorrencia->agendaEbiId,
-                        'inicio_previsto' => $inicio,
-                        'fim_previsto' => $fim,
-                        'status' => Sessao::STATUS_PREVISTA,
-                    ]);
+                    try {
+                        // O savepoint mantém a transação utilizável após uma violação no PostgreSQL.
+                        DB::transaction(fn () => Sessao::query()->create([
+                            'ebi_id' => $ebiId,
+                            'igreja_id' => $ebi->igrejaId,
+                            'agenda_ebi_id' => $ocorrencia->agendaEbiId,
+                            'inicio_previsto' => $inicio,
+                            'fim_previsto' => $fim,
+                            'status' => Sessao::STATUS_PREVISTA,
+                        ]));
+                    } catch (QueryException $e) {
+                        $mensagem = strtolower($e->getPrevious()?->getMessage() ?? $e->getMessage());
+                        $duplicada = ($e->errorInfo[0] ?? null) === '23505'
+                            && (str_contains($mensagem, 'sessao_ebi_inicio_unico')
+                                || (str_contains($mensagem, 'sessao')
+                                    && (str_contains($mensagem, 'unique') || str_contains($mensagem, 'duplicate'))));
+                        if (! $duplicada) {
+                            throw $e;
+                        }
+
+                        $ignoradas++;
+
+                        continue;
+                    }
                     $criadas++;
                 }
             }
