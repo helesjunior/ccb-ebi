@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Domain\Agenda\Contracts\GerirAgenda;
+use App\Domain\Agenda\Services\GerenciadorAgenda;
 use App\Domain\Auditoria\Contracts\ConsultarAuditoria;
 use App\Domain\Auditoria\Contracts\RegistrarEvento;
 use App\Domain\Auditoria\Services\ConsultaAuditoria;
@@ -119,5 +121,6 @@ class DomainServiceProvider extends ServiceProvider
         $this->app->bind(AvaliarElegibilidade::class, AvaliadorElegibilidade::class);
         $this->app->bind(ConsultarParticipante::class, ConsultaParticipante::class);
         $this->app->bind(VerificarPropriedadeParticipante::class, VerificadorPropriedadeParticipante::class);
+        $this->app->bind(GerirAgenda::class, GerenciadorAgenda::class);
     }
 }

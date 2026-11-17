@@ -3,6 +3,7 @@
 use App\Domain\Identidade\Services\DesafioMfa;
 use App\Http\Controllers\Api\V1\AccessGrantController;
 use App\Http\Controllers\Api\V1\AgeExceptionController;
+use App\Http\Controllers\Api\V1\AgendaController;
 use App\Http\Controllers\Api\V1\ArquivoController;
 use App\Http\Controllers\Api\V1\AuditEventController;
 use App\Http\Controllers\Api\V1\AuthController;
@@ -195,6 +196,13 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         });
         Route::patch('age-exceptions/{id}', [AgeExceptionController::class, 'update'])
             ->middleware('can:excecao.decidir')->name('age-exceptions.update');
+
+        Route::get('ebis/{id}/agenda', [AgendaController::class, 'index'])
+            ->middleware('can:sessao.ler,ebi,{id}')->name('agenda.index');
+        Route::post('ebis/{id}/agenda', [AgendaController::class, 'store'])
+            ->middleware(['can:agenda.gerenciar,ebi,{id}', IdempotenciaMiddleware::class])->name('agenda.store');
+        Route::patch('agenda/{id}', [AgendaController::class, 'update'])->name('agenda.update');
+        Route::delete('agenda/{id}', [AgendaController::class, 'destroy'])->name('agenda.destroy');
 
         // Evidencia/arquivo (E08, design §6.5): download so por URL assinada de
         // curta duracao, apos autorizacao (`evidencia.ler`).
