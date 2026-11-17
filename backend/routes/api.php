@@ -59,6 +59,10 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         Route::post('me/password', [MeController::class, 'alterarSenha'])->name('me.password');
         Route::get('me/scopes', [MeController::class, 'scopes'])->name('me.scopes');
 
+        // Seletor de EBIs do ator (RF-06/E04): sem Gate — a lista e sempre o
+        // recorte dos proprios vinculos (ou do contexto de atuacao presente).
+        Route::get('me/ebis', [MeController::class, 'ebis'])->name('me.ebis');
+
         // Termos de privacidade (RF-04): qualquer usuario autenticado le a
         // versao vigente que precisa aceitar.
         Route::get('privacy/terms', [PrivacyTermController::class, 'index'])->name('privacy.terms');

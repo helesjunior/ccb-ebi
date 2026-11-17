@@ -5,9 +5,12 @@ namespace App\Http\Controllers\Api\V1;
 use App\Domain\Identidade\Contracts\ConsultarVinculos;
 use App\Domain\Identidade\Contracts\ExigirMfa;
 use App\Domain\Identidade\Contracts\GerirPerfil;
+use App\Domain\Identidade\Services\ContextoAtuacao;
+use App\Domain\Organizacao\Contracts\ConsultarEbi;
 use App\Http\Requests\Identidade\PerfilAtualizarRequest;
 use App\Http\Requests\Identidade\PerfilSenhaRequest;
 use App\Http\Resources\ContextoAtuacaoResource;
+use App\Http\Resources\EbiResumoResource;
 use App\Http\Resources\UsuarioResource;
 use App\Support\ProblemException;
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -21,6 +24,7 @@ class MeController
         private readonly ConsultarVinculos $vinculos,
         private readonly ExigirMfa $mfa,
         private readonly GerirPerfil $gerirPerfil,
+        private readonly ConsultarEbi $ebis,
     ) {}
 
     public function me(Request $request): UsuarioResource
@@ -58,6 +62,34 @@ class MeController
 
         return new JsonResponse([
             'data' => ContextoAtuacaoResource::collection($escopos)->resolve($request),
+        ]);
+    }
+
+    /**
+     * Seletor de EBIs alcancadas pelo ator (RF-06/E04): quando existe contexto
+     * de atuacao na request, a lista usa apenas aquele no; senao, todos os
+     * vinculos vigentes. Sem Gate — o recorte e o proprio vinculo.
+     */
+    public function ebis(Request $request): JsonResponse
+    {
+        $contexto = $request->attributes->get('contexto_atuacao');
+
+        /** @var array<int, array{tipo_escopo: string, escopo_id: string}> $alvos */
+        $alvos = $contexto instanceof ContextoAtuacao
+            ? [['tipo_escopo' => $contexto->tipoEscopo, 'escopo_id' => $contexto->escopoId]]
+            : $this->vinculos->vigentesDoUsuario($this->usuario($request));
+
+        $porId = [];
+        foreach ($alvos as $alvo) {
+            foreach ($this->ebis->listarPorEscopo($alvo['tipo_escopo'], $alvo['escopo_id']) as $ebi) {
+                $porId[$ebi->id] ??= $ebi;
+            }
+        }
+
+        $ordenadas = collect($porId)->sortBy('nome', SORT_NATURAL | SORT_FLAG_CASE)->values();
+
+        return new JsonResponse([
+            'data' => EbiResumoResource::collection($ordenadas)->resolve($request),
         ]);
     }
 
