@@ -24,9 +24,10 @@ return new class extends Migration
             $table->boolean('realizada')->nullable();
             $table->text('motivo_cancelamento')->nullable();
             $table->foreignUlid('cancelada_por')->nullable()->constrained('usuarios');
-            $table->json('auxiliares_escalados')->nullable();
+            $table->unsignedSmallInteger('auxiliares_escalados')->nullable();
             $table->timestamps();
             $table->index(['ebi_id', 'inicio_previsto']);
+            $table->index(['igreja_id', 'inicio_previsto']);
         });
 
         Schema::create('sessao_correcao', function (Blueprint $table): void {
@@ -53,6 +54,7 @@ return new class extends Migration
             $table->text('motivo_estorno')->nullable();
             $table->timestamps();
             $table->index(['sessao_id', 'status']);
+            $table->index(['participante_id', 'registrado_em']);
         });
 
         DB::statement("CREATE UNIQUE INDEX sessao_ebi_inicio_unico ON sessao (ebi_id, inicio_previsto) WHERE status <> 'cancelada'");

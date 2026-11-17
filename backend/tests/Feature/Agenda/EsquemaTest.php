@@ -5,6 +5,14 @@ use App\Domain\Agenda\Models\AgendaExcecao;
 use App\Domain\Sessoes\Models\Presenca;
 use App\Domain\Sessoes\Models\Sessao;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Schema;
+
+it('preserva auxiliares escalados como inteiro', function () {
+    $sessao = Sessao::factory()->create(['auxiliares_escalados' => 2]);
+
+    expect($sessao->fresh()->auxiliares_escalados)->toBe(2);
+    expect(Schema::getColumnType('sessao', 'auxiliares_escalados'))->not->toBe('json');
+});
 
 it('nao permite duas presencas validas do mesmo participante na sessao', function () {
     $sessao = Sessao::factory()->create();

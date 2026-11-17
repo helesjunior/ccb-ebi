@@ -29,7 +29,7 @@ class Sessao extends Model
 
     protected $casts = [
         'inicio_previsto' => 'datetime', 'fim_previsto' => 'datetime', 'inicio_real' => 'datetime', 'fim_real' => 'datetime',
-        'realizada' => 'boolean', 'auxiliares_escalados' => 'array',
+        'realizada' => 'boolean', 'auxiliares_escalados' => 'integer',
     ];
 
     /** @return HasMany<Presenca, $this> */
