@@ -85,6 +85,15 @@ Proposta inicial, prefixo `/api/v1`. Rotas marcadas *novo* não existiam na vers
 | POST/PATCH | `/schedule-swaps` | Pedir e aprovar troca *novo* | RF-07 |
 | POST | `/sessions/{id}/feedback` | Registrar feedback | RF-09 |
 | POST | `/feedback/{id}/moderation` | Ministério Local libera ou devolve *novo* | RF-09 |
+| GET | `/me/ebis` | EBIs que o usuário pode operar *novo* (`no OpenAPI`) | RF-06 |
+| GET/POST | `/ebis/{id}/agenda` | Faixas semanais do EBI *novo* (`no OpenAPI`) | RF-06 |
+| PATCH/DELETE | `/agenda/{id}` | Alterar/encerrar faixa *novo* (`no OpenAPI`) | RF-06 |
+| GET/POST | `/ebis/{id}/agenda-exceptions` | Exceções da agenda *novo* (`no OpenAPI`) | RF-06 |
+| DELETE | `/agenda-exceptions/{id}` | Remover exceção *novo* (`no OpenAPI`) | RF-06 |
+| GET | `/ebis/{id}/sessions` | Sessões do EBI no período (`no OpenAPI`) | RF-06 |
+| POST | `/ebis/{id}/sessions/generate` | Gerar sessões previstas *novo* (`no OpenAPI`) | RF-06 |
+| GET/PATCH | `/sessions/{id}` | Detalhe e correção da sessão *novo* (`no OpenAPI`) | RF-06 |
+| POST | `/sessions/{id}/open`, `/sessions/{id}/close`, `/sessions/{id}/cancel` | Ciclo da sessão *novo* (`no OpenAPI`) | RF-06 |
 
 ## Biblioteca
 | Método | Rota | Finalidade | RF |
