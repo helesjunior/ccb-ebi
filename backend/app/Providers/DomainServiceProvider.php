@@ -82,12 +82,14 @@ use App\Domain\Privacidade\Services\GerenciadorTermos;
 use App\Domain\Sessoes\Contracts\CancelarSessoesPrevistas;
 use App\Domain\Sessoes\Contracts\ConsultarPresenca;
 use App\Domain\Sessoes\Contracts\ConsultarSessao;
+use App\Domain\Sessoes\Contracts\EstornarPresenca;
 use App\Domain\Sessoes\Contracts\GerarSessoesPrevistas;
 use App\Domain\Sessoes\Contracts\GerirSessaoEbi;
 use App\Domain\Sessoes\Contracts\RegistrarPresenca;
 use App\Domain\Sessoes\Services\CanceladorSessoesPrevistas;
 use App\Domain\Sessoes\Services\ConsultaPresenca;
 use App\Domain\Sessoes\Services\ConsultaSessao;
+use App\Domain\Sessoes\Services\EstornadorPresenca;
 use App\Domain\Sessoes\Services\GeradorSessoesPrevistas;
 use App\Domain\Sessoes\Services\GerenciadorSessao as GerenciadorSessaoEbi;
 use App\Domain\Sessoes\Services\RegistradorPresenca;
@@ -141,6 +143,7 @@ class DomainServiceProvider extends ServiceProvider
         $this->app->bind(GerarSessoesPrevistas::class, GeradorSessoesPrevistas::class);
         $this->app->bind(ConsultarSessao::class, ConsultaSessao::class);
         $this->app->bind(ConsultarPresenca::class, ConsultaPresenca::class);
+        $this->app->bind(EstornarPresenca::class, EstornadorPresenca::class);
         $this->app->bind(RegistrarPresenca::class, RegistradorPresenca::class);
         $this->app->bind(GerirSessaoEbi::class, GerenciadorSessaoEbi::class);
     }

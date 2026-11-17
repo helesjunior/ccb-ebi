@@ -8,4 +8,7 @@ interface ConsultarPresenca
     public function daSessao(string $sessaoId): array;
 
     public function ebiDaPresenca(string $presencaId): ?string;
+
+    /** @return array<int, HistoricoPresenca> */
+    public function doParticipante(string $participanteId, ?string $de = null, ?string $ate = null): array;
 }

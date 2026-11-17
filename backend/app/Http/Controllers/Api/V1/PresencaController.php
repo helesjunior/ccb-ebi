@@ -11,8 +11,10 @@ use App\Domain\Participantes\Contracts\ConsultarParticipante;
 use App\Domain\Participantes\Contracts\ParticipanteResumo;
 use App\Domain\Sessoes\Contracts\ConsultarPresenca;
 use App\Domain\Sessoes\Contracts\ConsultarSessao;
+use App\Domain\Sessoes\Contracts\EstornarPresenca;
 use App\Domain\Sessoes\Contracts\RegistrarPresenca;
 use App\Domain\Sessoes\Contracts\SessaoEbi;
+use App\Http\Requests\Agenda\EstornarPresencaRequest;
 use App\Http\Requests\Agenda\RegistrarPresencaRequest;
 use App\Http\Resources\PresencaResource;
 use App\Support\ProblemException;
@@ -33,6 +35,7 @@ class PresencaController
         private readonly ConsultarOrganizacao $organizacao,
         private readonly AvaliarElegibilidade $elegibilidade,
         private readonly RegistrarEvento $auditoria,
+        private readonly EstornarPresenca $estornador,
     ) {}
 
     public function participantes(Request $request, string $id): JsonResponse
@@ -86,6 +89,16 @@ class PresencaController
         Gate::authorize(Operacoes::PRESENCA_LER, ['ebi', $sessao->ebiId]);
 
         return response()->json(['data' => PresencaResource::collection($this->consulta->daSessao($id))->resolve($request)]);
+    }
+
+    public function estornar(EstornarPresencaRequest $request, string $id): JsonResponse
+    {
+        $ebiId = $this->consulta->ebiDaPresenca($id)
+            ?? throw new ProblemException('not_found', 'Recurso não encontrado', 404);
+        Gate::authorize(Operacoes::PRESENCA_ESTORNAR, ['ebi', $ebiId]);
+        $presenca = $this->estornador->estornar($id, $request->validated('motivo'), (string) $request->user()->id);
+
+        return response()->json((new PresencaResource($presenca))->resolve($request));
     }
 
     private function sessao(string $id): SessaoEbi

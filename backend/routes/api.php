@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\V1\EbiController;
 use App\Http\Controllers\Api\V1\GuardianController;
 use App\Http\Controllers\Api\V1\GuardianRequestController;
 use App\Http\Controllers\Api\V1\HealthController;
+use App\Http\Controllers\Api\V1\HistoricoPresencaController;
 use App\Http\Controllers\Api\V1\InvitationAcceptController;
 use App\Http\Controllers\Api\V1\InvitationController;
 use App\Http\Controllers\Api\V1\MeController;
@@ -226,6 +227,12 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
             ->name('sessions.attendance.index');
         Route::post('sessions/{id}/attendance', [PresencaController::class, 'store'])
             ->middleware(IdempotenciaMiddleware::class)->name('sessions.attendance.store');
+        Route::post('attendance/{id}/reversal', [PresencaController::class, 'estornar'])
+            ->middleware(IdempotenciaMiddleware::class)->name('attendance.reversal');
+        Route::get('participants/{id}/attendance', [HistoricoPresencaController::class, 'operador'])
+            ->name('participants.attendance');
+        Route::get('me/participants/{id}/attendance', [HistoricoPresencaController::class, 'responsavel'])
+            ->name('me.participants.attendance');
         Route::post('sessions/{id}/open', [SessaoController::class, 'open'])
             ->middleware(IdempotenciaMiddleware::class)->name('sessions.open');
         Route::post('sessions/{id}/close', [SessaoController::class, 'close'])
