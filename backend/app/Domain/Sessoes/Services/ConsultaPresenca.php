@@ -3,32 +3,37 @@
 namespace App\Domain\Sessoes\Services;
 
 use App\Domain\Organizacao\Contracts\ConsultarEbi;
+use App\Domain\Participantes\Contracts\ConsultarParticipante;
 use App\Domain\Sessoes\Contracts\ConsultarPresenca;
 use App\Domain\Sessoes\Contracts\HistoricoPresenca;
 use App\Domain\Sessoes\Contracts\PresencaRegistrada;
 use App\Domain\Sessoes\Models\Presenca;
+use App\Support\ProblemException;
 use Carbon\CarbonImmutable;
 
 class ConsultaPresenca implements ConsultarPresenca
 {
-    public function __construct(private readonly ConsultarEbi $ebis) {}
+    public function __construct(
+        private readonly ConsultarEbi $ebis,
+        private readonly ConsultarParticipante $participantes,
+    ) {}
 
     public function doParticipante(string $participanteId, ?string $de = null, ?string $ate = null): array
     {
-        $presencas = Presenca::query()->join('sessao', 'sessao.id', '=', 'presenca.sessao_id')
-            ->where('presenca.participante_id', $participanteId)
-            ->when($de !== null, fn ($q) => $q->where('presenca.registrado_em', '>=', CarbonImmutable::parse($de)->utc()))
-            ->when($ate !== null, fn ($q) => $q->where('presenca.registrado_em', '<=', CarbonImmutable::parse($ate)->utc()))
-            ->orderByDesc('presenca.registrado_em')->orderByDesc('presenca.id')
-            ->get(['presenca.*', 'sessao.ebi_id', 'sessao.inicio_previsto']);
+        $presencas = Presenca::query()->where('participante_id', $participanteId)
+            ->when($de !== null, fn ($q) => $q->where('registrado_em', '>=', CarbonImmutable::parse($de)->utc()))
+            ->when($ate !== null, fn ($q) => $q->where('registrado_em', '<=', CarbonImmutable::parse($ate)->utc()))
+            ->with('sessao')
+            ->orderByDesc('registrado_em')->orderByDesc('id')->get();
         $nomes = [];
 
         return $presencas->map(function (Presenca $p) use (&$nomes): HistoricoPresenca {
-            $nomes[$p->ebi_id] ??= $this->ebis->dados($p->ebi_id)?->nome ?? '';
+            $sessao = $p->sessao ?? throw new ProblemException('not_found', 'Recurso não encontrado', 404);
+            $nomes[$sessao->ebi_id] ??= $this->ebis->dados($sessao->ebi_id)->nome ?? '';
 
             return new HistoricoPresenca(
-                (string) $p->id, $p->sessao_id, $p->ebi_id, $nomes[$p->ebi_id],
-                CarbonImmutable::parse($p->inicio_previsto)->toIso8601String(), $p->status,
+                (string) $p->id, $p->sessao_id, $sessao->ebi_id, $nomes[$sessao->ebi_id],
+                CarbonImmutable::parse($sessao->inicio_previsto)->toIso8601String(), $p->status,
                 $p->registrado_em->toIso8601String(),
             );
         })->all();
@@ -36,14 +41,20 @@ class ConsultaPresenca implements ConsultarPresenca
 
     public function daSessao(string $sessaoId): array
     {
-        return Presenca::query()->where('sessao_id', $sessaoId)
-            ->with('participante')->orderBy('registrado_em')->orderBy('id')->get()
-            ->map(fn (Presenca $p) => new PresencaRegistrada(
+        $participantes = [];
+        $presencas = Presenca::query()->where('sessao_id', $sessaoId)
+            ->orderBy('registrado_em')->orderBy('id')->get();
+
+        return $presencas->map(function (Presenca $p) use (&$participantes): PresencaRegistrada {
+            $participantes[$p->participante_id] ??= $this->participantes->encontrar($p->participante_id);
+
+            return new PresencaRegistrada(
                 (string) $p->id, $p->sessao_id, $p->participante_id,
-                $p->participante?->nome, $p->participante?->matricula,
+                $participantes[$p->participante_id]?->nome, $participantes[$p->participante_id]?->matricula,
                 $p->registrado_por, $p->registrado_em->toIso8601String(),
                 $p->origem, $p->status, $p->estornado_em?->toIso8601String(), $p->motivo_estorno,
-            ))->all();
+            );
+        })->all();
     }
 
     public function ebiDaPresenca(string $presencaId): ?string

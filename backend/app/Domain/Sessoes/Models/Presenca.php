@@ -2,7 +2,6 @@
 
 namespace App\Domain\Sessoes\Models;
 
-use App\Domain\Participantes\Models\Participante;
 use App\Domain\Sessoes\Database\Factories\PresencaFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -32,9 +31,10 @@ class Presenca extends Model
 
     protected $casts = ['registrado_em' => 'datetime', 'estornado_em' => 'datetime'];
 
-    public function participante(): BelongsTo
+    /** @return BelongsTo<Sessao, $this> */
+    public function sessao(): BelongsTo
     {
-        return $this->belongsTo(Participante::class, 'participante_id');
+        return $this->belongsTo(Sessao::class, 'sessao_id');
     }
 
     protected static function newFactory(): PresencaFactory
