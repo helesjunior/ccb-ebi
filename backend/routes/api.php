@@ -27,6 +27,7 @@ use App\Http\Controllers\Api\V1\PrivacyTermController;
 use App\Http\Controllers\Api\V1\RegionController;
 use App\Http\Controllers\Api\V1\RegisterController;
 use App\Http\Controllers\Api\V1\SectorController;
+use App\Http\Controllers\Api\V1\SessaoController;
 use App\Http\Controllers\Api\V1\SessionController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Middleware\IdempotenciaMiddleware;
@@ -210,6 +211,10 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         Route::post('ebis/{id}/agenda-exceptions', [AgendaExcecaoController::class, 'store'])
             ->middleware(['can:agenda.gerenciar,ebi,{id}', IdempotenciaMiddleware::class])->name('agenda-exceptions.store');
         Route::delete('agenda-exceptions/{id}', [AgendaExcecaoController::class, 'destroy'])->name('agenda-exceptions.destroy');
+
+        Route::post('ebis/{id}/sessions/generate', [SessaoController::class, 'gerar'])
+            ->middleware(['can:agenda.gerenciar,ebi,{id}', IdempotenciaMiddleware::class])
+            ->name('sessions.generate');
 
         // Evidencia/arquivo (E08, design §6.5): download so por URL assinada de
         // curta duracao, apos autorizacao (`evidencia.ler`).

@@ -80,7 +80,9 @@ use App\Domain\Privacidade\Services\GerenciadorConsentimento;
 use App\Domain\Privacidade\Services\GerenciadorSolicitacao;
 use App\Domain\Privacidade\Services\GerenciadorTermos;
 use App\Domain\Sessoes\Contracts\CancelarSessoesPrevistas;
+use App\Domain\Sessoes\Contracts\GerarSessoesPrevistas;
 use App\Domain\Sessoes\Services\CanceladorSessoesPrevistas;
+use App\Domain\Sessoes\Services\GeradorSessoesPrevistas;
 use Illuminate\Support\ServiceProvider;
 
 class DomainServiceProvider extends ServiceProvider
@@ -128,5 +130,6 @@ class DomainServiceProvider extends ServiceProvider
         $this->app->bind(GerirAgenda::class, GerenciadorAgenda::class);
         $this->app->bind(ConsultarAgenda::class, ConsultaAgenda::class);
         $this->app->bind(CancelarSessoesPrevistas::class, CanceladorSessoesPrevistas::class);
+        $this->app->bind(GerarSessoesPrevistas::class, GeradorSessoesPrevistas::class);
     }
 }
