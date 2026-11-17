@@ -74,9 +74,6 @@ Proposta inicial, prefixo `/api/v1`. Rotas marcadas *novo* não existiam na vers
 ## Agenda, sessões e presença
 | Método | Rota | Finalidade | RF |
 |---|---|---|---|
-| GET/POST | `/ebis/{id}/agenda` | Programação *novo* | RF-06 |
-| GET | `/ebis/{id}/sessions` | Sessões | RF-06 |
-| POST | `/sessions/{id}/open`, `/close`, `/cancel` | Ciclo da sessão *novo* | RF-06 |
 | POST | `/sessions/{id}/attendance` | Registrar presença, idempotente (`no OpenAPI`) | RF-08 |
 | POST | `/attendance/{id}/reversal` | Estornar presença *novo* | RF-08 |
 | GET | `/ebis/{id}/schedules` | Consultar escala (era `/roster`) | RF-07 |

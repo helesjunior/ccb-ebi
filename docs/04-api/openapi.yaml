@@ -816,6 +816,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/XActingScope'
         - $ref: '#/components/parameters/EbiId'
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
@@ -839,11 +840,12 @@ paths:
       parameters:
         - $ref: '#/components/parameters/XActingScope'
         - $ref: '#/components/parameters/AgendaId'
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/AgendaEbiInput' }
+            schema: { $ref: '#/components/schemas/AgendaEbiUpdateInput' }
       responses:
         '200':
           description: Faixa atualizada
@@ -862,6 +864,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/XActingScope'
         - $ref: '#/components/parameters/AgendaId'
+        - $ref: '#/components/parameters/IdempotencyKey'
       responses:
         '204': { description: Faixa encerrada }
         '401': { $ref: '#/components/responses/Problem' }
@@ -897,6 +900,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/XActingScope'
         - $ref: '#/components/parameters/EbiId'
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
@@ -920,6 +924,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/XActingScope'
         - $ref: '#/components/parameters/ExcecaoAgendaId'
+        - $ref: '#/components/parameters/IdempotencyKey'
       responses:
         '204': { description: Exceção removida }
         '401': { $ref: '#/components/responses/Problem' }
@@ -975,6 +980,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/XActingScope'
         - $ref: '#/components/parameters/EbiId'
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         content:
           application/json:
@@ -1023,6 +1029,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/XActingScope'
         - $ref: '#/components/parameters/SessaoId'
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
@@ -1048,6 +1055,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/XActingScope'
         - $ref: '#/components/parameters/SessaoId'
+        - $ref: '#/components/parameters/IdempotencyKey'
       responses:
         '200':
           description: Sessão aberta
@@ -1064,12 +1072,13 @@ paths:
       summary: Encerrar a sessão
       description: >-
         Exige `realizada` (boolean) e aceita `fim_real?`. Transita a sessão
-        para `encerrada` (ou `cancelada`, conforme os dados informados).
+        para `encerrada`.
       security:
         - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/XActingScope'
         - $ref: '#/components/parameters/SessaoId'
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
@@ -1095,6 +1104,12 @@ paths:
       parameters:
         - $ref: '#/components/parameters/XActingScope'
         - $ref: '#/components/parameters/SessaoId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SessaoCancelamentoInput' }
       responses:
         '200':
           description: Sessão cancelada
@@ -2143,6 +2158,14 @@ components:
         hora_fim: { type: string, pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$' }
         inicio_vigencia: { type: string, format: date }
         fim_vigencia: { type: [string, 'null'], format: date }
+    AgendaEbiUpdateInput:
+      type: object
+      properties:
+        dia_semana: { type: integer, minimum: 1, maximum: 7 }
+        hora_inicio: { type: string, pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$' }
+        hora_fim: { type: string, pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$' }
+        inicio_vigencia: { type: string, format: date }
+        fim_vigencia: { type: [string, 'null'], format: date }
     AgendaExcecao:
       type: object
       properties:
@@ -2203,6 +2226,11 @@ components:
       properties:
         realizada: { type: boolean }
         fim_real: { type: [string, 'null'], format: date-time }
+    SessaoCancelamentoInput:
+      type: object
+      required: [motivo]
+      properties:
+        motivo: { type: string, minLength: 3, maxLength: 500 }
     SessaoCorrecaoInput:
       type: object
       properties:
