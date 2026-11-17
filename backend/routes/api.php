@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\V1\MfaController;
 use App\Http\Controllers\Api\V1\ParticipantController;
 use App\Http\Controllers\Api\V1\ParticipantMergeController;
 use App\Http\Controllers\Api\V1\PasswordController;
+use App\Http\Controllers\Api\V1\PresencaController;
 use App\Http\Controllers\Api\V1\PrivacyConsentController;
 use App\Http\Controllers\Api\V1\PrivacyRequestController;
 use App\Http\Controllers\Api\V1\PrivacyTermController;
@@ -219,6 +220,12 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         Route::get('ebis/{id}/sessions', [SessaoController::class, 'index'])
             ->middleware('can:sessao.ler,ebi,{id}')->name('sessions.index');
         Route::get('sessions/{id}', [SessaoController::class, 'show'])->name('sessions.show');
+        Route::get('sessions/{id}/participants', [PresencaController::class, 'participantes'])
+            ->name('sessions.participants');
+        Route::get('sessions/{id}/attendance', [PresencaController::class, 'index'])
+            ->name('sessions.attendance.index');
+        Route::post('sessions/{id}/attendance', [PresencaController::class, 'store'])
+            ->middleware(IdempotenciaMiddleware::class)->name('sessions.attendance.store');
         Route::post('sessions/{id}/open', [SessaoController::class, 'open'])
             ->middleware(IdempotenciaMiddleware::class)->name('sessions.open');
         Route::post('sessions/{id}/close', [SessaoController::class, 'close'])
