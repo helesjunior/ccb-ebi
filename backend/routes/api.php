@@ -4,6 +4,7 @@ use App\Domain\Identidade\Services\DesafioMfa;
 use App\Http\Controllers\Api\V1\AccessGrantController;
 use App\Http\Controllers\Api\V1\AgeExceptionController;
 use App\Http\Controllers\Api\V1\AgendaController;
+use App\Http\Controllers\Api\V1\AgendaExcecaoController;
 use App\Http\Controllers\Api\V1\ArquivoController;
 use App\Http\Controllers\Api\V1\AuditEventController;
 use App\Http\Controllers\Api\V1\AuthController;
@@ -203,6 +204,12 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
             ->middleware(['can:agenda.gerenciar,ebi,{id}', IdempotenciaMiddleware::class])->name('agenda.store');
         Route::patch('agenda/{id}', [AgendaController::class, 'update'])->name('agenda.update');
         Route::delete('agenda/{id}', [AgendaController::class, 'destroy'])->name('agenda.destroy');
+
+        Route::get('ebis/{id}/agenda-exceptions', [AgendaExcecaoController::class, 'index'])
+            ->middleware('can:sessao.ler,ebi,{id}')->name('agenda-exceptions.index');
+        Route::post('ebis/{id}/agenda-exceptions', [AgendaExcecaoController::class, 'store'])
+            ->middleware(['can:agenda.gerenciar,ebi,{id}', IdempotenciaMiddleware::class])->name('agenda-exceptions.store');
+        Route::delete('agenda-exceptions/{id}', [AgendaExcecaoController::class, 'destroy'])->name('agenda-exceptions.destroy');
 
         // Evidencia/arquivo (E08, design §6.5): download so por URL assinada de
         // curta duracao, apos autorizacao (`evidencia.ler`).

@@ -2,15 +2,95 @@
 
 namespace App\Domain\Agenda\Services;
 
+use App\Domain\Agenda\Contracts\ExcecaoAgenda;
 use App\Domain\Agenda\Contracts\FaixaAgenda;
 use App\Domain\Agenda\Contracts\GerirAgenda;
 use App\Domain\Agenda\Models\AgendaEbi;
+use App\Domain\Agenda\Models\AgendaExcecao;
 use App\Support\ProblemException;
+use Illuminate\Database\QueryException;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class GerenciadorAgenda implements GerirAgenda
 {
+    public function excecoes(string $ebiId, ?string $de = null, ?string $ate = null): array
+    {
+        return AgendaExcecao::query()->where('ebi_id', $ebiId)
+            ->when($de !== null, fn ($q) => $q->whereDate('data', '>=', $de))
+            ->when($ate !== null, fn ($q) => $q->whereDate('data', '<=', $ate))
+            ->orderBy('data')->orderBy('id')->get()
+            ->map(fn (AgendaExcecao $excecao): ExcecaoAgenda => $this->excecaoDto($excecao))->all();
+    }
+
+    public function excecao(string $id): ?ExcecaoAgenda
+    {
+        $excecao = AgendaExcecao::query()->find($id);
+
+        return $excecao ? $this->excecaoDto($excecao) : null;
+    }
+
+    public function criarExcecao(string $ebiId, array $dados): ExcecaoAgenda
+    {
+        $especial = ($dados['tipo'] ?? null) === AgendaExcecao::TIPO_HORARIO_ESPECIAL;
+        $dados = Validator::make($dados, [
+            'tipo' => ['required', Rule::in([AgendaExcecao::TIPO_FERIADO, AgendaExcecao::TIPO_CANCELAMENTO, AgendaExcecao::TIPO_HORARIO_ESPECIAL])],
+            'data' => ['required', 'date_format:Y-m-d'],
+            'motivo' => ['required', 'string'],
+            'agenda_ebi_id' => $especial
+                ? ['required', 'ulid', Rule::exists('agenda_ebi', 'id')->where('ebi_id', $ebiId)]
+                : ['nullable', Rule::in([null])],
+            'hora_inicio' => $especial ? ['required', 'date_format:H:i'] : ['nullable', Rule::in([null])],
+            'hora_fim' => $especial ? ['required', 'date_format:H:i', 'after:hora_inicio'] : ['nullable', Rule::in([null])],
+        ])->validate();
+        $dados = array_merge(['agenda_ebi_id' => null, 'hora_inicio' => null, 'hora_fim' => null], $dados);
+
+        $duplicada = AgendaExcecao::query()->whereDate('data', $dados['data']);
+        if ($especial) {
+            $duplicada->where('agenda_ebi_id', $dados['agenda_ebi_id']);
+        } else {
+            $duplicada->where('ebi_id', $ebiId)->where('tipo', $dados['tipo'])->whereNull('agenda_ebi_id');
+        }
+        if ($duplicada->exists()) {
+            $this->excecaoDuplicada();
+        }
+
+        try {
+            return DB::transaction(fn (): ExcecaoAgenda => $this->excecaoDto(AgendaExcecao::query()->create([...$dados, 'ebi_id' => $ebiId])));
+        } catch (QueryException $e) {
+            if ($e instanceof UniqueConstraintViolationException) {
+                $this->excecaoDuplicada();
+            }
+
+            throw $e;
+        }
+    }
+
+    public function removerExcecao(string $excecaoId): void
+    {
+        $excecao = AgendaExcecao::query()->find($excecaoId) ?? $this->naoEncontrada();
+        $excecao->delete();
+    }
+
+    private function excecaoDuplicada(): never
+    {
+        throw new ProblemException('agenda_excecao_duplicada', 'Exceção de agenda duplicada', 422);
+    }
+
+    private function excecaoDto(AgendaExcecao $excecao): ExcecaoAgenda
+    {
+        return new ExcecaoAgenda(
+            $excecao->id, $excecao->ebi_id, $excecao->agenda_ebi_id,
+            $excecao->data->toDateString(), $excecao->tipo,
+            $excecao->hora_inicio === null ? null : substr($excecao->hora_inicio, 0, 5),
+            $excecao->hora_fim === null ? null : substr($excecao->hora_fim, 0, 5),
+            $excecao->motivo,
+        );
+    }
+
     public function faixas(string $ebiId): array
     {
         return AgendaEbi::query()->where('ebi_id', $ebiId)->orderBy('dia_semana')->orderBy('hora_inicio')->get()

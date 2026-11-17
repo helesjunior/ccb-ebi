@@ -16,4 +16,14 @@ interface GerirAgenda
     public function atualizarFaixa(string $faixaId, array $dados): FaixaAgenda;
 
     public function encerrarFaixa(string $faixaId): void;
+
+    /** @return array<int, ExcecaoAgenda> */
+    public function excecoes(string $ebiId, ?string $de = null, ?string $ate = null): array;
+
+    public function excecao(string $id): ?ExcecaoAgenda;
+
+    /** @param array<string, mixed> $dados */
+    public function criarExcecao(string $ebiId, array $dados): ExcecaoAgenda;
+
+    public function removerExcecao(string $excecaoId): void;
 }

@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Domain\Agenda\Contracts\ConsultarAgenda;
 use App\Domain\Agenda\Contracts\GerirAgenda;
+use App\Domain\Agenda\Services\ConsultaAgenda;
 use App\Domain\Agenda\Services\GerenciadorAgenda;
 use App\Domain\Auditoria\Contracts\ConsultarAuditoria;
 use App\Domain\Auditoria\Contracts\RegistrarEvento;
@@ -77,6 +79,8 @@ use App\Domain\Privacidade\Contracts\SolicitarDireitoTitular;
 use App\Domain\Privacidade\Services\GerenciadorConsentimento;
 use App\Domain\Privacidade\Services\GerenciadorSolicitacao;
 use App\Domain\Privacidade\Services\GerenciadorTermos;
+use App\Domain\Sessoes\Contracts\CancelarSessoesPrevistas;
+use App\Domain\Sessoes\Services\CanceladorSessoesPrevistas;
 use Illuminate\Support\ServiceProvider;
 
 class DomainServiceProvider extends ServiceProvider
@@ -122,5 +126,7 @@ class DomainServiceProvider extends ServiceProvider
         $this->app->bind(ConsultarParticipante::class, ConsultaParticipante::class);
         $this->app->bind(VerificarPropriedadeParticipante::class, VerificadorPropriedadeParticipante::class);
         $this->app->bind(GerirAgenda::class, GerenciadorAgenda::class);
+        $this->app->bind(ConsultarAgenda::class, ConsultaAgenda::class);
+        $this->app->bind(CancelarSessoesPrevistas::class, CanceladorSessoesPrevistas::class);
     }
 }
