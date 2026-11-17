@@ -1212,7 +1212,7 @@ export interface paths {
         put?: never;
         /**
          * Registrar presença
-         * @description Idempotente. Aplica a regra de elegibilidade etária (RN-13 a RN-16).
+         * @description Idempotente. Aplica a regra de elegibilidade etária (RN-13 a RN-16). `422` indica participante `inelegivel` (com `motivo_bloqueio` no corpo do erro) e `409` indica sessão não aberta.
          */
         post: {
             parameters: {
@@ -1238,7 +1238,12 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            presenca: components["schemas"]["Presenca"];
+                            aviso?: string | null;
+                        };
+                    };
                 };
                 /** @description Presença registrada */
                 201: {
@@ -1247,11 +1252,12 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
-                            presenca?: components["schemas"]["Presenca"];
+                            presenca: components["schemas"]["Presenca"];
                             aviso?: string | null;
                         };
                     };
                 };
+                401: components["responses"]["Problem"];
                 403: components["responses"]["Problem"];
                 404: components["responses"]["Problem"];
                 409: components["responses"]["Problem"];
@@ -2538,7 +2544,7 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
-                            presenca?: components["schemas"]["Presenca"];
+                            presenca: components["schemas"]["Presenca"];
                         };
                     };
                 };
@@ -4111,10 +4117,10 @@ export interface components {
         PresencaRegistroInput: {
             participante_id: string;
             /**
-             * @default web
+             * @description Padrão: web
              * @enum {string}
              */
-            origem: "web" | "app";
+            origem?: "web" | "app";
         };
         PresencaContingenciaInput: {
             participante_id: string;

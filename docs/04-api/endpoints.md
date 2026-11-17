@@ -58,7 +58,7 @@ Proposta inicial, prefixo `/api/v1`. Rotas marcadas *novo* não existiam na vers
 | Método | Rota | Finalidade | RF |
 |---|---|---|---|
 | GET | `/me/participants` | Dependentes vinculados (era `/me/children`) (`no OpenAPI`) | RF-13 |
-| GET | `/me/participants/{id}/attendance` | Histórico de presenças do dependente *novo* (`no OpenAPI`) | RF-13 |
+| GET | `/me/participants/{id}/attendance` | Histórico de presenças do dependente *novo* (`no OpenAPI`) | RF-08 |
 | POST | `/participants` | Solicitar cadastro (era `/children`) (`no OpenAPI`) | RF-02 |
 | GET | `/participants` | Pesquisa no escopo do operador *novo* (`no OpenAPI`) | RF-02 |
 | GET | `/participants/{id}` | Consultar participante (`no OpenAPI`) | RF-02 |

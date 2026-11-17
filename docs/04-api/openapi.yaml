@@ -517,7 +517,7 @@ paths:
     post:
       tags: [sessions]
       summary: Registrar presença
-      description: Idempotente. Aplica a regra de elegibilidade etária (RN-13 a RN-16).
+      description: Idempotente. Aplica a regra de elegibilidade etária (RN-13 a RN-16). `422` indica participante `inelegivel` (com `motivo_bloqueio` no corpo do erro) e `409` indica sessão não aberta.
       security:
         - bearerAuth: []
       parameters:
@@ -536,10 +536,21 @@ paths:
             application/json:
               schema:
                 type: object
+                required: [presenca]
                 properties:
                   presenca: { $ref: '#/components/schemas/Presenca' }
                   aviso: { type: [string, 'null'] }
-        '200': { description: Presença já existente (mesma chave ou mesmo participante e sessão) }
+        '200':
+          description: Presença já existente (mesma chave ou mesmo participante e sessão)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [presenca]
+                properties:
+                  presenca: { $ref: '#/components/schemas/Presenca' }
+                  aviso: { type: [string, 'null'] }
+        '401': { $ref: '#/components/responses/Problem' }
         '403': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
         '409': { $ref: '#/components/responses/Problem' }
@@ -1206,6 +1217,7 @@ paths:
             application/json:
               schema:
                 type: object
+                required: [presenca]
                 properties:
                   presenca: { $ref: '#/components/schemas/Presenca' }
         '401': { $ref: '#/components/responses/Problem' }
@@ -2447,7 +2459,7 @@ components:
       required: [participante_id]
       properties:
         participante_id: { type: string }
-        origem: { type: string, enum: [web, app], default: web }
+        origem: { type: string, enum: [web, app], description: 'Padrão: web' }
     PresencaContingenciaInput:
       type: object
       required: [participante_id, motivo]
