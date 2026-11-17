@@ -1,1 +1,3 @@
-# Modulo Agenda. Nesta leva: vazio. Expoe: �.
+# Agenda
+
+Agenda recorrente das EBIs e exceções pontuais de calendário.

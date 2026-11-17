@@ -38,6 +38,11 @@ it('fronteiras de modulo respeitadas', function () {
     foreach ($moduleDirs as $dir) {
         $modulo = basename($dir);
         foreach ($phpFiles($dir) as $f) {
+            // Factories are test fixtures and must create cross-module parents.
+            if (str_contains($f, DIRECTORY_SEPARATOR.'Database'.DIRECTORY_SEPARATOR.'Factories'.DIRECTORY_SEPARATOR)) {
+                continue;
+            }
+
             $files[] = [$f, $modulo];
         }
     }
