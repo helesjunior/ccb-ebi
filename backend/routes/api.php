@@ -216,6 +216,18 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
             ->middleware(['can:agenda.gerenciar,ebi,{id}', IdempotenciaMiddleware::class])
             ->name('sessions.generate');
 
+        Route::get('ebis/{id}/sessions', [SessaoController::class, 'index'])
+            ->middleware('can:sessao.ler,ebi,{id}')->name('sessions.index');
+        Route::get('sessions/{id}', [SessaoController::class, 'show'])->name('sessions.show');
+        Route::post('sessions/{id}/open', [SessaoController::class, 'open'])
+            ->middleware(IdempotenciaMiddleware::class)->name('sessions.open');
+        Route::post('sessions/{id}/close', [SessaoController::class, 'close'])
+            ->middleware(IdempotenciaMiddleware::class)->name('sessions.close');
+        Route::post('sessions/{id}/cancel', [SessaoController::class, 'cancel'])
+            ->middleware(IdempotenciaMiddleware::class)->name('sessions.cancel');
+        Route::patch('sessions/{id}', [SessaoController::class, 'update'])
+            ->middleware(IdempotenciaMiddleware::class)->name('sessions.update');
+
         // Evidencia/arquivo (E08, design §6.5): download so por URL assinada de
         // curta duracao, apos autorizacao (`evidencia.ler`).
         Route::get('arquivos/{id}', [ArquivoController::class, 'show'])

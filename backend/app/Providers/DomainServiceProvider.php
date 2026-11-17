@@ -80,9 +80,13 @@ use App\Domain\Privacidade\Services\GerenciadorConsentimento;
 use App\Domain\Privacidade\Services\GerenciadorSolicitacao;
 use App\Domain\Privacidade\Services\GerenciadorTermos;
 use App\Domain\Sessoes\Contracts\CancelarSessoesPrevistas;
+use App\Domain\Sessoes\Contracts\ConsultarSessao;
 use App\Domain\Sessoes\Contracts\GerarSessoesPrevistas;
+use App\Domain\Sessoes\Contracts\GerirSessaoEbi;
 use App\Domain\Sessoes\Services\CanceladorSessoesPrevistas;
+use App\Domain\Sessoes\Services\ConsultaSessao;
 use App\Domain\Sessoes\Services\GeradorSessoesPrevistas;
+use App\Domain\Sessoes\Services\GerenciadorSessao as GerenciadorSessaoEbi;
 use Illuminate\Support\ServiceProvider;
 
 class DomainServiceProvider extends ServiceProvider
@@ -131,5 +135,7 @@ class DomainServiceProvider extends ServiceProvider
         $this->app->bind(ConsultarAgenda::class, ConsultaAgenda::class);
         $this->app->bind(CancelarSessoesPrevistas::class, CanceladorSessoesPrevistas::class);
         $this->app->bind(GerarSessoesPrevistas::class, GeradorSessoesPrevistas::class);
+        $this->app->bind(ConsultarSessao::class, ConsultaSessao::class);
+        $this->app->bind(GerirSessaoEbi::class, GerenciadorSessaoEbi::class);
     }
 }

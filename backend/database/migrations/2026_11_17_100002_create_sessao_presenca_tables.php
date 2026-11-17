@@ -34,7 +34,7 @@ return new class extends Migration
             $table->ulid('id')->primary();
             $table->foreignUlid('sessao_id')->constrained('sessao');
             $table->foreignUlid('autor_id')->constrained('usuarios');
-            $table->text('motivo');
+            $table->text('motivo')->nullable();
             $table->json('antes');
             $table->json('depois');
             $table->timestampTz('ocorrido_em');
