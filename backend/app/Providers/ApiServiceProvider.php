@@ -4,11 +4,14 @@ namespace App\Providers;
 
 use App\Domain\Identidade\Support\Operacoes;
 use App\Policies\AccessGrantPolicy;
+use App\Policies\AgendaPolicy;
 use App\Policies\AuditoriaPolicy;
 use App\Policies\ConsentimentoPolicy;
 use App\Policies\ConvitePolicy;
 use App\Policies\OrganizacaoPolicy;
 use App\Policies\ParticipantePolicy;
+use App\Policies\PresencaPolicy;
+use App\Policies\SessaoPolicy;
 use App\Policies\UsuarioPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -42,5 +45,13 @@ class ApiServiceProvider extends ServiceProvider
         Gate::define(Operacoes::EXCECAO_DECIDIR, [ParticipantePolicy::class, 'decidirExcecao']);
         Gate::define(Operacoes::EXCECAO_LER, [ParticipantePolicy::class, 'lerExcecao']);
         Gate::define(Operacoes::EVIDENCIA_LER, [ParticipantePolicy::class, 'lerEvidencia']);
+
+        // E04 — Agenda, sessões e presença (RF-06, RF-08).
+        Gate::define(Operacoes::AGENDA_GERENCIAR, [AgendaPolicy::class, 'gerenciar']);
+        Gate::define(Operacoes::SESSAO_LER, [SessaoPolicy::class, 'ler']);
+        Gate::define(Operacoes::SESSAO_GERENCIAR, [SessaoPolicy::class, 'gerenciar']);
+        Gate::define(Operacoes::PRESENCA_LER, [PresencaPolicy::class, 'ler']);
+        Gate::define(Operacoes::PRESENCA_REGISTRAR, [PresencaPolicy::class, 'registrar']);
+        Gate::define(Operacoes::PRESENCA_ESTORNAR, [PresencaPolicy::class, 'estornar']);
     }
 }
