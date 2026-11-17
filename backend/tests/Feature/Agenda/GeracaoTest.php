@@ -6,6 +6,8 @@ use App\Domain\Sessoes\Contracts\GerarSessoesPrevistas;
 use App\Domain\Sessoes\Models\Sessao;
 use App\Support\ProblemException;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Cache;
 
 beforeEach(function () {
     ['igreja' => $this->igreja, 'ebi' => $this->ebi] = igrejaComEbi();
@@ -89,8 +91,10 @@ it('recusa intervalo maior que doze semanas', function () {
 
 it('o comando gera para todas as EBIs ativas', function () {
     $outra = igrejaComEbi()['ebi'];
+    $inativa = igrejaComEbi()['ebi'];
+    $inativa->update(['status' => 'inativo']);
 
-    foreach ([$this->ebi, $outra] as $ebi) {
+    foreach ([$this->ebi, $outra, $inativa] as $ebi) {
         AgendaEbi::factory()->create([
             'ebi_id' => $ebi->id,
             'dia_semana' => now()->dayOfWeekIso,
@@ -100,7 +104,9 @@ it('o comando gera para todas as EBIs ativas', function () {
 
     $this->artisan('sessoes:gerar', ['--dias' => 7])->assertSuccessful();
 
-    expect(Sessao::query()->count())->toBeGreaterThanOrEqual(2);
+    expect(Sessao::query()->where('ebi_id', $this->ebi->id)->exists())->toBeTrue()
+        ->and(Sessao::query()->where('ebi_id', $outra->id)->exists())->toBeTrue()
+        ->and(Sessao::query()->where('ebi_id', $inativa->id)->exists())->toBeFalse();
 });
 
 it('auxiliar nao gera sessoes', function () {
@@ -186,3 +192,61 @@ it('aceita apenas ate usando hoje como inicio', function () {
         'ate' => '2026-11-22',
     ], ($this->auth)())->assertCreated()->assertJsonPath('de', '2026-11-16')->assertJsonPath('ate', '2026-11-22');
 });
+
+it('recusa geracao concorrente na mesma EBI sem bloquear outra EBI e libera o lock', function () {
+    $outra = igrejaComEbi()['ebi'];
+    $lock = Cache::lock("sessoes:gerar:{$this->ebi->id}", 60);
+    expect($lock->get())->toBeTrue();
+
+    try {
+        expect(app(GerarSessoesPrevistas::class)->gerar($outra->id, '2026-11-16', '2026-11-16')->criadas)->toBe(0);
+        $this->postJson("/api/v1/ebis/{$this->ebi->id}/sessions/generate", [
+            'de' => '2026-11-16', 'ate' => '2026-11-16',
+        ], ($this->auth)())->assertStatus(409)->assertJsonPath('code', 'geracao_em_andamento')
+            ->assertJsonPath('title', 'Conflito')
+            ->assertJsonPath('detail', 'Já existe uma geração em andamento para esta EBI.');
+    } finally {
+        $lock->release();
+    }
+
+    expect(app(GerarSessoesPrevistas::class)->gerar($this->ebi->id, '2026-11-16', '2026-11-16')->criadas)->toBe(0);
+    $livre = Cache::lock("sessoes:gerar:{$this->ebi->id}", 60);
+    try {
+        expect($livre->get())->toBeTrue();
+    } finally {
+        $livre->release();
+    }
+});
+
+it('recupera apenas a violacao unica do inicio da sessao', function (string $mensagem, bool $ignorar) {
+    AgendaEbi::factory()->create([
+        'ebi_id' => $this->ebi->id,
+        'dia_semana' => 1,
+        'inicio_vigencia' => '2026-01-01',
+    ]);
+    $dispatcher = Sessao::getEventDispatcher();
+    Sessao::setEventDispatcher(clone $dispatcher);
+    $causa = new PDOException($mensagem);
+    $causa->errorInfo = [str_contains($mensagem, 'duplicate') ? '23505' : '23000', null, $mensagem];
+    $erro = new QueryException('testing', 'insert into sessao (...)', [], $causa);
+    Sessao::creating(fn () => throw $erro);
+
+    try {
+        $gerar = fn () => app(GerarSessoesPrevistas::class)->gerar($this->ebi->id, '2026-11-16', '2026-11-16');
+        if ($ignorar) {
+            $resultado = $gerar();
+            expect($resultado->criadas)->toBe(0)->and($resultado->ignoradas)->toBe(1);
+            expect(EventoAuditoria::query()->where('acao', 'sessao.gerada')->count())->toBe(1);
+        } else {
+            expect($gerar)->toThrow($erro);
+            expect(EventoAuditoria::query()->where('acao', 'sessao.gerada')->count())->toBe(0);
+        }
+    } finally {
+        Sessao::setEventDispatcher($dispatcher);
+    }
+})->with([
+    'postgres inicio' => ['duplicate key value violates unique constraint "sessao_ebi_inicio_unico"', true],
+    'sqlite inicio' => ['UNIQUE constraint failed: sessao.ebi_id, sessao.inicio_previsto', true],
+    'outra unique' => ['duplicate key value violates unique constraint "sessao_pkey"', false],
+    'foreign key' => ['foreign key constraint failed on sessao', false],
+]);
