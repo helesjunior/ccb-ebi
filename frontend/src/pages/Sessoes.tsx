@@ -52,6 +52,7 @@ export function Sessoes({ onAbrirPresenca, papeis }: {
   const consulta = useRef<AbortController | null>(null)
   const podeGerenciar = papeis.some((p) => ['adm_igreja', 'coordenadora'].includes(p))
   const periodoValido = Boolean(de && ate && de <= ate)
+  const motivoValido = motivo.trim().length >= 3 && motivo.trim().length <= 500
 
   useEffect(() => {
     const controller = new AbortController()
@@ -141,7 +142,7 @@ export function Sessoes({ onAbrirPresenca, papeis }: {
 
   async function salvar(acao: Acao | 'abrir', sessao: Sessao, realizada?: boolean) {
     if (!podeGerenciar || !sessao.id) return
-    if ((acao === 'cancelar' || acao === 'corrigir') && !motivo.trim()) return
+    if ((acao === 'cancelar' || acao === 'corrigir') && !motivoValido) return
     setErro(null)
     setEnviando(true)
     const options = { params: { path: { id: sessao.id } }, headers: cabecalhos() }
@@ -291,14 +292,14 @@ export function Sessoes({ onAbrirPresenca, papeis }: {
               <div className="flex flex-col gap-2"><Label htmlFor="sessao-auxiliares">Auxiliares escalados</Label><Input id="sessao-auxiliares" type="number" min="0" step="1" value={auxiliares} onChange={(e) => setAuxiliares(e.target.value)} disabled={enviando} /></div>
             </>}
             {dialogo && dialogo.acao !== 'encerrar' && (
-              <div className="flex flex-col gap-2"><Label htmlFor="sessao-motivo">Motivo (obrigatório)</Label><Input id="sessao-motivo" value={motivo} onChange={(e) => setMotivo(e.target.value)} required disabled={enviando} /></div>
+              <div className="flex flex-col gap-2"><Label htmlFor="sessao-motivo">Motivo (3 a 500 caracteres)</Label><Input id="sessao-motivo" value={motivo} onChange={(e) => setMotivo(e.target.value)} minLength={3} maxLength={500} required disabled={enviando} /></div>
             )}
             <DialogFooter>
               <Button type="button" variant="outline" disabled={enviando} onClick={() => setDialogo(null)}>Voltar</Button>
               {dialogo?.acao === 'encerrar' ? <>
                 <Button type="button" variant="outline" disabled={enviando} onClick={() => void salvar('encerrar', dialogo.sessao, false)}>Não realizada</Button>
                 <Button type="button" disabled={enviando} onClick={() => void salvar('encerrar', dialogo.sessao, true)}>Realizada</Button>
-              </> : <Button type="submit" disabled={enviando || !motivo.trim()}>{enviando ? 'Salvando…' : 'Confirmar'}</Button>}
+              </> : <Button type="submit" disabled={enviando || !motivoValido}>{enviando ? 'Salvando…' : 'Confirmar'}</Button>}
             </DialogFooter>
           </form>
         </DialogContent>
