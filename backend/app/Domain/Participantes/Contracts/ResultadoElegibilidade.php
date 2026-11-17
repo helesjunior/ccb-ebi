@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domain\Participantes\Services;
+namespace App\Domain\Participantes\Contracts;
 
 /**
  * Resultado da checagem de elegibilidade etaria: permitido + motivo tecnico
