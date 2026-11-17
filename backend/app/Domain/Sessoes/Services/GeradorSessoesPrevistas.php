@@ -27,8 +27,8 @@ class GeradorSessoesPrevistas implements GerarSessoesPrevistas
     {
         try {
             return Cache::lock("sessoes:gerar:{$ebiId}", 60)->block(10, function () use ($ebiId, $de, $ate): ResultadoGeracao {
-                $primeiroDia = CarbonImmutable::createFromFormat('!Y-m-d', $de);
-                $ultimoDia = CarbonImmutable::createFromFormat('!Y-m-d', $ate);
+                $primeiroDia = CarbonImmutable::parse($de);
+                $ultimoDia = CarbonImmutable::parse($ate);
                 if ($ultimoDia->lt($primeiroDia) || $ultimoDia->gt($primeiroDia->addDays(84))) {
                     throw new ProblemException('intervalo_invalido', 'Dados inválidos', 422, 'O intervalo deve ser ordenado e não pode exceder 84 dias.');
                 }
@@ -41,8 +41,8 @@ class GeradorSessoesPrevistas implements GerarSessoesPrevistas
 
                     for ($dia = $primeiroDia; $dia->lte($ultimoDia); $dia = $dia->addDay()) {
                         foreach ($this->agenda->ocorrenciasDoDia($ebiId, $dia->toDateString()) as $ocorrencia) {
-                            $inicio = CarbonImmutable::createFromFormat('!Y-m-d H:i', "{$ocorrencia->data} {$ocorrencia->horaInicio}", $ebi->timezone)->utc();
-                            $fim = CarbonImmutable::createFromFormat('!Y-m-d H:i', "{$ocorrencia->data} {$ocorrencia->horaFim}", $ebi->timezone)->utc();
+                            $inicio = CarbonImmutable::parse("{$ocorrencia->data} {$ocorrencia->horaInicio}", $ebi->timezone)->utc();
+                            $fim = CarbonImmutable::parse("{$ocorrencia->data} {$ocorrencia->horaFim}", $ebi->timezone)->utc();
 
                             $mesmoInicio = Sessao::query()->where('ebi_id', $ebiId)->where('inicio_previsto', $inicio)->exists();
                             $sobreposta = Sessao::query()->where('ebi_id', $ebiId)
@@ -85,7 +85,7 @@ class GeradorSessoesPrevistas implements GerarSessoesPrevistas
                     $this->auditoria->registrar([
                         'acao' => 'sessao.gerada',
                         'recurso' => 'sessao',
-                        'ator_id' => auth()->id(),
+                        'ator_id' => auth()->id() === null ? null : (string) auth()->id(),
                         'origem' => auth()->check() ? 'api' : 'console',
                         'escopo' => "ebi:{$ebiId}",
                         'motivo' => null,

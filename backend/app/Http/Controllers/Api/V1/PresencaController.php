@@ -64,7 +64,7 @@ class PresencaController
             ];
         }, $candidatos);
         $this->auditoria->registrar([
-            'acao' => 'participante.buscado', 'recurso' => 'participante', 'ator_id' => (string) $request->user()->id,
+            'acao' => 'participante.buscado', 'recurso' => 'participante', 'ator_id' => (string) $request->user()?->getAuthIdentifier(),
             'origem' => 'api', 'escopo' => "ebi:{$sessao->ebiId}", 'motivo' => $finalidade,
             'metadados_minimizados' => ['termo' => $termo, 'sessao_id' => $id, 'participante_ids' => array_column($data, 'id')],
         ]);
@@ -77,7 +77,7 @@ class PresencaController
         $sessao = $this->sessao($id);
         Gate::authorize(Operacoes::PRESENCA_REGISTRAR, ['ebi', $sessao->ebiId]);
         $dados = $request->validated();
-        $resultado = $this->registrador->registrar($id, $dados['participante_id'], (string) $request->user()->id, $dados['origem'] ?? 'web');
+        $resultado = $this->registrador->registrar($id, $dados['participante_id'], (string) $request->user()?->getAuthIdentifier(), $dados['origem'] ?? 'web');
 
         return response()->json([
             'presenca' => (new PresencaResource($resultado->presenca))->resolve($request), 'aviso' => $resultado->aviso,
@@ -89,7 +89,7 @@ class PresencaController
         $sessao = $this->sessao($id);
         Gate::authorize(Operacoes::SESSAO_GERENCIAR, ['ebi', $sessao->ebiId]);
         $dados = $request->validated();
-        $resultado = $this->registrador->registrarContingencia($id, $dados['participante_id'], $dados['motivo'], (string) $request->user()->id);
+        $resultado = $this->registrador->registrarContingencia($id, $dados['participante_id'], $dados['motivo'], (string) $request->user()?->getAuthIdentifier());
 
         return response()->json([
             'presenca' => (new PresencaResource($resultado->presenca))->resolve($request),
@@ -109,7 +109,7 @@ class PresencaController
         $ebiId = $this->consulta->ebiDaPresenca($id)
             ?? throw new ProblemException('not_found', 'Recurso não encontrado', 404);
         Gate::authorize(Operacoes::PRESENCA_ESTORNAR, ['ebi', $ebiId]);
-        $presenca = $this->estornador->estornar($id, $request->validated('motivo'), (string) $request->user()->id);
+        $presenca = $this->estornador->estornar($id, $request->validated('motivo'), (string) $request->user()?->getAuthIdentifier());
 
         return response()->json((new PresencaResource($presenca))->resolve($request));
     }

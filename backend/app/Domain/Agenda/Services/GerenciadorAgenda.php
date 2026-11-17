@@ -143,6 +143,7 @@ class GerenciadorAgenda implements GerirAgenda
         $faixa->update(['fim_vigencia' => today()->subDay()->toDateString()]);
     }
 
+    /** @param array<string, mixed> $dados */
     private function validar(array $dados): void
     {
         if ($dados['hora_fim'] <= $dados['hora_inicio']
@@ -151,6 +152,7 @@ class GerenciadorAgenda implements GerirAgenda
         }
     }
 
+    /** @param array<string, mixed> $dados */
     private function validarSobreposicao(string $ebiId, array $dados, ?string $ignorar = null): void
     {
         $query = AgendaEbi::query()->where('ebi_id', $ebiId)->where('dia_semana', $dados['dia_semana'])

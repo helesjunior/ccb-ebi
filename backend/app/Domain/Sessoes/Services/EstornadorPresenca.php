@@ -42,7 +42,7 @@ class EstornadorPresenca implements EstornarPresenca
             return new PresencaRegistrada(
                 (string) $p->id, $p->sessao_id, $p->participante_id, $participante?->nome, $participante?->matricula,
                 $p->registrado_por, $p->registrado_em->toIso8601String(), $p->origem, $p->status,
-                $p->estornado_em->toIso8601String(), $p->motivo_estorno,
+                $p->estornado_em?->toIso8601String(), $p->motivo_estorno,
             );
         });
     }

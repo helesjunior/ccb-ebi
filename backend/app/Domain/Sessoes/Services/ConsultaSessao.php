@@ -22,8 +22,8 @@ class ConsultaSessao implements ConsultarSessao
             'ate' => ['required', 'date_format:Y-m-d', 'after_or_equal:de'],
             'status' => ['nullable', Rule::in(['prevista', 'aberta', 'encerrada', 'cancelada'])],
         ])->validate();
-        $inicio = CarbonImmutable::createFromFormat('!Y-m-d', $de, 'UTC');
-        $fim = CarbonImmutable::createFromFormat('!Y-m-d', $ate, 'UTC');
+        $inicio = CarbonImmutable::parse($de, 'UTC');
+        $fim = CarbonImmutable::parse($ate, 'UTC');
         if ($fim->gt($inicio->addDays(92))) {
             throw new ProblemException('intervalo_invalido', 'Dados inválidos', 422, 'O intervalo não pode exceder 92 dias.');
         }
@@ -54,7 +54,7 @@ class ConsultaSessao implements ConsultarSessao
             $sessao->inicio_previsto->copy()->utc()->toIso8601String(), $sessao->fim_previsto->copy()->utc()->toIso8601String(),
             $sessao->inicio_real?->copy()->utc()->toIso8601String(), $sessao->fim_real?->copy()->utc()->toIso8601String(),
             $sessao->tema, $sessao->passagem_biblica, $sessao->status, $sessao->realizada,
-            $sessao->motivo_cancelamento, $sessao->auxiliares_escalados, (int) $sessao->presentes,
+            $sessao->motivo_cancelamento, $sessao->auxiliares_escalados, (int) $sessao->getAttribute('presentes'),
         );
     }
 }

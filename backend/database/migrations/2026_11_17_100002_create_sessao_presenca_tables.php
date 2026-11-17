@@ -14,10 +14,10 @@ return new class extends Migration
             $table->foreignUlid('ebi_id')->constrained('ebis');
             $table->foreignUlid('igreja_id')->constrained('igrejas');
             $table->foreignUlid('agenda_ebi_id')->nullable()->constrained('agenda_ebi');
-            $table->timestampTz('inicio_previsto');
-            $table->timestampTz('fim_previsto');
-            $table->timestampTz('inicio_real')->nullable();
-            $table->timestampTz('fim_real')->nullable();
+            $table->dateTimeTz('inicio_previsto');
+            $table->dateTimeTz('fim_previsto');
+            $table->dateTimeTz('inicio_real')->nullable();
+            $table->dateTimeTz('fim_real')->nullable();
             $table->string('tema')->nullable();
             $table->string('passagem_biblica')->nullable();
             $table->string('status')->default('prevista');
@@ -37,7 +37,7 @@ return new class extends Migration
             $table->text('motivo')->nullable();
             $table->json('antes');
             $table->json('depois');
-            $table->timestampTz('ocorrido_em');
+            $table->dateTimeTz('ocorrido_em');
             $table->timestamps();
         });
 
@@ -46,11 +46,11 @@ return new class extends Migration
             $table->foreignUlid('sessao_id')->constrained('sessao');
             $table->foreignUlid('participante_id')->constrained('participante');
             $table->foreignUlid('registrado_por')->constrained('usuarios');
-            $table->timestampTz('registrado_em');
+            $table->dateTimeTz('registrado_em');
             $table->string('origem');
             $table->string('status')->default('valida');
             $table->foreignUlid('estornado_por')->nullable()->constrained('usuarios');
-            $table->timestampTz('estornado_em')->nullable();
+            $table->dateTimeTz('estornado_em')->nullable();
             $table->text('motivo_estorno')->nullable();
             $table->timestamps();
             $table->index(['sessao_id', 'status']);

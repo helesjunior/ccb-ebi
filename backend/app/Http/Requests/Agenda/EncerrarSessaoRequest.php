@@ -11,6 +11,7 @@ class EncerrarSessaoRequest extends FormRequest
         return true;
     }
 
+    /** @return array<string, mixed> */
     public function rules(): array
     {
         return ['realizada' => ['required', 'boolean'], 'fim_real' => ['nullable', 'date']];

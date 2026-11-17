@@ -29,8 +29,8 @@ class ConsultaAgenda implements ConsultarAgenda
 
                 return new OcorrenciaAgenda(
                     (string) $faixa->id, $ebiId, $dataIso,
-                    substr($especial?->hora_inicio ?? $faixa->hora_inicio, 0, 5),
-                    substr($especial?->hora_fim ?? $faixa->hora_fim, 0, 5),
+                    substr($especial->hora_inicio ?? $faixa->hora_inicio, 0, 5),
+                    substr($especial->hora_fim ?? $faixa->hora_fim, 0, 5),
                 );
             })->values()->all();
     }

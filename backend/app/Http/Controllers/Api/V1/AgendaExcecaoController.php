@@ -35,7 +35,7 @@ class AgendaExcecaoController
         $excecao = DB::transaction(function () use ($request, $id) {
             $excecao = $this->gerir->criarExcecao($id, $request->validated());
             if (in_array($excecao->tipo, ['feriado', 'cancelamento'], true)) {
-                $this->cancelar->naData($id, $excecao->data, $excecao->motivo, (string) $request->user()->getAuthIdentifier());
+                $this->cancelar->naData($id, $excecao->data, $excecao->motivo, (string) $request->user()?->getAuthIdentifier());
             }
 
             return $excecao;

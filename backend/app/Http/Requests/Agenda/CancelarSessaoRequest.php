@@ -11,6 +11,7 @@ class CancelarSessaoRequest extends FormRequest
         return true;
     }
 
+    /** @return array<string, mixed> */
     public function rules(): array
     {
         return ['motivo' => ['required', 'string', 'min:3', 'max:500']];

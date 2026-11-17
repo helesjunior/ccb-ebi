@@ -9,11 +9,13 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /** @mixin SessaoEbi */
 class SessaoResource extends JsonResource
 {
+    /** @param array<string, mixed>|null $equipeMinima */
     public function __construct($resource, private readonly ?array $equipeMinima = null)
     {
         parent::__construct($resource);
     }
 
+    /** @return array<string, mixed> */
     public function toArray(Request $request): array
     {
         return [

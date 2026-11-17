@@ -59,7 +59,7 @@ class SessaoController
     {
         $this->autorizar($id, Operacoes::SESSAO_GERENCIAR);
 
-        return (new SessaoResource($this->gerir->abrir($id, (string) $request->user()->id)))->response();
+        return (new SessaoResource($this->gerir->abrir($id, (string) $request->user()?->getAuthIdentifier())))->response();
     }
 
     public function close(EncerrarSessaoRequest $request, string $id): Response
@@ -67,21 +67,21 @@ class SessaoController
         $this->autorizar($id, Operacoes::SESSAO_GERENCIAR);
         $dados = $request->validated();
 
-        return (new SessaoResource($this->gerir->encerrar($id, (bool) $dados['realizada'], $dados['fim_real'] ?? null, (string) $request->user()->id)))->response();
+        return (new SessaoResource($this->gerir->encerrar($id, (bool) $dados['realizada'], $dados['fim_real'] ?? null, (string) $request->user()?->getAuthIdentifier())))->response();
     }
 
     public function cancel(CancelarSessaoRequest $request, string $id): Response
     {
         $this->autorizar($id, Operacoes::SESSAO_GERENCIAR);
 
-        return (new SessaoResource($this->gerir->cancelar($id, $request->validated('motivo'), (string) $request->user()->id)))->response();
+        return (new SessaoResource($this->gerir->cancelar($id, $request->validated('motivo'), (string) $request->user()?->getAuthIdentifier())))->response();
     }
 
     public function update(CorrigirSessaoRequest $request, string $id): Response
     {
         $this->autorizar($id, Operacoes::SESSAO_GERENCIAR);
 
-        return (new SessaoResource($this->gerir->corrigir($id, $request->validated(), (string) $request->user()->id)))->response();
+        return (new SessaoResource($this->gerir->corrigir($id, $request->validated(), (string) $request->user()?->getAuthIdentifier())))->response();
     }
 
     private function autorizar(string $id, string $operacao): SessaoEbi
@@ -96,7 +96,7 @@ class SessaoController
     {
         $dados = $request->validated();
         $de = $dados['de'] ?? CarbonImmutable::today()->toDateString();
-        $ate = $dados['ate'] ?? CarbonImmutable::createFromFormat('!Y-m-d', $de)->addWeeks((int) ($dados['semanas'] ?? 4))->toDateString();
+        $ate = $dados['ate'] ?? CarbonImmutable::parse($de)->addWeeks((int) ($dados['semanas'] ?? 4))->toDateString();
 
         return response()->json($this->gerador->gerar($id, $de, $ate), 201);
     }

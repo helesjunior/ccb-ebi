@@ -31,7 +31,7 @@ class HistoricoPresencaController
     {
         $this->participantes->encontrar($id)
             ?? throw new ProblemException('not_found', 'Recurso não encontrado', 404);
-        $this->autorizacao->exigirResponsavel((string) $request->user()->id, $id);
+        $this->autorizacao->exigirResponsavel((string) $request->user()?->getAuthIdentifier(), $id);
 
         return $this->historico($request, $id);
     }

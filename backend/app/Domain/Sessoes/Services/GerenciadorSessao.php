@@ -31,7 +31,7 @@ class GerenciadorSessao implements GerirSessaoEbi
             $sessao->save();
             $this->auditar($sessao, 'sessao.aberta', $autorId);
 
-            return $this->consulta->detalhe($sessaoId);
+            return $this->consulta->detalhe($sessaoId) ?? throw new ProblemException('not_found', 'Recurso nao encontrado', 404);
         });
     }
 
@@ -47,7 +47,7 @@ class GerenciadorSessao implements GerirSessaoEbi
             $sessao->save();
             $this->auditar($sessao, 'sessao.encerrada', $autorId, metadados: ['realizada' => $realizada]);
 
-            return $this->consulta->detalhe($sessaoId);
+            return $this->consulta->detalhe($sessaoId) ?? throw new ProblemException('not_found', 'Recurso nao encontrado', 404);
         });
     }
 
@@ -60,7 +60,7 @@ class GerenciadorSessao implements GerirSessaoEbi
             $sessao->update(['status' => Sessao::STATUS_CANCELADA, 'motivo_cancelamento' => $motivo, 'cancelada_por' => $autorId]);
             $this->auditar($sessao, 'sessao.cancelada', $autorId, $motivo);
 
-            return $this->consulta->detalhe($sessaoId);
+            return $this->consulta->detalhe($sessaoId) ?? throw new ProblemException('not_found', 'Recurso nao encontrado', 404);
         });
     }
 
@@ -104,7 +104,7 @@ class GerenciadorSessao implements GerirSessaoEbi
             ]);
             $this->auditar($sessao, 'sessao.corrigida', $autorId, $motivo);
 
-            return $this->consulta->detalhe($sessaoId);
+            return $this->consulta->detalhe($sessaoId) ?? throw new ProblemException('not_found', 'Recurso nao encontrado', 404);
         });
     }
 
@@ -127,6 +127,7 @@ class GerenciadorSessao implements GerirSessaoEbi
         }
     }
 
+    /** @param array<string, mixed> $metadados */
     private function auditar(Sessao $sessao, string $acao, string $autorId, ?string $motivo = null, array $metadados = []): void
     {
         $this->auditoria->registrar([
