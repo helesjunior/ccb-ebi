@@ -13,6 +13,15 @@ export function formatarData(valor?: string | null): string {
   return Number.isNaN(data.getTime()) ? valor : data.toLocaleDateString('pt-BR')
 }
 
+/** `2026-11-18T13:00:00Z` → `13:00` (hora local do navegador). */
+export function formatarHora(valor?: string | null): string {
+  if (!valor) return '—'
+  const data = new Date(valor)
+  return Number.isNaN(data.getTime())
+    ? valor
+    : data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+}
+
 /** Data-hora ISO → `05/03/2018 14:30`. */
 export function formatarDataHora(valor?: string | null): string {
   if (!valor) return '—'
@@ -72,6 +81,15 @@ const STATUS: Record<string, string> = {
   aceito: 'Aceito',
   retirado: 'Retirado',
   mesclado: 'Mesclado',
+  prevista: 'Prevista',
+  aberta: 'Aberta',
+  encerrada: 'Encerrada',
+  cancelada: 'Cancelada',
+  valida: 'Válida',
+  estornada: 'Estornada',
+  feriado: 'Feriado',
+  cancelamento: 'Cancelamento',
+  horario_especial: 'Horário especial',
 }
 
 /** Rótulo de status; códigos desconhecidos aparecem com o `_` trocado por espaço. */
