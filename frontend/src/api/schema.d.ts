@@ -758,6 +758,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/ebis": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * EBIs que o usuário pode operar
+         * @description Vínculos vigentes do usuário em escopos do tipo `ebi`, para o seletor de EBI da área de sessões (RF-06).
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description EBIs disponíveis para o usuário */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["EbiResumo"][];
+                        };
+                    };
+                };
+                401: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/users": {
         parameters: {
             query?: never;
@@ -1126,14 +1171,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/sessions/{sessionId}/attendance": {
+    "/sessions/{id}/attendance": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Presenças da sessão */
+        get: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                };
+                path: {
+                    id: components["parameters"]["SessaoId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Presenças da sessão */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["Presenca"][];
+                        };
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+            };
+        };
         put?: never;
         /**
          * Registrar presença
@@ -1143,20 +1218,18 @@ export interface paths {
             parameters: {
                 query?: never;
                 header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
                     "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
                 };
                 path: {
-                    sessionId: components["parameters"]["SessionId"];
+                    id: components["parameters"]["SessaoId"];
                 };
                 cookie?: never;
             };
             requestBody: {
                 content: {
-                    "application/json": {
-                        participantId: string;
-                        /** @enum {string} */
-                        origin?: "web" | "app";
-                    };
+                    "application/json": components["schemas"]["PresencaRegistroInput"];
                 };
             };
             responses: {
@@ -1173,17 +1246,16 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["Attendance"];
+                        "application/json": {
+                            presenca?: components["schemas"]["Presenca"];
+                            aviso?: string | null;
+                        };
                     };
                 };
                 403: components["responses"]["Problem"];
-                /** @description Participante inelegível pela idade, ou sessão não aberta */
-                422: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
+                404: components["responses"]["Problem"];
+                409: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
             };
         };
         delete?: never;
@@ -1750,6 +1822,793 @@ export interface paths {
         };
         trace?: never;
     };
+    "/ebis/{id}/agenda": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Faixas semanais da agenda do EBI */
+        get: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                };
+                path: {
+                    id: components["parameters"]["EbiId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Faixas semanais do EBI (vigentes e encerradas) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["AgendaEbi"][];
+                        };
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        /** Criar faixa semanal na agenda do EBI */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: components["parameters"]["EbiId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["AgendaEbiInput"];
+                };
+            };
+            responses: {
+                /** @description Faixa criada */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AgendaEbi"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/agenda/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Encerrar faixa semanal */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: components["parameters"]["AgendaId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Faixa encerrada */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Alterar faixa semanal */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: components["parameters"]["AgendaId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["AgendaEbiUpdateInput"];
+                };
+            };
+            responses: {
+                /** @description Faixa atualizada */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AgendaEbi"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        trace?: never;
+    };
+    "/ebis/{id}/agenda-exceptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Exceções da agenda do EBI */
+        get: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                };
+                path: {
+                    id: components["parameters"]["EbiId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Exceções cadastradas (feriados, cancelamentos e horários especiais) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["AgendaExcecao"][];
+                        };
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        /** Criar exceção na agenda do EBI */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: components["parameters"]["EbiId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["AgendaExcecaoInput"];
+                };
+            };
+            responses: {
+                /** @description Exceção criada */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AgendaExcecao"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/agenda-exceptions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remover exceção da agenda */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: components["parameters"]["ExcecaoAgendaId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Exceção removida */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ebis/{id}/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Sessões do EBI no período
+         * @description Exige `de` e `ate` (datas ISO); intervalo máximo de 92 dias. Resultado ordenado por `inicio_previsto`.
+         */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Início do intervalo (inclusive). */
+                    de: string;
+                    /** @description Fim do intervalo (inclusive), no máximo 92 dias após `de`. */
+                    ate: string;
+                };
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                };
+                path: {
+                    id: components["parameters"]["EbiId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Sessões do EBI no período, ordenadas por `inicio_previsto` */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["Sessao"][];
+                        };
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ebis/{id}/sessions/generate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Gerar sessões previstas
+         * @description Gera as sessões previstas a partir das faixas da agenda, aplicando as exceções do período. Aceita `de?`, `ate?` e `semanas?` (padrão 4 semanas, máximo 12). Idempotente: sessões previstas já existentes para a mesma janela não são duplicadas.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: components["parameters"]["EbiId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: date */
+                        de?: string;
+                        /** Format: date */
+                        ate?: string;
+                        /** @default 4 */
+                        semanas?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Sessões previstas geradas (contagem de criadas e ignoradas) */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GeracaoSessoes"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Detalhe da sessão */
+        get: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                };
+                path: {
+                    id: components["parameters"]["SessaoId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Sessão com o resumo de equipe mínima */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SessaoDetalhe"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Correção da sessão
+         * @description Corrige dados da sessão (`tema`, `passagem_biblica`, `inicio_real`, `fim_real`, `realizada`, `auxiliares_escalados`). `motivo` é obrigatório quando a sessão está `encerrada`.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: components["parameters"]["SessaoId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SessaoCorrecaoInput"];
+                };
+            };
+            responses: {
+                /** @description Sessão atualizada */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Sessao"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                409: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        trace?: never;
+    };
+    "/sessions/{id}/open": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Abrir a sessão */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: components["parameters"]["SessaoId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Sessão aberta */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Sessao"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                409: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/{id}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Encerrar a sessão
+         * @description Exige `realizada` (boolean) e aceita `fim_real?`. Transita a sessão para `encerrada`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: components["parameters"]["SessaoId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SessaoFechamentoInput"];
+                };
+            };
+            responses: {
+                /** @description Sessão encerrada */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Sessao"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                409: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancelar a sessão */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: components["parameters"]["SessaoId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SessaoCancelamentoInput"];
+                };
+            };
+            responses: {
+                /** @description Sessão cancelada */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Sessao"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                409: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/{id}/participants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Buscar participantes elegíveis na sessão (finalidade obrigatória)
+         * @description Busca por nome (mínimo 3 caracteres) entre os participantes elegíveis para registro de presença na sessão, devolvendo no máximo 20 resultados. Exige a finalidade declarada (`finalidade`), registrada na auditoria.
+         */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Termo de busca pelo nome (mínimo 3 caracteres). */
+                    busca: string;
+                    /** @description Finalidade declarada da leitura identificável (matriz `*` da leitura), registrada na auditoria. Não reusa a finalidade do termo de consentimento. */
+                    finalidade: components["parameters"]["FinalidadeLeitura"];
+                };
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                };
+                path: {
+                    id: components["parameters"]["SessaoId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Candidatos elegíveis (no máximo 20 resultados) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["CandidatoPresenca"][];
+                        };
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/{id}/contingency-attendance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Lançar presença de lista em papel
+         * @description Registro contingencial de presença em papel, com motivo obrigatório. Escrita idempotente (`Idempotency-Key`).
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: components["parameters"]["SessaoId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PresencaContingenciaInput"];
+                };
+            };
+            responses: {
+                /** @description Presença contingencial registrada */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            presenca?: components["schemas"]["Presenca"];
+                        };
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                409: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/attendance/{id}/reversal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Estornar presença
+         * @description Estorna uma presença válida, com motivo obrigatório; a presença passa a `estornada` e o motivo é registrado. Escrita idempotente (`Idempotency-Key`).
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: components["parameters"]["PresencaId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["EstornoInput"];
+                };
+            };
+            responses: {
+                /** @description Presença estornada */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Presenca"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                409: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/central": {
         parameters: {
             query?: never;
@@ -2229,6 +3088,55 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/participants/{id}/attendance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Histórico de presenças (operador)
+         * @description Histórico de presenças do participante, do mais recente ao mais antigo.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                };
+                path: {
+                    id: components["parameters"]["ParticipanteId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Histórico de presenças do participante */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["HistoricoPresenca"][];
+                        };
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/participants/{id}/guardians": {
         parameters: {
             query?: never;
@@ -2316,6 +3224,52 @@ export interface paths {
                     };
                 };
                 401: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/participants/{id}/attendance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Histórico de presenças do dependente (autorização por propriedade, CA-04)
+         * @description Histórico de presenças de um participante representado pelo responsável autenticado (vínculo `aprovada` e vigente).
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: components["parameters"]["ParticipanteId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Histórico de presenças do dependente */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["HistoricoPresenca"][];
+                        };
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
             };
         };
         put?: never;
@@ -2759,17 +3713,6 @@ export interface components {
                 redis?: "ok" | "fail";
             };
         };
-        Attendance: {
-            id?: string;
-            sessionId?: string;
-            participantId?: string;
-            /** @enum {string} */
-            status?: "valid" | "reversed";
-            /** @enum {string} */
-            origin?: "web" | "app";
-            /** Format: date-time */
-            recordedAt?: string;
-        };
         Church: {
             id?: string;
             codigo?: string;
@@ -3015,6 +3958,185 @@ export interface components {
         MesclagemInput: {
             duplicado_id: string;
         };
+        EbiResumo: {
+            id?: string;
+            nome?: string;
+            igreja_id?: string;
+            igreja_nome?: string;
+            timezone?: string;
+        };
+        AgendaEbi: {
+            id?: string;
+            ebi_id?: string;
+            dia_semana?: number;
+            /** @description HH:MM no fuso da igreja */
+            hora_inicio?: string;
+            hora_fim?: string;
+            /** Format: date */
+            inicio_vigencia?: string;
+            /** Format: date */
+            fim_vigencia?: string | null;
+            vigente?: boolean;
+        };
+        AgendaEbiInput: {
+            dia_semana: number;
+            hora_inicio: string;
+            hora_fim: string;
+            /** Format: date */
+            inicio_vigencia: string;
+            /** Format: date */
+            fim_vigencia?: string | null;
+        };
+        AgendaEbiUpdateInput: {
+            dia_semana?: number;
+            hora_inicio?: string;
+            hora_fim?: string;
+            /** Format: date */
+            inicio_vigencia?: string;
+            /** Format: date */
+            fim_vigencia?: string | null;
+        };
+        AgendaExcecao: {
+            id?: string;
+            ebi_id?: string;
+            agenda_ebi_id?: string | null;
+            /** Format: date */
+            data?: string;
+            /** @enum {string} */
+            tipo?: "feriado" | "cancelamento" | "horario_especial";
+            hora_inicio?: string | null;
+            hora_fim?: string | null;
+            motivo?: string;
+        };
+        AgendaExcecaoInput: {
+            /** @enum {string} */
+            tipo: "feriado" | "cancelamento" | "horario_especial";
+            /** Format: date */
+            data: string;
+            agenda_ebi_id?: string | null;
+            hora_inicio?: string | null;
+            hora_fim?: string | null;
+            motivo: string;
+        };
+        Sessao: {
+            id?: string;
+            ebi_id?: string;
+            ebi_nome?: string;
+            igreja_id?: string;
+            agenda_ebi_id?: string | null;
+            /** Format: date-time */
+            inicio_previsto?: string;
+            /** Format: date-time */
+            fim_previsto?: string;
+            /** Format: date-time */
+            inicio_real?: string | null;
+            /** Format: date-time */
+            fim_real?: string | null;
+            tema?: string | null;
+            passagem_biblica?: string | null;
+            /** @enum {string} */
+            status?: "prevista" | "aberta" | "encerrada" | "cancelada";
+            realizada?: boolean | null;
+            motivo_cancelamento?: string | null;
+            auxiliares_escalados?: number | null;
+            presentes?: number;
+        };
+        EquipeMinima: {
+            presentes?: number;
+            participantes_por_auxiliar?: number;
+            auxiliares_necessarios?: number;
+            auxiliares_informados?: number | null;
+            alerta?: boolean;
+        };
+        SessaoDetalhe: components["schemas"]["Sessao"] & {
+            equipe_minima?: components["schemas"]["EquipeMinima"];
+        };
+        SessaoFechamentoInput: {
+            realizada: boolean;
+            /** Format: date-time */
+            fim_real?: string | null;
+        };
+        SessaoCancelamentoInput: {
+            motivo: string;
+        };
+        SessaoCorrecaoInput: {
+            tema?: string | null;
+            passagem_biblica?: string | null;
+            /** Format: date-time */
+            inicio_real?: string | null;
+            /** Format: date-time */
+            fim_real?: string | null;
+            realizada?: boolean | null;
+            auxiliares_escalados?: number | null;
+            motivo?: string | null;
+        };
+        GeracaoSessoes: {
+            criadas?: number;
+            ignoradas?: number;
+            /** Format: date */
+            de?: string;
+            /** Format: date */
+            ate?: string;
+        };
+        CandidatoPresenca: {
+            id?: string;
+            nome?: string;
+            matricula?: string;
+            igreja_referencia?: {
+                id?: string;
+                nome?: string;
+            } | null;
+            elegivel?: boolean;
+            motivo_bloqueio?: string | null;
+        };
+        Presenca: {
+            id?: string;
+            sessao_id?: string;
+            participante?: {
+                id?: string;
+                nome?: string;
+                matricula?: string;
+            };
+            registrado_por?: string;
+            /** Format: date-time */
+            registrado_em?: string;
+            /** @enum {string} */
+            origem?: "web" | "app" | "contingencia";
+            /** @enum {string} */
+            status?: "valida" | "estornada";
+            /** Format: date-time */
+            estornado_em?: string | null;
+            motivo_estorno?: string | null;
+        };
+        PresencaRegistroInput: {
+            participante_id: string;
+            /**
+             * @default web
+             * @enum {string}
+             */
+            origem: "web" | "app";
+        };
+        PresencaContingenciaInput: {
+            participante_id: string;
+            motivo: string;
+        };
+        EstornoInput: {
+            motivo: string;
+        };
+        HistoricoPresenca: {
+            id?: string;
+            sessao_id?: string;
+            ebi?: {
+                id?: string;
+                nome?: string;
+            };
+            /** Format: date-time */
+            inicio_previsto?: string;
+            /** @enum {string} */
+            status?: "valida" | "estornada";
+            /** Format: date-time */
+            registrado_em?: string;
+        };
     };
     responses: {
         /** @description Erro no formato RFC 9457 */
@@ -3028,7 +4150,6 @@ export interface components {
         };
     };
     parameters: {
-        SessionId: string;
         IdempotencyKey: string;
         /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
         XActingScope: string;
@@ -3039,6 +4160,9 @@ export interface components {
         SetorId: string;
         EbiId: string;
         SessaoId: string;
+        PresencaId: string;
+        AgendaId: string;
+        ExcecaoAgendaId: string;
         UsuarioId: string;
         ConviteId: string;
         VinculoId: string;

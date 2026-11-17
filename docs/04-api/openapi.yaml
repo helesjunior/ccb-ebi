@@ -513,34 +513,59 @@ paths:
       responses:
         '204': { description: Vínculo revogado }
         '403': { $ref: '#/components/responses/Problem' }
-  /sessions/{sessionId}/attendance:
+  /sessions/{id}/attendance:
     post:
       tags: [sessions]
       summary: Registrar presença
       description: Idempotente. Aplica a regra de elegibilidade etária (RN-13 a RN-16).
+      security:
+        - bearerAuth: []
       parameters:
-        - $ref: '#/components/parameters/SessionId'
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/SessaoId'
         - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
           application/json:
-            schema:
-              type: object
-              required: [participantId]
-              properties:
-                participantId: { type: string }
-                origin: { type: string, enum: [web, app] }
+            schema: { $ref: '#/components/schemas/PresencaRegistroInput' }
       responses:
         '201':
           description: Presença registrada
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Attendance' }
+              schema:
+                type: object
+                properties:
+                  presenca: { $ref: '#/components/schemas/Presenca' }
+                  aviso: { type: [string, 'null'] }
         '200': { description: Presença já existente (mesma chave ou mesmo participante e sessão) }
         '403': { $ref: '#/components/responses/Problem' }
-        '422':
-          description: 'Participante inelegível pela idade, ou sessão não aberta'
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+    get:
+      tags: [sessions]
+      summary: Presenças da sessão
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/SessaoId'
+      responses:
+        '200':
+          description: Presenças da sessão
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Presenca' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
   /churches:
     get:
       tags: [organization]
@@ -1121,6 +1146,103 @@ paths:
         '404': { $ref: '#/components/responses/Problem' }
         '409': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/Problem' }
+  /sessions/{id}/participants:
+    get:
+      tags: [sessions]
+      summary: Buscar participantes elegíveis na sessão (finalidade obrigatória)
+      description: >-
+        Busca por nome (mínimo 3 caracteres) entre os participantes elegíveis
+        para registro de presença na sessão, devolvendo no máximo 20 resultados.
+        Exige a finalidade declarada (`finalidade`), registrada na auditoria.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/SessaoId'
+        - name: busca
+          in: query
+          required: true
+          description: Termo de busca pelo nome (mínimo 3 caracteres).
+          schema: { type: string, minLength: 3 }
+        - $ref: '#/components/parameters/FinalidadeLeitura'
+      responses:
+        '200':
+          description: Candidatos elegíveis (no máximo 20 resultados)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    maxItems: 20
+                    items: { $ref: '#/components/schemas/CandidatoPresenca' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /sessions/{id}/contingency-attendance:
+    post:
+      tags: [sessions]
+      summary: Lançar presença de lista em papel
+      description: >-
+        Registro contingencial de presença em papel, com motivo obrigatório.
+        Escrita idempotente (`Idempotency-Key`).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/SessaoId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PresencaContingenciaInput' }
+      responses:
+        '201':
+          description: Presença contingencial registrada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  presenca: { $ref: '#/components/schemas/Presenca' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /attendance/{id}/reversal:
+    post:
+      tags: [sessions]
+      summary: Estornar presença
+      description: >-
+        Estorna uma presença válida, com motivo obrigatório; a presença passa a
+        `estornada` e o motivo é registrado. Escrita idempotente
+        (`Idempotency-Key`).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/PresencaId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EstornoInput' }
+      responses:
+        '200':
+          description: Presença estornada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Presenca' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
   /central:
     get:
       tags: [organization]
@@ -1398,6 +1520,30 @@ paths:
         '403': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/Problem' }
+  /participants/{id}/attendance:
+    get:
+      tags: [participants]
+      summary: Histórico de presenças (operador)
+      description: Histórico de presenças do participante, do mais recente ao mais antigo.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/ParticipanteId'
+      responses:
+        '200':
+          description: Histórico de presenças do participante
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/HistoricoPresenca' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
   /participants/{id}/guardians:
     post:
       tags: [participants]
@@ -1449,6 +1595,31 @@ paths:
                     type: array
                     items: { $ref: '#/components/schemas/Participante' }
         '401': { $ref: '#/components/responses/Problem' }
+  /me/participants/{id}/attendance:
+    get:
+      tags: [participants]
+      summary: Histórico de presenças do dependente (autorização por propriedade, CA-04)
+      description: >-
+        Histórico de presenças de um participante representado pelo responsável
+        autenticado (vínculo `aprovada` e vigente).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ParticipanteId'
+      responses:
+        '200':
+          description: Histórico de presenças do dependente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/HistoricoPresenca' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
   /guardian-requests/{id}:
     patch:
       tags: [participants]
@@ -1610,11 +1781,6 @@ components:
       type: http
       scheme: bearer
   parameters:
-    SessionId:
-      name: sessionId
-      in: path
-      required: true
-      schema: { type: string }
     IdempotencyKey:
       name: Idempotency-Key
       in: header
@@ -1660,6 +1826,11 @@ components:
       required: true
       schema: { type: string }
     SessaoId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+    PresencaId:
       name: id
       in: path
       required: true
@@ -1860,15 +2031,6 @@ components:
           properties:
             database: { type: string, enum: [ok, fail] }
             redis: { type: string, enum: [ok, fail] }
-    Attendance:
-      type: object
-      properties:
-        id: { type: string }
-        sessionId: { type: string }
-        participantId: { type: string }
-        status: { type: string, enum: [valid, reversed] }
-        origin: { type: string, enum: [web, app] }
-        recordedAt: { type: string, format: date-time }
     Church:
       type: object
       properties:
@@ -2248,3 +2410,65 @@ components:
         ignoradas: { type: integer }
         de: { type: string, format: date }
         ate: { type: string, format: date }
+    CandidatoPresenca:
+      type: object
+      properties:
+        id: { type: string }
+        nome: { type: string }
+        matricula: { type: string }
+        igreja_referencia:
+          oneOf:
+            - type: object
+              properties:
+                id: { type: string }
+                nome: { type: string }
+            - type: 'null'
+        elegivel: { type: boolean }
+        motivo_bloqueio: { type: [string, 'null'] }
+    Presenca:
+      type: object
+      properties:
+        id: { type: string }
+        sessao_id: { type: string }
+        participante:
+          type: object
+          properties:
+            id: { type: string }
+            nome: { type: string }
+            matricula: { type: string }
+        registrado_por: { type: string }
+        registrado_em: { type: string, format: date-time }
+        origem: { type: string, enum: [web, app, contingencia] }
+        status: { type: string, enum: [valida, estornada] }
+        estornado_em: { type: [string, 'null'], format: date-time }
+        motivo_estorno: { type: [string, 'null'] }
+    PresencaRegistroInput:
+      type: object
+      required: [participante_id]
+      properties:
+        participante_id: { type: string }
+        origem: { type: string, enum: [web, app], default: web }
+    PresencaContingenciaInput:
+      type: object
+      required: [participante_id, motivo]
+      properties:
+        participante_id: { type: string }
+        motivo: { type: string, minLength: 3, maxLength: 500 }
+    EstornoInput:
+      type: object
+      required: [motivo]
+      properties:
+        motivo: { type: string, minLength: 3, maxLength: 500 }
+    HistoricoPresenca:
+      type: object
+      properties:
+        id: { type: string }
+        sessao_id: { type: string }
+        ebi:
+          type: object
+          properties:
+            id: { type: string }
+            nome: { type: string }
+        inicio_previsto: { type: string, format: date-time }
+        status: { type: string, enum: [valida, estornada] }
+        registrado_em: { type: string, format: date-time }
