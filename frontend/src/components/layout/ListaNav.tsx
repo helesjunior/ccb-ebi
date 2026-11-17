@@ -1,5 +1,6 @@
 import {
   AccessibilityIcon,
+  CalendarDaysIcon,
   CombineIcon,
   HouseIcon,
   LinkIcon,
@@ -26,6 +27,8 @@ export type IdTela =
   | 'privacidade'
   | 'participantes'
   | 'dependentes'
+  | 'sessoes'
+  | 'presenca'
   | 'cadastro-assistido'
   | 'vinculos'
   | 'excecao'
@@ -66,6 +69,15 @@ const PARTICIPANTES = [
   'ministerio_local',
 ]
 const CADASTRO = ['super_admin', 'adm_igreja', 'coordenadora', 'auxiliar', 'responsavel']
+const SESSOES = [
+  'super_admin',
+  'adm_regional',
+  'adm_setor',
+  'adm_igreja',
+  'coordenadora',
+  'auxiliar',
+  'ministerio_local',
+]
 const MESCLAGEM = ['super_admin', 'coordenadora']
 const AUDITORIA = ['super_admin', 'adm_regional', 'adm_setor']
 
@@ -78,6 +90,14 @@ const ITENS: ItemNav[] = [
     icone: UsersRoundIcon,
     grupo: 'Participantes',
     papeis: [],
+  },
+  {
+    id: 'sessoes',
+    rotulo: 'Sessões',
+    descricao: 'Abra, encerre e registre presença.',
+    icone: CalendarDaysIcon,
+    grupo: 'Participantes',
+    papeis: SESSOES,
   },
   {
     id: 'participantes',
