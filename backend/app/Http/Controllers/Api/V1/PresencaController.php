@@ -14,6 +14,7 @@ use App\Domain\Sessoes\Contracts\ConsultarSessao;
 use App\Domain\Sessoes\Contracts\EstornarPresenca;
 use App\Domain\Sessoes\Contracts\RegistrarPresenca;
 use App\Domain\Sessoes\Contracts\SessaoEbi;
+use App\Http\Requests\Agenda\ContingenciaPresencaRequest;
 use App\Http\Requests\Agenda\EstornarPresencaRequest;
 use App\Http\Requests\Agenda\RegistrarPresencaRequest;
 use App\Http\Resources\PresencaResource;
@@ -80,6 +81,18 @@ class PresencaController
 
         return response()->json([
             'presenca' => (new PresencaResource($resultado->presenca))->resolve($request), 'aviso' => $resultado->aviso,
+        ], $resultado->nova ? 201 : 200);
+    }
+
+    public function contingencia(ContingenciaPresencaRequest $request, string $id): JsonResponse
+    {
+        $sessao = $this->sessao($id);
+        Gate::authorize(Operacoes::SESSAO_GERENCIAR, ['ebi', $sessao->ebiId]);
+        $dados = $request->validated();
+        $resultado = $this->registrador->registrarContingencia($id, $dados['participante_id'], $dados['motivo'], (string) $request->user()->id);
+
+        return response()->json([
+            'presenca' => (new PresencaResource($resultado->presenca))->resolve($request),
         ], $resultado->nova ? 201 : 200);
     }
 
