@@ -40,7 +40,7 @@ class AutorizadorOperacao implements AutorizarOperacao
             Operacoes::CONVITE_GERENCIAR, Operacoes::ACESSO_GERENCIAR,
             Operacoes::CONSENTIMENTO_LER, Operacoes::AUDITORIA_LER,
             Operacoes::PARTICIPANTE_LER, Operacoes::EXCECAO_LER,
-            // E04: acompanha (le) sessoes e presenca de todo o territorio.
+            // E04: acompanha (le) sessoes e presenca da regional.
             Operacoes::SESSAO_LER, Operacoes::PRESENCA_LER,
         ],
         'adm_setor' => [
@@ -49,7 +49,7 @@ class AutorizadorOperacao implements AutorizarOperacao
             Operacoes::CONVITE_GERENCIAR, Operacoes::ACESSO_GERENCIAR,
             Operacoes::CONSENTIMENTO_LER, Operacoes::AUDITORIA_LER,
             Operacoes::PARTICIPANTE_LER, Operacoes::EXCECAO_LER,
-            // E04: acompanha (le) sessoes e presenca de todo o territorio.
+            // E04: acompanha (le) sessoes e presenca do setor.
             Operacoes::SESSAO_LER, Operacoes::PRESENCA_LER,
         ],
         'adm_igreja' => [
