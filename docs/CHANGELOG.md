@@ -2,6 +2,20 @@
 
 Formato: versão, data, autor e mudanças. Itens mais recentes primeiro.
 
+## 2.18 — 17/11/2026
+
+Etapa 6 — Sessões e presença (E04).
+
+- **Agenda (RF-06):** faixas semanais por EBI (mais de uma no mesmo dia), vigência sem reescrever o passado, exceções `feriado`/`cancelamento` (dia inteiro) e `horario_especial` (por faixa). Feriado criado depois cancela as sessões `prevista` do dia, com autor e auditoria.
+- **Sessões previstas (RF-06, CA-23):** geração idempotente pelo comando `sessoes:gerar` (diário no `scheduler`) e por `POST /ebis/{id}/sessions/generate`; sem duplicar, sem sobrepor e sem ressuscitar sessão cancelada.
+- **Ciclo da sessão:** abrir, encerrar informando se foi realizada, cancelar com motivo e corrigir sessão encerrada com motivo, `antes/depois` em `sessao_correcao` e evento de auditoria.
+- **Presença (RF-08, CA-02):** busca nacional auditada (finalidade obrigatória, 3+ caracteres, 20 resultados) com elegibilidade calculada no fuso da igreja; registro idempotente (índice único parcial), uma presença válida por participante/sessão, aviso de presença simultânea em outra igreja.
+- **Estorno e histórico (CA-13):** estorno com motivo, autor e data preservando o original; histórico por participante para operador (escopo) e responsável (propriedade).
+- **Contingência (RNF-03):** lançamento posterior da lista em papel em sessão encerrada, com motivo e auditoria.
+- **Equipe mínima (ADR-0010):** aviso não bloqueante a partir de `auxiliares_escalados` informado na sessão (a escala nominal é a E07).
+- **Contrato e portal:** 22 operações novas no OpenAPI e telas de Sessões e Presença; histórico no perfil do participante e do dependente.
+- **Dívidas:** CA-27 (presença no escopo de mesclagem/correção), contingência em lote, `finalidade` nas listas/histórico (E06), aviso dos 12 anos (RF-15).
+
 ## 2.17 — 12/11/2026
 
 Portal Web — usabilidade (sem mudança de estrutura, rotas ou contrato).

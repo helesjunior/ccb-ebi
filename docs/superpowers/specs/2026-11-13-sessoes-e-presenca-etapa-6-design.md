@@ -1,6 +1,6 @@
 # Design — Etapa 6: Sessões e presença (E04)
 
-**Data:** 13/11/2026 · **Status:** proposto · **Épico:** [E04](../../07-produto/backlog-epicos.md) · **Fase:** 1
+**Data:** 13/11/2026 · **Status:** aprovado em 17/11/2026 · **Épico:** [E04](../../07-produto/backlog-epicos.md) · **Fase:** 1
 
 ## 1. Intenção e por quê
 
