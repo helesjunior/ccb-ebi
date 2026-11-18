@@ -159,7 +159,7 @@ function App() {
         />
       )}
       {tela === 'cadastro-assistido' && <CadastroAssistido />}
-      {tela === 'vinculos' && <Vinculos escopos={escopos} />}
+      {tela === 'vinculos' && <Vinculos escopos={escopos} usuarioId={usuario.id ?? null} />}
       {tela === 'excecao' && <ExcecaoInclusiva />}
       {tela === 'mesclagem' && <Mesclagem />}
       {tela === 'auditoria' && <Auditoria />}
