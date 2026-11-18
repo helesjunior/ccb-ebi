@@ -1,6 +1,8 @@
 <?php
 
 use App\Domain\Auditoria\Models\EventoAuditoria;
+use App\Domain\Identidade\Models\Papel;
+use App\Domain\Identidade\Models\VinculoAcesso;
 use App\Domain\Participantes\Contracts\GerirVinculoResponsavel;
 use App\Domain\Participantes\Models\Participante;
 use App\Domain\Participantes\Models\ResponsavelParticipante;
@@ -159,6 +161,38 @@ it('outro operador do territorio aprova o pedido do autor', function () {
     ])->assertOk()->assertJsonPath('validacao', 'aprovada');
 
     expect($vinculo->fresh()->conferido_por)->toBe($outraCoordenadora->id);
+});
+
+it('responsavel do participante nao decide vinculo so por propriedade', function () {
+    ['igreja' => $igrejaB] = igrejaComEbi();
+    $crianca = participanteNaIgreja($igrejaB);
+
+    // O mesmo usuario e responsavel (aprovado) pela crianca da EBI B e
+    // coordenador da EBI A. Ele tem a operacao no escopo A, mas nao cobre B.
+    $usuario = criarUsuarioComPapel('responsavel', 'central', 'c1');
+    ResponsavelParticipante::factory()->aprovado()->create([
+        'participante_id' => $crianca->id,
+        'usuario_id' => $usuario->id,
+    ]);
+    VinculoAcesso::factory()->create([
+        'usuario_id' => $usuario->id,
+        'papel_id' => Papel::query()->where('codigo', 'coordenadora')->value('id'),
+        'tipo_escopo' => 'ebi',
+        'escopo_id' => $this->ebi->id,
+    ]);
+
+    $pedido = ResponsavelParticipante::factory()->create([
+        'participante_id' => $crianca->id,
+        'usuario_id' => null,
+        'validacao' => ResponsavelParticipante::VALIDACAO_PENDENTE,
+    ]);
+
+    $this->patchJson("/api/v1/guardian-requests/{$pedido->id}", ['decisao' => 'aprovar'], [
+        'Authorization' => 'Bearer '.$usuario->createToken('t')->plainTextToken,
+        'X-Acting-Scope' => "papel=coordenadora;escopo=ebi:{$this->ebi->id}",
+    ])->assertStatus(404);
+
+    expect($pedido->fresh()->validacao)->toBe(ResponsavelParticipante::VALIDACAO_PENDENTE);
 });
 
 it('vinculo sem dono continua aprovavel por operador do territorio', function () {

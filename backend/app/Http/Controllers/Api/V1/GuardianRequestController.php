@@ -33,10 +33,12 @@ class GuardianRequestController
             ? $this->participantes->encontrar((string) $vinculo->participante_id)
             : null;
 
-        // Decidir exige o territorio do participante; fora dele o vinculo se
-        // comporta como inexistente (404), para nao revelar que existe (RF-03).
+        // Decidir e ato de coordenacao sobre o territorio do participante: ser
+        // responsavel pela crianca nao autoriza decidir pedido de outrem. Fora
+        // do territorio o vinculo se comporta como inexistente (404), para nao
+        // revelar que existe (RF-03).
         if ($vinculo === null || $participante === null
-            || ! $this->autorizacao->pode($this->contexto($request), $atorId, $participante, Operacoes::VINCULO_GERENCIAR)) {
+            || ! $this->autorizacao->cobreTerritorio($this->contexto($request), $participante, Operacoes::VINCULO_GERENCIAR)) {
             throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Vínculo não encontrado.');
         }
 
