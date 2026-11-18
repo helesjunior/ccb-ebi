@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Auditoria\Contracts\RegistrarEvento;
 use App\Domain\Identidade\Services\ContextoAtuacao;
 use App\Domain\Participantes\Contracts\GerirParticipante;
 use App\Domain\Participantes\Contracts\GerirVinculoResponsavel;
@@ -26,6 +27,7 @@ class GuardianController
         private readonly GerirParticipante $participantes,
         private readonly AutorizacaoParticipante $autorizacao,
         private readonly VisibilidadeVinculoResponsavel $visibilidade,
+        private readonly RegistrarEvento $auditoria,
     ) {}
 
     public function store(SolicitarVinculoRequest $request, string $participantId): JsonResponse
@@ -67,11 +69,27 @@ class GuardianController
      */
     public function pedidos(ListarVinculosRequest $request): JsonResponse
     {
+        $finalidade = (string) $request->validated('finalidade');
         $vinculos = $this->visibilidade->listar(
             (string) $request->user()?->getAuthIdentifier(),
             $this->contexto($request),
             (string) ($request->validated('validacao') ?? 'pendente'),
         );
+
+        // Leitura identificavel (nome/matricula do participante): a finalidade
+        // declarada vai para a trilha, como em `GET /participants` (ADR-0032).
+        $this->auditoria->registrar([
+            'acao' => 'vinculo.listado',
+            'recurso' => 'vinculo',
+            'ator_id' => (string) $request->user()?->getAuthIdentifier(),
+            'origem' => 'api',
+            'escopo' => null,
+            'motivo' => $finalidade,
+            'metadados_minimizados' => [
+                'vinculo_ids' => array_map(static fn ($v): string => (string) $v->id, $vinculos),
+            ],
+            'ocorrido_em' => now(),
+        ]);
 
         return response()->json([
             'data' => ResponsavelParticipanteResource::collection($vinculos)->resolve($request),

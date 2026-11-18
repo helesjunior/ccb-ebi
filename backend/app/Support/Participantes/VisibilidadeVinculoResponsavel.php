@@ -32,6 +32,13 @@ class VisibilidadeVinculoResponsavel
 
         if ($validacao !== 'todos') {
             $query->where('validacao', $validacao);
+
+            // Revogar/contestar grava `validacao = recusada` **e** `fim`: sem o
+            // recorte por `fim`, um vinculo encerrado reapareceria como
+            // pendente e voltaria a aceitar decisao.
+            if (in_array($validacao, ['pendente', 'aprovada', 'aguardando_documento'], true)) {
+                $query->whereNull('fim');
+            }
         }
 
         $visiveis = $query->orderByDesc('created_at')->orderByDesc('id')->get()

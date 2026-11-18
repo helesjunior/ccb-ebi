@@ -9,7 +9,7 @@ import { Obrigatorio } from '../components/Obrigatorio'
 import { Sugestoes } from '../components/Sugestoes'
 import { formatarData, rotuloStatus, SUGESTOES_RELACAO } from '@/lib/formatos'
 import { cabecalhos, type ContextoAtuacao } from '../api/sessao'
-import type { components } from '../api/schema'
+import type { components, paths } from '../api/schema'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
@@ -41,6 +41,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 type Vinculo = components['schemas']['ResponsavelParticipante']
 type Participante = components['schemas']['Participante']
 type Decisao = components['schemas']['DecisaoVinculoInput']['decisao']
+/** Enum de situação do contrato (`validacao`), sem cast. */
+type Situacao = NonNullable<
+  NonNullable<paths['/guardian-requests']['get']['parameters']['query']>['validacao']
+>
 
 /** Finalidade declarada da listagem de pedidos (registrada na auditoria). */
 const FINALIDADE = 'triagem_vinculo'
@@ -55,7 +59,7 @@ const DECISOES: { valor: Decisao; rotulo: string }[] = [
   { valor: 'revogar', rotulo: 'Revogar' },
 ]
 
-const SITUACOES: { valor: string; rotulo: string }[] = [
+const SITUACOES: { valor: Situacao; rotulo: string }[] = [
   { valor: 'pendente', rotulo: 'Pendentes' },
   { valor: 'aprovada', rotulo: 'Aprovados' },
   { valor: 'aguardando_documento', rotulo: 'Aguardando documento' },
@@ -74,14 +78,43 @@ const PAPEIS_CADASTRO = [
   'ministerio_local',
 ]
 
+/** Papéis com `vinculo.gerenciar`: veem o território e decidem. */
+const PAPEIS_GESTAO_VINCULO = [
+  'super_admin',
+  'adm_regional',
+  'adm_setor',
+  'adm_igreja',
+  'coordenadora',
+  'auxiliar',
+  'ministerio_local',
+]
+
 /**
- * A busca por nome exige `participante.ler`; o responsável só solicita vínculo
- * sem buscar. A tela espelha a matriz do servidor — a autoria real é dele.
+ * A busca por nome exige `participante.ler`. O `responsavel` **não** tem esse
+ * escopo: a busca daria 403, então a aba Solicitar não aparece para ele — o
+ * caminho dele é o cadastro assistido, feito pela coordenação.
  */
 function podeBuscarParticipante(escopos: ContextoAtuacao[]): boolean {
-  return escopos.some(
-    (e) => e.papel === 'responsavel' || PAPEIS_CADASTRO.includes(e.papel ?? ''),
-  )
+  return escopos.some((e) => PAPEIS_CADASTRO.includes(e.papel ?? ''))
+}
+
+/** Quem decide pedidos de vínculo; para os demais a lista é só leitura. */
+function podeDecidirVinculo(escopos: ContextoAtuacao[]): boolean {
+  return escopos.some((e) => PAPEIS_GESTAO_VINCULO.includes(e.papel ?? ''))
+}
+
+/**
+ * Ações válidas para a linha. Vínculo encerrado (`fim`) só aceita revogar de
+ * novo — aprovar um encerrado o reabriria mantendo `fim`, sem dar acesso.
+ */
+function acoesDoPedido(pedido: Vinculo): typeof DECISOES {
+  if (pedido.fim) {
+    return DECISOES.filter((d) => d.valor === 'revogar')
+  }
+  if (pedido.validacao === 'recusada') {
+    return DECISOES.filter((d) => d.valor === 'aprovar')
+  }
+  return DECISOES
 }
 
 /**
@@ -96,16 +129,17 @@ function podeBuscarParticipante(escopos: ContextoAtuacao[]): boolean {
 export function Vinculos({ escopos }: { escopos: ContextoAtuacao[] }) {
   const [aba, setAba] = useState<string>('pedidos')
 
-  const [validacao, setValidacao] = useState('pendente')
+  const [validacao, setValidacao] = useState<Situacao>('pendente')
   const [pedidos, setPedidos] = useState<Vinculo[]>([])
   const [carregando, setCarregando] = useState(true)
   const [ocupado, setOcupado] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
+  const gerencia = podeDecidirVinculo(escopos)
 
   const carregar = useCallback(async () => {
     setCarregando(true)
     const { data, error } = await api.GET('/guardian-requests', {
-      params: { query: { validacao: validacao as 'todos', finalidade: FINALIDADE } },
+      params: { query: { validacao, finalidade: FINALIDADE } },
       headers: cabecalhos(),
     })
     setCarregando(false)
@@ -169,7 +203,10 @@ export function Vinculos({ escopos }: { escopos: ContextoAtuacao[] }) {
             <CardContent className="flex flex-col gap-4">
               <div className="flex flex-col gap-2 sm:max-w-xs">
                 <Label htmlFor="vinculos-situacao">Situação</Label>
-                <Select value={validacao} onValueChange={setValidacao}>
+                <Select
+                  value={validacao}
+                  onValueChange={(v) => setValidacao(v as Situacao)}
+                >
                   <SelectTrigger id="vinculos-situacao" className="w-full">
                     <SelectValue />
                   </SelectTrigger>
@@ -191,12 +228,12 @@ export function Vinculos({ escopos }: { escopos: ContextoAtuacao[] }) {
                     <TableHead>Relação</TableHead>
                     <TableHead>Situação</TableHead>
                     <TableHead>Solicitado em</TableHead>
-                    <TableHead>Ações</TableHead>
+                    {gerencia && <TableHead>Ações</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   <EstadoTabela
-                    colunas={6}
+                    colunas={gerencia ? 6 : 5}
                     carregando={carregando}
                     vazio={pedidos.length === 0}
                     mensagemVazio="Nenhum pedido de vínculo."
@@ -213,24 +250,29 @@ export function Vinculos({ escopos }: { escopos: ContextoAtuacao[] }) {
                       </TableCell>
                       <TableCell className="whitespace-normal">{pedido.nome}</TableCell>
                       <TableCell>{rotuloStatus(pedido.tipo_relacao)}</TableCell>
-                      <TableCell>{rotuloStatus(pedido.validacao)}</TableCell>
-                      <TableCell>{formatarData(pedido.inicio)}</TableCell>
                       <TableCell>
-                        <div className="flex flex-wrap gap-2">
-                          {DECISOES.map((d) => (
-                            <Button
-                              key={d.valor}
-                              type="button"
-                              size="sm"
-                              variant={d.valor === 'aprovar' ? 'default' : 'outline'}
-                              disabled={ocupado}
-                              onClick={() => void decidir(pedido.id ?? '', d.valor)}
-                            >
-                              {d.rotulo}
-                            </Button>
-                          ))}
-                        </div>
+                        {rotuloStatus(pedido.validacao)}
+                        {pedido.fim ? ` · encerrado em ${formatarData(pedido.fim)}` : ''}
                       </TableCell>
+                      <TableCell>{formatarData(pedido.inicio)}</TableCell>
+                      {gerencia && (
+                        <TableCell>
+                          <div className="flex flex-wrap gap-2">
+                            {acoesDoPedido(pedido).map((d) => (
+                              <Button
+                                key={d.valor}
+                                type="button"
+                                size="sm"
+                                variant={d.valor === 'aprovar' ? 'default' : 'outline'}
+                                disabled={ocupado}
+                                onClick={() => void decidir(pedido.id ?? '', d.valor)}
+                              >
+                                {d.rotulo}
+                              </Button>
+                            ))}
+                          </div>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>

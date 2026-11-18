@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Auditoria\Models\EventoAuditoria;
 use App\Domain\Participantes\Models\ResponsavelParticipante;
 
 beforeEach(function () {
@@ -56,4 +57,35 @@ it('aceita o filtro de validacao', function () {
 it('rejeita validacao desconhecida', function () {
     $this->getJson('/api/v1/guardian-requests?validacao=xpto&finalidade=triage', $this->auth)
         ->assertStatus(422);
+});
+
+it('registra na auditoria a finalidade da listagem', function () {
+    $this->getJson('/api/v1/guardian-requests?finalidade=triagem_vinculo', $this->auth)->assertOk();
+
+    $evento = EventoAuditoria::query()->where('acao', 'vinculo.listado')->first();
+
+    expect($evento)->not->toBeNull()
+        ->and($evento->motivo)->toBe('triagem_vinculo')
+        ->and($evento->ator_id)->toBe($this->coordenadora->id);
+});
+
+it('devolve colecao vazia quando nao ha vinculos visiveis', function () {
+    $this->getJson('/api/v1/guardian-requests?finalidade=triagem_vinculo', $this->auth)
+        ->assertOk()
+        ->assertExactJson(['data' => []]);
+});
+
+it('nao lista vinculo encerrado como pendente', function () {
+    $p = participanteNaIgreja($this->igreja);
+    ResponsavelParticipante::factory()->create([
+        'participante_id' => $p->id, 'validacao' => 'pendente',
+    ]);
+    $encerrado = ResponsavelParticipante::factory()->create([
+        'participante_id' => $p->id, 'validacao' => 'pendente', 'fim' => now()->toDateString(),
+    ]);
+
+    $ids = collect($this->getJson('/api/v1/guardian-requests?finalidade=triage', $this->auth)
+        ->assertOk()->json('data'))->pluck('id')->all();
+
+    expect($ids)->not->toContain($encerrado->id)->and($ids)->toHaveCount(1);
 });

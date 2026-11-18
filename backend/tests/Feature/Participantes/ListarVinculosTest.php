@@ -84,3 +84,14 @@ it('sem contexto territorial lista apenas os vinculos proprios', function () {
 
     expect(collect($lista)->pluck('id')->all())->toBe([$meu->id]);
 });
+
+it('nao lista vinculo encerrado sob a situacao viva que ele ocupava', function () {
+    $p = participanteNaIgreja($this->igreja);
+    $encerrado = ResponsavelParticipante::factory()->create([
+        'participante_id' => $p->id, 'validacao' => 'pendente', 'fim' => now()->toDateString(),
+    ]);
+
+    expect($this->servico->listar($this->coordenadora->id, $this->contexto, 'pendente'))->toHaveCount(0)
+        ->and(collect($this->servico->listar($this->coordenadora->id, $this->contexto, 'todos'))->pluck('id')->all())
+        ->toBe([$encerrado->id]);
+});
