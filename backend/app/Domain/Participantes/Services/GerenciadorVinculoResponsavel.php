@@ -76,6 +76,16 @@ class GerenciadorVinculoResponsavel implements GerirVinculoResponsavel
             $vinculo = ResponsavelParticipante::query()->find($vinculoId)
                 ?? throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Vínculo não encontrado.');
 
+            // Segregacao de funcoes: quem abriu o pedido nao o decide.
+            if ($coordenadoraId !== '' && $vinculo->usuario_id !== null && (string) $vinculo->usuario_id === $coordenadoraId) {
+                throw new ProblemException(
+                    'acesso_negado',
+                    'Acesso negado',
+                    403,
+                    'A decisão deve ser feita por outro operador do seu território.',
+                );
+            }
+
             if ($encerraVinculo) {
                 $vinculo->fill([
                     'validacao' => ResponsavelParticipante::VALIDACAO_RECUSADA,

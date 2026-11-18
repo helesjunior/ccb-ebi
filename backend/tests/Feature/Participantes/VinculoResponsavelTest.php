@@ -1,8 +1,11 @@
 <?php
 
+use App\Domain\Auditoria\Models\EventoAuditoria;
+use App\Domain\Participantes\Contracts\GerirVinculoResponsavel;
 use App\Domain\Participantes\Models\Participante;
 use App\Domain\Participantes\Models\ResponsavelParticipante;
 use App\Domain\Participantes\Models\SolicitacaoVinculo;
+use App\Support\ProblemException;
 
 beforeEach(function () {
     ['igreja' => $this->igreja, 'ebi' => $this->ebi] = igrejaComEbi();
@@ -65,7 +68,7 @@ it('revoga encerrando o vinculo mas preservando o log', function () {
     ]);
 
     $this->patchJson("/api/v1/guardian-requests/{$vinculo->id}", [
-        'decisao' => 'revogar', 'motivo' => 'Pedido do responsável',
+        'decisao' => 'revogar', 'motivo' => 'Pedido do responsÃ¡vel',
     ], $this->authCoord)->assertOk();
 
     expect($vinculo->fresh()->fim)->not->toBeNull();
@@ -87,4 +90,84 @@ it('coordenadora nao decide vinculo de participante fora do seu territorio', fun
 it('devolve 404 para vinculo inexistente', function () {
     $this->patchJson('/api/v1/guardian-requests/'.Str::ulid(), ['decisao' => 'aprovar'], $this->authCoord)
         ->assertStatus(404);
+});
+
+it('o dominio recusa o autor decidindo o proprio pedido', function () {
+    $vinculo = ResponsavelParticipante::factory()->create([
+        'participante_id' => participanteNaIgreja($this->igreja)->id,
+        'usuario_id' => $this->coordenadora->id,
+        'validacao' => ResponsavelParticipante::VALIDACAO_PENDENTE,
+    ]);
+    $antes = $vinculo->fresh()->toArray();
+    $logsAntes = SolicitacaoVinculo::query()->count();
+    $auditoriaAntes = EventoAuditoria::query()->count();
+
+    $servico = app(GerirVinculoResponsavel::class);
+
+    expect(fn () => $servico->decidir((string) $this->coordenadora->id, $vinculo->id, 'aprovar'))
+        ->toThrow(function (ProblemException $e) {
+            expect($e->status)->toBe(403)
+                ->and($e->problemCode)->toBe('acesso_negado');
+        });
+
+    expect($vinculo->fresh()->toArray())->toBe($antes)
+        ->and(SolicitacaoVinculo::query()->count())->toBe($logsAntes)
+        ->and(EventoAuditoria::query()->count())->toBe($auditoriaAntes);
+});
+
+it('autor recebe 403 com acesso_negado em qualquer decisao', function (string $decisao) {
+    $vinculo = ResponsavelParticipante::factory()->create([
+        'participante_id' => participanteNaIgreja($this->igreja)->id,
+        'usuario_id' => $this->coordenadora->id,
+        'validacao' => ResponsavelParticipante::VALIDACAO_PENDENTE,
+    ]);
+
+    $this->patchJson("/api/v1/guardian-requests/{$vinculo->id}", ['decisao' => $decisao], $this->authCoord)
+        ->assertStatus(403)
+        ->assertJsonPath('code', 'acesso_negado');
+
+    $atual = $vinculo->fresh();
+    expect($atual->validacao)->toBe(ResponsavelParticipante::VALIDACAO_PENDENTE)
+        ->and($atual->conferido_por)->toBeNull()
+        ->and($atual->conferido_em)->toBeNull()
+        ->and($atual->fim)->toBeNull();
+})->with(['aprovar', 'recusar', 'pedir_documento', 'revogar', 'contestar']);
+
+it('autor nao revoga o proprio vinculo ja aprovado', function () {
+    $vinculo = ResponsavelParticipante::factory()->aprovado()->create([
+        'participante_id' => participanteNaIgreja($this->igreja)->id,
+        'usuario_id' => $this->coordenadora->id,
+    ]);
+
+    $this->patchJson("/api/v1/guardian-requests/{$vinculo->id}", ['decisao' => 'revogar'], $this->authCoord)
+        ->assertStatus(403);
+
+    expect($vinculo->fresh()->fim)->toBeNull();
+});
+
+it('outro operador do territorio aprova o pedido do autor', function () {
+    $outraCoordenadora = criarUsuarioComPapel('coordenadora', 'ebi', $this->ebi->id);
+    $vinculo = ResponsavelParticipante::factory()->create([
+        'participante_id' => participanteNaIgreja($this->igreja)->id,
+        'usuario_id' => $this->coordenadora->id,
+        'validacao' => ResponsavelParticipante::VALIDACAO_PENDENTE,
+    ]);
+
+    $this->patchJson("/api/v1/guardian-requests/{$vinculo->id}", ['decisao' => 'aprovar'], [
+        'Authorization' => 'Bearer '.$outraCoordenadora->createToken('t')->plainTextToken,
+        'X-Acting-Scope' => "papel=coordenadora;escopo=ebi:{$this->ebi->id}",
+    ])->assertOk()->assertJsonPath('validacao', 'aprovada');
+
+    expect($vinculo->fresh()->conferido_por)->toBe($outraCoordenadora->id);
+});
+
+it('vinculo sem dono continua aprovavel por operador do territorio', function () {
+    $vinculo = ResponsavelParticipante::factory()->create([
+        'participante_id' => participanteNaIgreja($this->igreja)->id,
+        'usuario_id' => null,
+        'validacao' => ResponsavelParticipante::VALIDACAO_PENDENTE,
+    ]);
+
+    $this->patchJson("/api/v1/guardian-requests/{$vinculo->id}", ['decisao' => 'aprovar'], $this->authCoord)
+        ->assertOk()->assertJsonPath('validacao', 'aprovada');
 });

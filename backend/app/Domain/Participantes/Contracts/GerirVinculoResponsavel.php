@@ -21,6 +21,9 @@ interface GerirVinculoResponsavel
     public function solicitar(string $usuarioId, string $participanteId, array $dados): ResponsavelParticipante;
 
     /**
+     * O autor do pedido não pode decidir o próprio vínculo, em nenhuma decisão
+     * (segregação de funções); nesse caso lança 403 `acesso_negado`.
+     *
      * @param  string  $decisao  aprovar | recusar | pedir_documento | revogar | contestar
      */
     public function decidir(string $coordenadoraId, string $vinculoId, string $decisao, ?string $motivo = null): ResponsavelParticipante;
