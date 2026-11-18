@@ -70,6 +70,10 @@ class ChurchController
 
     public function update(IgrejaRequest $request, string $id): Response
     {
+        if ($this->gerir->encontrarIgreja($id) === null) {
+            throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Igreja não encontrada');
+        }
+
         Gate::authorize(Operacoes::ORGANIZACAO_GERENCIAR, ['igreja', $id]);
         $igreja = $this->gerir->atualizarIgreja($id, $request->validated());
 
@@ -85,13 +89,15 @@ class ChurchController
     public function transfer(TransferenciaRequest $request, string $id): Response
     {
         Gate::authorize(Operacoes::ORGANIZACAO_GERENCIAR, ['igreja', $id]);
+        $sectorId = $request->string('sector_id')->toString();
+        Gate::authorize(Operacoes::ORGANIZACAO_GERENCIAR, ['setor', $sectorId]);
 
         try {
             $contexto = $request->attributes->get('contexto_atuacao');
 
             $this->transferir->executar(
                 $id,
-                $request->string('sector_id')->toString(),
+                $sectorId,
                 new \DateTimeImmutable($request->string('date')->toString()),
                 $request->input('reason'),
                 $contexto instanceof ContextoAtuacao ? $contexto->usuarioId : null,

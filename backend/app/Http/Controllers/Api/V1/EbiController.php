@@ -34,8 +34,17 @@ class EbiController
 
     public function update(EbiRequest $request, string $id): Response
     {
+        if ($this->gerir->encontrarEbi($id) === null) {
+            throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'EBI não encontrada');
+        }
+
         Gate::authorize(Operacoes::ORGANIZACAO_GERENCIAR, ['ebi', $id]);
-        $ebi = $this->gerir->atualizarEbi($id, $request->validated());
+        $dados = $request->validated();
+        if (isset($dados['igreja_id'])) {
+            // Reparentar exige alcance tambem sobre a igreja de destino.
+            Gate::authorize(Operacoes::ORGANIZACAO_GERENCIAR, ['igreja', (string) $dados['igreja_id']]);
+        }
+        $ebi = $this->gerir->atualizarEbi($id, $dados);
 
         if ($ebi === null) {
             throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'EBI não encontrada');

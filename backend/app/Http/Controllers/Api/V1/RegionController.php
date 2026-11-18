@@ -36,7 +36,11 @@ class RegionController
     public function update(RegionalRequest $request, string $id): Response
     {
         Gate::authorize(Operacoes::ORGANIZACAO_GERENCIAR, ['regional', $id]);
-        $regional = $this->gerir->atualizarRegional($id, $request->validated());
+        $dados = $request->validated();
+        if (isset($dados['central_nacional_id'])) {
+            Gate::authorize(Operacoes::ORGANIZACAO_GERENCIAR, ['central', (string) $dados['central_nacional_id']]);
+        }
+        $regional = $this->gerir->atualizarRegional($id, $dados);
 
         if ($regional === null) {
             throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Regional não encontrada');

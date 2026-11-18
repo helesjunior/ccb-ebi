@@ -8,6 +8,7 @@ use App\Domain\Organizacao\Models\Ebi;
 use App\Domain\Organizacao\Models\Igreja;
 use App\Domain\Organizacao\Models\Regional;
 use App\Domain\Organizacao\Models\Setor;
+use App\Support\RecursoNaoEncontradoException;
 use RuntimeException;
 
 /**
@@ -52,7 +53,7 @@ class ConsultaHierarquia implements ConsultarHierarquia
         $central = CentralNacional::query()->find($id);
 
         if ($central === null) {
-            throw new RuntimeException("Central nao encontrada: {$id}");
+            throw new RecursoNaoEncontradoException("Central nao encontrada: {$id}");
         }
 
         return ['central' => $central->id];
@@ -64,7 +65,7 @@ class ConsultaHierarquia implements ConsultarHierarquia
         $regional = Regional::query()->find($id);
 
         if ($regional === null) {
-            throw new RuntimeException("Regional nao encontrada: {$id}");
+            throw new RecursoNaoEncontradoException("Regional nao encontrada: {$id}");
         }
 
         return ['regional' => $regional->id, 'central' => $regional->central_nacional_id];
@@ -76,7 +77,7 @@ class ConsultaHierarquia implements ConsultarHierarquia
         $setor = Setor::query()->with('regional')->find($id);
 
         if ($setor === null || $setor->regional === null) {
-            throw new RuntimeException("Setor nao encontrado: {$id}");
+            throw new RecursoNaoEncontradoException("Setor nao encontrado: {$id}");
         }
 
         return [
@@ -92,7 +93,7 @@ class ConsultaHierarquia implements ConsultarHierarquia
         $igreja = Igreja::query()->with('vinculacaoVigente.setor.regional')->find($id);
 
         if ($igreja === null) {
-            throw new RuntimeException("Igreja nao encontrada: {$id}");
+            throw new RecursoNaoEncontradoException("Igreja nao encontrada: {$id}");
         }
 
         $ancestrais = ['igreja' => $igreja->id];
@@ -116,7 +117,7 @@ class ConsultaHierarquia implements ConsultarHierarquia
         $ebi = Ebi::query()->find($id);
 
         if ($ebi === null) {
-            throw new RuntimeException("EBI nao encontrada: {$id}");
+            throw new RecursoNaoEncontradoException("EBI nao encontrada: {$id}");
         }
 
         return ['ebi' => $ebi->id] + $this->igreja($ebi->igreja_id);

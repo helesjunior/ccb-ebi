@@ -35,7 +35,11 @@ class SectorController
     public function update(SetorRequest $request, string $id): Response
     {
         Gate::authorize(Operacoes::ORGANIZACAO_GERENCIAR, ['setor', $id]);
-        $setor = $this->gerir->atualizarSetor($id, $request->validated());
+        $dados = $request->validated();
+        if (isset($dados['regional_id'])) {
+            Gate::authorize(Operacoes::ORGANIZACAO_GERENCIAR, ['regional', (string) $dados['regional_id']]);
+        }
+        $setor = $this->gerir->atualizarSetor($id, $dados);
 
         if ($setor === null) {
             throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Setor não encontrado');

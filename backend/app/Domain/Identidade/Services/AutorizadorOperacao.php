@@ -5,6 +5,7 @@ namespace App\Domain\Identidade\Services;
 use App\Domain\Identidade\Contracts\AutorizarOperacao;
 use App\Domain\Identidade\Contracts\ResolverEscopo;
 use App\Domain\Identidade\Support\Operacoes;
+use App\Support\RecursoNaoEncontradoException;
 
 /**
  * RBAC+ABAC: a matriz decide *o que* o papel pode (operacao); o escopo
@@ -123,11 +124,17 @@ class AutorizadorOperacao implements AutorizarOperacao
             return true;
         }
 
-        return $this->escopo->cobre(
-            $contexto->tipoEscopo,
-            $contexto->escopoId,
-            $tipoRecurso,
-            $recursoId,
-        );
+        try {
+            return $this->escopo->cobre(
+                $contexto->tipoEscopo,
+                $contexto->escopoId,
+                $tipoRecurso,
+                $recursoId,
+            );
+        } catch (RecursoNaoEncontradoException) {
+            // Recurso inexistente nega a operacao; o 404 fica com quem carrega
+            // o recurso (Gate so responde permitido/negado).
+            return false;
+        }
     }
 }

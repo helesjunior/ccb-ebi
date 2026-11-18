@@ -79,3 +79,31 @@ it('nao altera EBI de outro escopo', function () {
 
     $this->patchJson("/api/v1/ebis/{$ebi->id}", ['nome' => 'X'], $auth)->assertForbidden();
 });
+
+it('nao reparenta EBI para igreja fora do escopo nem transfere para setor fora', function () {
+    $central = CentralNacional::factory()->create();
+    $regional = Regional::factory()->create(['central_nacional_id' => $central->id]);
+    $setorA = Setor::factory()->create(['regional_id' => $regional->id]);
+    $setorB = Setor::factory()->create(['regional_id' => $regional->id]);
+    $igrejaA = Igreja::factory()->create();
+    $igrejaB = Igreja::factory()->create();
+
+    IgrejaVinculacao::create(['igreja_id' => $igrejaA->id, 'setor_id' => $setorA->id, 'inicio' => '2020-01-01', 'fim' => null]);
+    IgrejaVinculacao::create(['igreja_id' => $igrejaB->id, 'setor_id' => $setorB->id, 'inicio' => '2020-01-01', 'fim' => null]);
+
+    $ebi = Ebi::factory()->create(['igreja_id' => $igrejaA->id]);
+    $auth = ($this->auth)('adm_setor', 'setor', $setorA->id);
+
+    $this->patchJson("/api/v1/ebis/{$ebi->id}", ['igreja_id' => $igrejaB->id], $auth)->assertForbidden();
+    $this->patchJson("/api/v1/ebis/{$ebi->id}", ['igreja_id' => $igrejaA->id], $auth)->assertOk();
+
+    $this->postJson("/api/v1/churches/{$igrejaA->id}/transfers", [
+        'sector_id' => $setorB->id, 'date' => now()->toDateString(),
+    ], $auth)->assertForbidden();
+});
+
+it('devolve 404, e nao 500, ao autorizar recurso inexistente', function () {
+    $auth = ($this->auth)('adm_setor', 'setor', (string) Str::ulid());
+
+    $this->patchJson('/api/v1/churches/01J00000000000000000000000', ['nome' => 'X'], $auth)->assertNotFound();
+});
