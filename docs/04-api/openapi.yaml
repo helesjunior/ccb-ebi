@@ -1672,7 +1672,11 @@ paths:
       summary: Decidir pedido de vínculo (RF-03)
       description: >-
         A coordenadora aprova, recusa, pede documento, revoga ou contesta um
-        vínculo. Exige a operação `vinculo.gerenciar`.
+        vínculo. Exige `vinculo.gerenciar`
+        sobre o território do participante; fora dele responde 404 (ser
+        responsável pela criança não basta). O autor do pedido não pode decidir
+        o próprio vínculo: nesse caso responde 403 `acesso_negado`, e a decisão
+        deve ficar com outro operador do mesmo território.
       security:
         - bearerAuth: []
       parameters:
