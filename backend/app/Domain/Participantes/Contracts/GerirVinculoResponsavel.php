@@ -32,4 +32,6 @@ interface GerirVinculoResponsavel
      * @return array<int, Participante>
      */
     public function dependentesDe(string $usuarioId): array;
+
+    public function encontrar(string $vinculoId): ?ResponsavelParticipante;
 }

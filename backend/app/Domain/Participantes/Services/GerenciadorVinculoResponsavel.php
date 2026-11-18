@@ -128,6 +128,11 @@ class GerenciadorVinculoResponsavel implements GerirVinculoResponsavel
             ->all();
     }
 
+    public function encontrar(string $vinculoId): ?ResponsavelParticipante
+    {
+        return ResponsavelParticipante::query()->find($vinculoId);
+    }
+
     /**
      * @param  array<string, mixed>  $metadados
      */
