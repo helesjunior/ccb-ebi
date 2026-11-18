@@ -63,6 +63,7 @@ Proposta inicial, prefixo `/api/v1`. Rotas marcadas *novo* não existiam na vers
 | GET | `/participants` | Pesquisa no escopo do operador *novo* (`no OpenAPI`) | RF-02 |
 | GET | `/participants/{id}` | Consultar participante (`no OpenAPI`) | RF-02 |
 | POST | `/participants/{id}/guardians` | Solicitar vínculo (`no OpenAPI`) | RF-03 |
+| GET | `/guardian-requests` | Listar pedidos de vínculo do território e os próprios *novo* (`no OpenAPI`) | RF-03 |
 | PATCH | `/guardian-requests/{id}` | Aprovar, recusar, contestar ou revogar *novo* (`no OpenAPI`) | RF-03 |
 | POST | `/participants/{id}/age-exceptions` | Solicitar exceção inclusiva *novo* (`no OpenAPI`) | RF-02 |
 | PATCH | `/age-exceptions/{id}` | Coordenadora decide (com o responsável), suspende ou revoga *novo* (`no OpenAPI`) | RF-02 |

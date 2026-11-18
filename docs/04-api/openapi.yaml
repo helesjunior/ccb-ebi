@@ -1632,6 +1632,40 @@ paths:
         '401': { $ref: '#/components/responses/Problem' }
         '403': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
+  /guardian-requests:
+    get:
+      tags: [participants]
+      summary: Listar pedidos de vínculo (RF-03)
+      description: >-
+        Lista vínculos visíveis ao ator: os do seu território, para quem tem
+        `vinculo.gerenciar`, e os que ele mesmo abriu, por propriedade. Exige a
+        finalidade declarada, registrada na auditoria.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - name: validacao
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [pendente, aprovada, aguardando_documento, recusada, todos]
+            default: pendente
+        - $ref: '#/components/parameters/FinalidadeLeitura'
+      responses:
+        '200':
+          description: Pedidos visíveis ao ator
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ResponsavelParticipante' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
   /guardian-requests/{id}:
     patch:
       tags: [participants]
@@ -2241,12 +2275,22 @@ components:
           type: string
           format: binary
           description: 'Arquivo da evidência de aceite (PDF/JPEG/PNG). Obrigatório.'
+    VinculoParticipanteResumo:
+      type: object
+      properties:
+        id: { type: string }
+        nome: { type: string }
+        matricula: { type: string }
     ResponsavelParticipante:
       type: object
       properties:
         id: { type: string }
         usuario_id: { type: [string, 'null'] }
         participante_id: { type: string }
+        participante:
+          oneOf:
+            - $ref: '#/components/schemas/VinculoParticipanteResumo'
+            - type: 'null'
         nome: { type: string }
         tipo_relacao: { type: string }
         status: { type: string }
