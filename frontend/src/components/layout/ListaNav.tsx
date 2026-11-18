@@ -145,7 +145,7 @@ const ITENS: ItemNav[] = [
     descricao: 'Pedidos de vínculo entre responsável e participante.',
     icone: LinkIcon,
     grupo: 'Administração',
-    papeis: EQUIPE,
+    papeis: [],
   },
   {
     id: 'auditoria',
