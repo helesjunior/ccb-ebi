@@ -3,6 +3,7 @@
 use App\Domain\Agenda\Models\AgendaEbi;
 use App\Domain\Auditoria\Models\EventoAuditoria;
 use App\Domain\Sessoes\Contracts\GerarSessoesPrevistas;
+use App\Domain\Sessoes\Contracts\ResultadoGeracao;
 use App\Domain\Sessoes\Models\Sessao;
 use App\Support\ProblemException;
 use Carbon\CarbonImmutable;
@@ -250,3 +251,24 @@ it('recupera apenas a violacao unica do inicio da sessao', function (string $men
     'outra unique' => ['duplicate key value violates unique constraint "sessao_pkey"', false],
     'foreign key' => ['foreign key constraint failed on sessao', false],
 ]);
+
+it('isola falha de uma EBI e continua nas demais', function () {
+    $outra = igrejaComEbi()['ebi'];
+    $chamadas = [];
+    $falha = $this->ebi->id;
+
+    $this->mock(GerarSessoesPrevistas::class, function ($mock) use (&$chamadas, $falha): void {
+        $mock->shouldReceive('gerar')->andReturnUsing(function (string $ebiId, string $de, string $ate) use (&$chamadas, $falha) {
+            $chamadas[] = $ebiId;
+            if ($ebiId === $falha) {
+                throw new RuntimeException('falha proposital');
+            }
+
+            return new ResultadoGeracao(1, 0, $de, $ate);
+        });
+    });
+
+    $this->artisan('sessoes:gerar')->assertFailed();
+
+    expect($chamadas)->toContain($falha, $outra->id);
+});

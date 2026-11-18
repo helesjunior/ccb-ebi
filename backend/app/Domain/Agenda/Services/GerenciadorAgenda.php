@@ -133,14 +133,18 @@ class GerenciadorAgenda implements GerirAgenda
     public function encerrarFaixa(string $faixaId): void
     {
         $faixa = AgendaEbi::query()->find($faixaId) ?? $this->naoEncontrada();
-        if ($faixa->inicio_vigencia->toDateString() > today()->toDateString()
+        $inicio = $faixa->inicio_vigencia->toDateString();
+        if ($inicio > today()->toDateString()
             && ! DB::table('sessao')->where('agenda_ebi_id', $faixaId)->exists()) {
             $faixa->delete();
 
             return;
         }
 
-        $faixa->update(['fim_vigencia' => today()->subDay()->toDateString()]);
+        // Faixa futura que ja gerou sessoes fica inerte em vez de vencer antes
+        // de comecar (o que violaria a janela de vigencia).
+        $fim = today()->subDay()->toDateString();
+        $faixa->update(['fim_vigencia' => $fim < $inicio ? $inicio : $fim]);
     }
 
     /** @param array<string, mixed> $dados */

@@ -16,11 +16,15 @@ class AgendaController
 
     public function index(string $id): Response
     {
+        Gate::authorize(Operacoes::SESSAO_LER, ['ebi', $id]);
+
         return AgendaFaixaResource::collection($this->gerir->faixas($id))->response();
     }
 
     public function store(AgendaFaixaRequest $request, string $id): Response
     {
+        Gate::authorize(Operacoes::AGENDA_GERENCIAR, ['ebi', $id]);
+
         return (new AgendaFaixaResource($this->gerir->criarFaixa($id, $request->validated())))
             ->response()->setStatusCode(201);
     }

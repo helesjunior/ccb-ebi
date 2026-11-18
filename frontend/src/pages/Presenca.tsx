@@ -187,7 +187,7 @@ export function Presenca({ sessaoId, onVoltar, papeis }: {
         <Button type="button" variant="outline" onClick={onVoltar} disabled={enviando}>Voltar para sessões</Button>
         <h1 className="text-2xl font-semibold">Presença{sessao && ` — ${sessao.ebi_nome ?? 'EBI'}`}</h1>
         {sessao && <div className="flex flex-wrap items-center gap-3">
-          <p>{formatarDataHora(sessao.inicio_previsto)}</p>
+          <p>{formatarDataHora(sessao.inicio_previsto, sessao.timezone)}</p>
           <Badge variant="outline">{rotuloStatus(sessao.status)}</Badge>
         </div>}
       </header>
@@ -264,7 +264,7 @@ export function Presenca({ sessaoId, onVoltar, papeis }: {
             <TableBody>
               <EstadoTabela colunas={5} carregando={carregando} vazio={presencas.length === 0} mensagemVazio="Nenhuma presença registrada." />
               {!carregando && presencas.map((presenca) => <TableRow key={presenca.id}>
-                <TableCell className={presenca.status === 'estornada' ? 'line-through' : ''}>{formatarHora(presenca.registrado_em)}</TableCell>
+                <TableCell className={presenca.status === 'estornada' ? 'line-through' : ''}>{formatarHora(presenca.registrado_em, sessao?.timezone)}</TableCell>
                 <TableCell className={`whitespace-normal ${presenca.status === 'estornada' ? 'line-through' : ''}`}>{presenca.participante?.nome}</TableCell>
                 <TableCell className={presenca.status === 'estornada' ? 'line-through' : ''}>{presenca.participante?.matricula}</TableCell>
                 <TableCell className="whitespace-normal">

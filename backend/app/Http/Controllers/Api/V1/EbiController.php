@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Identidade\Support\Operacoes;
 use App\Domain\Organizacao\Contracts\GerirOrganizacao;
 use App\Http\Requests\Organizacao\EbiRequest;
 use App\Http\Resources\EbiResource;
 use App\Support\PaginacaoCursor;
 use App\Support\ProblemException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\Response;
 
 class EbiController
@@ -32,6 +34,7 @@ class EbiController
 
     public function update(EbiRequest $request, string $id): Response
     {
+        Gate::authorize(Operacoes::ORGANIZACAO_GERENCIAR, ['ebi', $id]);
         $ebi = $this->gerir->atualizarEbi($id, $request->validated());
 
         if ($ebi === null) {

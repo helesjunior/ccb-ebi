@@ -95,6 +95,9 @@ class GerenciadorSessao implements GerirSessaoEbi
             $sessao->fill($alteracoes);
             $this->validarInstantes($sessao);
             $alterados = array_keys($sessao->getDirty());
+            if ($alterados === []) {
+                return $this->consulta->detalhe($sessaoId) ?? throw new ProblemException('not_found', 'Recurso não encontrado', 404);
+            }
             $antes = Arr::only($original, $alterados);
             $depois = Arr::only($sessao->toArray(), $alterados);
             $sessao->save();

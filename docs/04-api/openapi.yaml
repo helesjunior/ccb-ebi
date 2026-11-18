@@ -2367,6 +2367,7 @@ components:
         id: { type: string }
         ebi_id: { type: string }
         ebi_nome: { type: string }
+        timezone: { type: string, description: 'Fuso IANA da igreja; datas/horas da sessão são exibidas nele.' }
         igreja_id: { type: string }
         agenda_ebi_id: { type: [string, 'null'] }
         inicio_previsto: { type: string, format: date-time }
@@ -2481,6 +2482,7 @@ components:
           properties:
             id: { type: string }
             nome: { type: string }
+            timezone: { type: string }
         inicio_previsto: { type: string, format: date-time }
         status: { type: string, enum: [valida, estornada] }
         registrado_em: { type: string, format: date-time }

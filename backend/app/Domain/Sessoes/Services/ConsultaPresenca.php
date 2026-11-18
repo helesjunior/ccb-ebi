@@ -25,14 +25,15 @@ class ConsultaPresenca implements ConsultarPresenca
             ->when($ate !== null, fn ($q) => $q->where('registrado_em', '<=', CarbonImmutable::parse($ate)->utc()))
             ->with('sessao')
             ->orderByDesc('registrado_em')->orderByDesc('id')->get();
-        $nomes = [];
+        $ebis = [];
 
-        return $presencas->map(function (Presenca $p) use (&$nomes): HistoricoPresenca {
+        return $presencas->map(function (Presenca $p) use (&$ebis): HistoricoPresenca {
             $sessao = $p->sessao ?? throw new ProblemException('not_found', 'Recurso não encontrado', 404);
-            $nomes[$sessao->ebi_id] ??= $this->ebis->dados($sessao->ebi_id)->nome ?? '';
+            $ebis[$sessao->ebi_id] ??= $this->ebis->dados($sessao->ebi_id);
 
             return new HistoricoPresenca(
-                (string) $p->id, $p->sessao_id, $sessao->ebi_id, $nomes[$sessao->ebi_id],
+                (string) $p->id, $p->sessao_id, $sessao->ebi_id, $ebis[$sessao->ebi_id]->nome ?? '',
+                $ebis[$sessao->ebi_id]->timezone ?? 'UTC',
                 CarbonImmutable::parse($sessao->inicio_previsto)->toIso8601String(), $p->status,
                 $p->registrado_em->toIso8601String(),
             );

@@ -4,31 +4,34 @@
  * ao servidor continua sendo o código original.
  */
 
-/** `2018-03-05` → `05/03/2018`. Aceita também data-hora ISO. Vazio → `—`. */
-export function formatarData(valor?: string | null): string {
+/**
+ * `2018-03-05` → `05/03/2018`. Aceita também data-hora ISO e, nesse caso, usa
+ * o fuso informado (o da igreja) em vez do fuso do navegador. Vazio → `—`.
+ */
+export function formatarData(valor?: string | null, timeZone?: string): string {
   if (!valor) return '—'
   const soData = /^(\d{4})-(\d{2})-(\d{2})$/.exec(valor)
   if (soData) return `${soData[3]}/${soData[2]}/${soData[1]}`
   const data = new Date(valor)
-  return Number.isNaN(data.getTime()) ? valor : data.toLocaleDateString('pt-BR')
+  return Number.isNaN(data.getTime()) ? valor : data.toLocaleDateString('pt-BR', timeZone ? { timeZone } : undefined)
 }
 
-/** `2026-11-18T13:00:00Z` → `13:00` (hora local do navegador). */
-export function formatarHora(valor?: string | null): string {
+/** `2026-11-18T13:00:00Z` → `13:00` no fuso informado (padrão: do navegador). */
+export function formatarHora(valor?: string | null, timeZone?: string): string {
   if (!valor) return '—'
   const data = new Date(valor)
   return Number.isNaN(data.getTime())
     ? valor
-    : data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    : data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', ...(timeZone ? { timeZone } : {}) })
 }
 
-/** Data-hora ISO → `05/03/2018 14:30`. */
-export function formatarDataHora(valor?: string | null): string {
+/** Data-hora ISO → `05/03/2018 14:30` no fuso informado. */
+export function formatarDataHora(valor?: string | null, timeZone?: string): string {
   if (!valor) return '—'
   const data = new Date(valor)
   return Number.isNaN(data.getTime())
     ? valor
-    : data.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
+    : data.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short', ...(timeZone ? { timeZone } : {}) })
 }
 
 const PAPEIS: Record<string, string> = {

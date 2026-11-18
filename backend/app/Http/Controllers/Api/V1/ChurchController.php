@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Identidade\Services\ContextoAtuacao;
+use App\Domain\Identidade\Support\Operacoes;
 use App\Domain\Organizacao\Contracts\ConsultarOrganizacao;
 use App\Domain\Organizacao\Contracts\GerirOrganizacao;
 use App\Domain\Organizacao\Contracts\TransferirIgreja;
@@ -14,6 +15,7 @@ use App\Support\PaginacaoCursor;
 use App\Support\ProblemException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\Response;
 
 class ChurchController
@@ -68,6 +70,7 @@ class ChurchController
 
     public function update(IgrejaRequest $request, string $id): Response
     {
+        Gate::authorize(Operacoes::ORGANIZACAO_GERENCIAR, ['igreja', $id]);
         $igreja = $this->gerir->atualizarIgreja($id, $request->validated());
 
         if ($igreja === null) {
@@ -81,6 +84,8 @@ class ChurchController
 
     public function transfer(TransferenciaRequest $request, string $id): Response
     {
+        Gate::authorize(Operacoes::ORGANIZACAO_GERENCIAR, ['igreja', $id]);
+
         try {
             $contexto = $request->attributes->get('contexto_atuacao');
 

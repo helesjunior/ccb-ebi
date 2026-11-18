@@ -139,25 +139,25 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         // Escritas de criacao/transferencia sob idempotencia (Idempotency-Key).
         Route::middleware(IdempotenciaMiddleware::class)->group(function (): void {
             Route::post('churches', [ChurchController::class, 'store'])
-                ->middleware('can:organizacao.gerenciar,igreja')->name('churches.store');
+                ->middleware('can:organizacao.gerenciar')->name('churches.store');
             Route::post('churches/{id}/transfers', [ChurchController::class, 'transfer'])
-                ->middleware('can:organizacao.gerenciar,igreja,{id}')->name('churches.transfer');
+                ->name('churches.transfer');
             Route::post('regions', [RegionController::class, 'store'])
-                ->middleware('can:organizacao.gerenciar,regional')->name('regions.store');
+                ->middleware('can:organizacao.gerenciar')->name('regions.store');
             Route::post('sectors', [SectorController::class, 'store'])
-                ->middleware('can:organizacao.gerenciar,setor')->name('sectors.store');
+                ->middleware('can:organizacao.gerenciar')->name('sectors.store');
             Route::post('ebis', [EbiController::class, 'store'])
-                ->middleware('can:organizacao.gerenciar,ebi')->name('ebis.store');
+                ->middleware('can:organizacao.gerenciar')->name('ebis.store');
         });
 
         Route::patch('churches/{id}', [ChurchController::class, 'update'])
-            ->middleware('can:organizacao.gerenciar,igreja,{id}')->name('churches.update');
+            ->name('churches.update');
         Route::patch('regions/{id}', [RegionController::class, 'update'])
-            ->middleware('can:organizacao.gerenciar,regional,{id}')->name('regions.update');
+            ->name('regions.update');
         Route::patch('sectors/{id}', [SectorController::class, 'update'])
-            ->middleware('can:organizacao.gerenciar,setor,{id}')->name('sectors.update');
+            ->name('sectors.update');
         Route::patch('ebis/{id}', [EbiController::class, 'update'])
-            ->middleware('can:organizacao.gerenciar,ebi,{id}')->name('ebis.update');
+            ->name('ebis.update');
 
         // Participantes (RF-02, RF-03). Cadastro pelo responsavel sob
         // idempotencia; leitura por operador sob `participante.ler` (matriz).
@@ -201,25 +201,22 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         Route::patch('age-exceptions/{id}', [AgeExceptionController::class, 'update'])
             ->middleware('can:excecao.decidir')->name('age-exceptions.update');
 
-        Route::get('ebis/{id}/agenda', [AgendaController::class, 'index'])
-            ->middleware('can:sessao.ler,ebi,{id}')->name('agenda.index');
+        Route::get('ebis/{id}/agenda', [AgendaController::class, 'index'])->name('agenda.index');
         Route::post('ebis/{id}/agenda', [AgendaController::class, 'store'])
-            ->middleware(['can:agenda.gerenciar,ebi,{id}', IdempotenciaMiddleware::class])->name('agenda.store');
+            ->middleware(IdempotenciaMiddleware::class)->name('agenda.store');
         Route::patch('agenda/{id}', [AgendaController::class, 'update'])->name('agenda.update');
         Route::delete('agenda/{id}', [AgendaController::class, 'destroy'])->name('agenda.destroy');
 
-        Route::get('ebis/{id}/agenda-exceptions', [AgendaExcecaoController::class, 'index'])
-            ->middleware('can:sessao.ler,ebi,{id}')->name('agenda-exceptions.index');
+        Route::get('ebis/{id}/agenda-exceptions', [AgendaExcecaoController::class, 'index'])->name('agenda-exceptions.index');
         Route::post('ebis/{id}/agenda-exceptions', [AgendaExcecaoController::class, 'store'])
-            ->middleware(['can:agenda.gerenciar,ebi,{id}', IdempotenciaMiddleware::class])->name('agenda-exceptions.store');
+            ->middleware(IdempotenciaMiddleware::class)->name('agenda-exceptions.store');
         Route::delete('agenda-exceptions/{id}', [AgendaExcecaoController::class, 'destroy'])->name('agenda-exceptions.destroy');
 
         Route::post('ebis/{id}/sessions/generate', [SessaoController::class, 'gerar'])
-            ->middleware(['can:agenda.gerenciar,ebi,{id}', IdempotenciaMiddleware::class])
+            ->middleware(IdempotenciaMiddleware::class)
             ->name('sessions.generate');
 
-        Route::get('ebis/{id}/sessions', [SessaoController::class, 'index'])
-            ->middleware('can:sessao.ler,ebi,{id}')->name('sessions.index');
+        Route::get('ebis/{id}/sessions', [SessaoController::class, 'index'])->name('sessions.index');
         Route::get('sessions/{id}', [SessaoController::class, 'show'])->name('sessions.show');
         Route::get('sessions/{id}/participants', [PresencaController::class, 'participantes'])
             ->name('sessions.participants');

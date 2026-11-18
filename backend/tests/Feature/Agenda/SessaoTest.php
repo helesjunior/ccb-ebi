@@ -169,3 +169,35 @@ it('corrige realizada de sessao encerrada e audita com motivo', function () {
         ->and($evento->motivo)->toBe('Registro incorreto')
         ->and($evento->escopo)->toBe("ebi:{$this->ebi->id}");
 });
+
+it('lista pelo dia local da igreja, nao pelo dia UTC', function () {
+    $this->igreja->update(['timezone' => 'America/Manaus']);
+
+    $madrugadaLocal = Sessao::factory()->create([
+        'ebi_id' => $this->ebi->id, 'igreja_id' => $this->igreja->id,
+        'inicio_previsto' => '2026-11-19 00:30:00', 'fim_previsto' => '2026-11-19 02:00:00',
+        'status' => Sessao::STATUS_PREVISTA,
+    ]);
+    $diaSeguinteLocal = Sessao::factory()->create([
+        'ebi_id' => $this->ebi->id, 'igreja_id' => $this->igreja->id,
+        'inicio_previsto' => '2026-11-19 04:00:00', 'fim_previsto' => '2026-11-19 05:30:00',
+        'status' => Sessao::STATUS_PREVISTA,
+    ]);
+
+    $resposta = $this->getJson("/api/v1/ebis/{$this->ebi->id}/sessions?de=2026-11-18&ate=2026-11-18", $this->auth)
+        ->assertOk()->assertJsonCount(2)->assertJsonPath('0.timezone', 'America/Manaus');
+
+    $ids = collect($resposta->json())->pluck('id');
+    expect($ids)->toContain($this->sessao->id, $madrugadaLocal->id)
+        ->and($ids)->not->toContain($diaSeguinteLocal->id);
+});
+
+it('nao grava correcao quando nada muda', function () {
+    $this->sessao->update(['tema' => 'Tema mantido']);
+
+    $this->patchJson("/api/v1/sessions/{$this->sessao->id}", ['tema' => 'Tema mantido'], $this->auth)
+        ->assertOk()->assertJsonPath('tema', 'Tema mantido');
+
+    expect(SessaoCorrecao::count())->toBe(0)
+        ->and(EventoAuditoria::where('acao', 'sessao.corrigida')->exists())->toBeFalse();
+});

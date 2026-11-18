@@ -20,6 +20,7 @@ class SessaoResource extends JsonResource
     {
         return [
             'id' => $this->id, 'ebi_id' => $this->ebiId, 'ebi_nome' => $this->ebiNome,
+            'timezone' => $this->timezone,
             'igreja_id' => $this->igrejaId, 'agenda_ebi_id' => $this->agendaEbiId,
             'inicio_previsto' => $this->inicioPrevisto, 'fim_previsto' => $this->fimPrevisto,
             'inicio_real' => $this->inicioReal, 'fim_real' => $this->fimReal,

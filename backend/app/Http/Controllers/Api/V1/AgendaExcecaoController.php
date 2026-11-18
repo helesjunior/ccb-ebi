@@ -22,6 +22,7 @@ class AgendaExcecaoController
 
     public function index(Request $request, string $id): Response
     {
+        Gate::authorize(Operacoes::SESSAO_LER, ['ebi', $id]);
         $filtros = $request->validate([
             'de' => ['nullable', 'date_format:Y-m-d'],
             'ate' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:de'],
@@ -32,6 +33,8 @@ class AgendaExcecaoController
 
     public function store(AgendaExcecaoRequest $request, string $id): Response
     {
+        Gate::authorize(Operacoes::AGENDA_GERENCIAR, ['ebi', $id]);
+
         $excecao = DB::transaction(function () use ($request, $id) {
             $excecao = $this->gerir->criarExcecao($id, $request->validated());
             if (in_array($excecao->tipo, ['feriado', 'cancelamento'], true)) {

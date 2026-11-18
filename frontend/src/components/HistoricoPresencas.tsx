@@ -97,7 +97,7 @@ export function HistoricoPresencas({ participanteId, rota }: {
               />
               {!carregando && itens.map((item) => (
                 <TableRow key={item.id}>
-                  <TableCell>{formatarDataHora(item.inicio_previsto)}</TableCell>
+                  <TableCell>{formatarDataHora(item.inicio_previsto, item.ebi?.timezone)}</TableCell>
                   <TableCell className="whitespace-normal">{item.ebi?.nome ?? '—'}</TableCell>
                   <TableCell>{rotuloStatus(item.status)}</TableCell>
                 </TableRow>

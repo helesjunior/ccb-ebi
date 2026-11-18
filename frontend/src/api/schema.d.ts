@@ -4028,6 +4028,8 @@ export interface components {
             id?: string;
             ebi_id?: string;
             ebi_nome?: string;
+            /** @description Fuso IANA da igreja; datas/horas da sessão são exibidas nele. */
+            timezone?: string;
             igreja_id?: string;
             agenda_ebi_id?: string | null;
             /** Format: date-time */
@@ -4135,6 +4137,7 @@ export interface components {
             ebi?: {
                 id?: string;
                 nome?: string;
+                timezone?: string;
             };
             /** Format: date-time */
             inicio_previsto?: string;

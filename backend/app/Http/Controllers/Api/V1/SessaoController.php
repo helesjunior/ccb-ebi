@@ -34,6 +34,7 @@ class SessaoController
 
     public function index(Request $request, string $id): Response
     {
+        Gate::authorize(Operacoes::SESSAO_LER, ['ebi', $id]);
         $dados = $request->validate([
             'de' => ['required', 'date_format:Y-m-d'],
             'ate' => ['required', 'date_format:Y-m-d', 'after_or_equal:de'],
@@ -94,9 +95,12 @@ class SessaoController
 
     public function gerar(GerarSessoesRequest $request, string $id): JsonResponse
     {
+        Gate::authorize(Operacoes::AGENDA_GERENCIAR, ['ebi', $id]);
+        $ebi = $this->ebis->dados($id) ?? throw new ProblemException('not_found', 'Recurso não encontrado', 404);
         $dados = $request->validated();
-        $de = $dados['de'] ?? CarbonImmutable::today()->toDateString();
-        $ate = $dados['ate'] ?? CarbonImmutable::parse($de)->addWeeks((int) ($dados['semanas'] ?? 4))->toDateString();
+        $hoje = CarbonImmutable::now($ebi->timezone);
+        $de = $dados['de'] ?? $hoje->toDateString();
+        $ate = $dados['ate'] ?? CarbonImmutable::parse($de, $ebi->timezone)->addWeeks((int) ($dados['semanas'] ?? 4))->toDateString();
 
         return response()->json($this->gerador->gerar($id, $de, $ate), 201);
     }

@@ -9,6 +9,7 @@ final readonly class HistoricoPresenca
         public string $sessaoId,
         public string $ebiId,
         public string $ebiNome,
+        public string $ebiTimezone,
         public string $inicioPrevisto,
         public string $status,
         public string $registradoEm,

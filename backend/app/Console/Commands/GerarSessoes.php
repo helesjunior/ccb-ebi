@@ -6,6 +6,7 @@ use App\Domain\Organizacao\Contracts\ConsultarEbi;
 use App\Domain\Sessoes\Contracts\GerarSessoesPrevistas;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
+use Throwable;
 
 class GerarSessoes extends Command
 {
@@ -22,12 +23,20 @@ class GerarSessoes extends Command
             return self::INVALID;
         }
 
-        $hoje = CarbonImmutable::today();
+        $falhas = 0;
         foreach ($ebis->todasAtivas() as $ebi) {
-            $resultado = $gerador->gerar($ebi->id, $hoje->toDateString(), $hoje->addDays($dias)->toDateString());
-            $this->line("EBI {$ebi->nome}: criadas {$resultado->criadas}, ignoradas {$resultado->ignoradas}");
+            $hoje = CarbonImmutable::now($ebi->timezone);
+
+            try {
+                $resultado = $gerador->gerar($ebi->id, $hoje->toDateString(), $hoje->addDays($dias)->toDateString());
+                $this->line("EBI {$ebi->nome}: criadas {$resultado->criadas}, ignoradas {$resultado->ignoradas}");
+            } catch (Throwable $e) {
+                report($e);
+                $this->error("EBI {$ebi->nome}: falha ao gerar sessoes ({$e->getMessage()})");
+                $falhas++;
+            }
         }
 
-        return self::SUCCESS;
+        return $falhas === 0 ? self::SUCCESS : self::FAILURE;
     }
 }

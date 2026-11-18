@@ -8,6 +8,7 @@ final readonly class SessaoEbi
         public string $id,
         public string $ebiId,
         public string $ebiNome,
+        public string $timezone,
         public string $igrejaId,
         public ?string $agendaEbiId,
         public string $inicioPrevisto,

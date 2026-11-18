@@ -42,7 +42,8 @@ class HistoricoPresencaController
         $historico = $this->consulta->doParticipante($id, $filtros['de'] ?? null, $filtros['ate'] ?? null);
 
         return response()->json(['data' => array_map(fn (HistoricoPresenca $p) => [
-            'id' => $p->id, 'sessao_id' => $p->sessaoId, 'ebi' => ['id' => $p->ebiId, 'nome' => $p->ebiNome],
+            'id' => $p->id, 'sessao_id' => $p->sessaoId,
+            'ebi' => ['id' => $p->ebiId, 'nome' => $p->ebiNome, 'timezone' => $p->ebiTimezone],
             'inicio_previsto' => $p->inicioPrevisto, 'status' => $p->status, 'registrado_em' => $p->registradoEm,
         ], $historico)]);
     }

@@ -194,7 +194,7 @@ export function Sessoes({ onAbrirPresenca, papeis }: {
 
   const grupos = new Map<string, Sessao[]>()
   for (const sessao of sessoes) {
-    const dia = formatarData(sessao.inicio_previsto)
+    const dia = formatarData(sessao.inicio_previsto, sessao.timezone)
     const grupo = grupos.get(dia) ?? []
     grupo.push(sessao)
     grupos.set(dia, grupo)
@@ -245,7 +245,7 @@ export function Sessoes({ onAbrirPresenca, papeis }: {
                   <TableRow className="bg-muted/50"><TableCell colSpan={5} className="font-semibold">{dia}</TableCell></TableRow>
                   {sessoesDoDia.map((sessao) => (
                     <TableRow key={sessao.id}>
-                      <TableCell>{formatarHora(sessao.inicio_previsto)} – {formatarHora(sessao.fim_previsto)}</TableCell>
+                      <TableCell>{formatarHora(sessao.inicio_previsto, sessao.timezone)} – {formatarHora(sessao.fim_previsto, sessao.timezone)}</TableCell>
                       <TableCell className="whitespace-normal">{sessao.tema || '—'}</TableCell>
                       <TableCell className="whitespace-normal">
                         {rotuloStatus(sessao.status)}

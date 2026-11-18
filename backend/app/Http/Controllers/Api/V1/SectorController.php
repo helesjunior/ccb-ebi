@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Identidade\Support\Operacoes;
 use App\Domain\Organizacao\Contracts\GerirOrganizacao;
 use App\Http\Requests\Organizacao\SetorRequest;
 use App\Http\Resources\SectorResource;
 use App\Support\PaginacaoCursor;
 use App\Support\ProblemException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\Response;
 
 class SectorController
@@ -32,6 +34,7 @@ class SectorController
 
     public function update(SetorRequest $request, string $id): Response
     {
+        Gate::authorize(Operacoes::ORGANIZACAO_GERENCIAR, ['setor', $id]);
         $setor = $this->gerir->atualizarSetor($id, $request->validated());
 
         if ($setor === null) {

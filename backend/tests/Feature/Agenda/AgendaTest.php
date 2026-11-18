@@ -1,6 +1,7 @@
 <?php
 
 use App\Domain\Agenda\Models\AgendaEbi;
+use App\Domain\Sessoes\Models\Sessao;
 
 beforeEach(function () {
     ['igreja' => $this->igreja, 'ebi' => $this->ebi] = igrejaComEbi();
@@ -63,6 +64,26 @@ it('delete encerra a vigencia e nao apaga a faixa', function () {
 
     $faixa->refresh();
     expect($faixa->fim_vigencia?->toDateString())->toBe(now()->subDay()->toDateString());
+});
+
+it('nao vence antes de comecar a faixa futura que ja gerou sessoes', function () {
+    $inicio = now()->addMonth()->toDateString();
+    $faixa = AgendaEbi::factory()->create([
+        'ebi_id' => $this->ebi->id,
+        'inicio_vigencia' => $inicio,
+        'fim_vigencia' => null,
+    ]);
+    Sessao::factory()->create([
+        'ebi_id' => $this->ebi->id,
+        'igreja_id' => $this->igreja->id,
+        'agenda_ebi_id' => $faixa->id,
+        'inicio_previsto' => $inicio.' 19:00:00',
+        'fim_previsto' => $inicio.' 20:30:00',
+    ]);
+
+    $this->deleteJson("/api/v1/agenda/{$faixa->id}", [], $this->auth)->assertNoContent();
+
+    expect($faixa->refresh()->fim_vigencia?->toDateString())->toBe($inicio);
 });
 
 it('auxiliar nao altera a agenda', function () {

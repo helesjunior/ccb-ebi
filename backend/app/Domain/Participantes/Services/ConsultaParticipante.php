@@ -21,7 +21,7 @@ class ConsultaParticipante implements ConsultarParticipante
             ->where('status', '!=', 'mesclado')
             ->where(function ($query) use ($termo, $termoNormalizado) {
                 $query->where('matricula', 'like', $termo.'%')
-                    ->orWhere('nome', 'like', '%'.mb_substr($termoNormalizado, 0, 3).'%');
+                    ->orWhere('nome_busca', 'like', '%'.mb_substr($termoNormalizado, 0, 3).'%');
             })
             ->limit(100)
             ->get()
