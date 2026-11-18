@@ -88,6 +88,10 @@ class ChurchController
 
     public function transfer(TransferenciaRequest $request, string $id): Response
     {
+        if ($this->gerir->encontrarIgreja($id) === null) {
+            throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Igreja não encontrada');
+        }
+
         Gate::authorize(Operacoes::ORGANIZACAO_GERENCIAR, ['igreja', $id]);
         $sectorId = $request->string('sector_id')->toString();
         Gate::authorize(Operacoes::ORGANIZACAO_GERENCIAR, ['setor', $sectorId]);
@@ -108,7 +112,7 @@ class ChurchController
 
         $igreja = $this->gerir->encontrarIgreja($id);
 
-        if ($igreja === null) {
+        if ($igreja->getKey() === null) {
             throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Igreja não encontrada');
         }
 

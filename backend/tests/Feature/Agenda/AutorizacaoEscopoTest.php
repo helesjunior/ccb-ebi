@@ -110,6 +110,10 @@ it('devolve 404, e nao 500, ao autorizar recurso inexistente', function () {
     $this->patchJson('/api/v1/regions/01J00000000000000000000000', ['nome' => 'X'], $auth)->assertNotFound();
     $this->patchJson('/api/v1/sectors/01J00000000000000000000000', ['nome' => 'X'], $auth)->assertNotFound();
     $this->patchJson('/api/v1/ebis/01J00000000000000000000000', ['nome' => 'X'], $auth)->assertNotFound();
+    $setorQualquer = Setor::factory()->create();
+    $this->postJson('/api/v1/churches/01J00000000000000000000000/transfers', [
+        'sector_id' => $setorQualquer->id, 'date' => now()->toDateString(),
+    ], $auth)->assertNotFound();
 });
 
 it('permite reenvio do mesmo pai nas escritas de EBI', function () {
