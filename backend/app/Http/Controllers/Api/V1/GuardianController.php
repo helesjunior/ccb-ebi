@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Api\V1;
 use App\Domain\Identidade\Services\ContextoAtuacao;
 use App\Domain\Participantes\Contracts\GerirParticipante;
 use App\Domain\Participantes\Contracts\GerirVinculoResponsavel;
+use App\Http\Requests\Participantes\ListarVinculosRequest;
 use App\Http\Requests\Participantes\SolicitarVinculoRequest;
 use App\Http\Resources\ParticipanteResource;
 use App\Http\Resources\ResponsavelParticipanteResource;
 use App\Support\Participantes\AutorizacaoParticipante;
+use App\Support\Participantes\VisibilidadeVinculoResponsavel;
 use App\Support\ProblemException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,6 +25,7 @@ class GuardianController
         private readonly GerirVinculoResponsavel $vinculos,
         private readonly GerirParticipante $participantes,
         private readonly AutorizacaoParticipante $autorizacao,
+        private readonly VisibilidadeVinculoResponsavel $visibilidade,
     ) {}
 
     public function store(SolicitarVinculoRequest $request, string $participantId): JsonResponse
@@ -55,6 +58,23 @@ class GuardianController
 
         return response()->json([
             'data' => ParticipanteResource::collection($dependentes)->resolve($request),
+        ]);
+    }
+
+    /**
+     * Pedidos de vinculo visiveis ao ator: territorio para quem gerencia,
+     * propriedade para os demais (RF-03).
+     */
+    public function pedidos(ListarVinculosRequest $request): JsonResponse
+    {
+        $vinculos = $this->visibilidade->listar(
+            (string) $request->user()?->getAuthIdentifier(),
+            $this->contexto($request),
+            (string) ($request->validated('validacao') ?? 'pendente'),
+        );
+
+        return response()->json([
+            'data' => ResponsavelParticipanteResource::collection($vinculos)->resolve($request),
         ]);
     }
 

@@ -189,6 +189,8 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         });
         Route::get('me/participants', [GuardianController::class, 'meusDependentes'])
             ->name('me.participants.index');
+        Route::get('guardian-requests', [GuardianController::class, 'pedidos'])
+            ->name('guardian-requests.index');
         Route::patch('guardian-requests/{id}', [GuardianRequestController::class, 'update'])
             ->middleware('can:vinculo.gerenciar')->name('guardian-requests.update');
 
