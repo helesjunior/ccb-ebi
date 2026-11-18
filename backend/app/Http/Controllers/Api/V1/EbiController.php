@@ -34,13 +34,15 @@ class EbiController
 
     public function update(EbiRequest $request, string $id): Response
     {
-        if ($this->gerir->encontrarEbi($id) === null) {
+        $atual = $this->gerir->encontrarEbi($id);
+
+        if ($atual === null) {
             throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'EBI não encontrada');
         }
 
         Gate::authorize(Operacoes::ORGANIZACAO_GERENCIAR, ['ebi', $id]);
         $dados = $request->validated();
-        if (isset($dados['igreja_id'])) {
+        if (isset($dados['igreja_id']) && (string) $dados['igreja_id'] !== (string) $atual->igreja_id) {
             // Reparentar exige alcance tambem sobre a igreja de destino.
             Gate::authorize(Operacoes::ORGANIZACAO_GERENCIAR, ['igreja', (string) $dados['igreja_id']]);
         }

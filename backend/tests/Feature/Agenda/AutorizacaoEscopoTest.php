@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Organizacao\Contracts\ConsultarHierarquia;
 use App\Domain\Organizacao\Models\CentralNacional;
 use App\Domain\Organizacao\Models\Ebi;
 use App\Domain\Organizacao\Models\Igreja;
@@ -106,4 +107,42 @@ it('devolve 404, e nao 500, ao autorizar recurso inexistente', function () {
     $auth = ($this->auth)('adm_setor', 'setor', (string) Str::ulid());
 
     $this->patchJson('/api/v1/churches/01J00000000000000000000000', ['nome' => 'X'], $auth)->assertNotFound();
+    $this->patchJson('/api/v1/regions/01J00000000000000000000000', ['nome' => 'X'], $auth)->assertNotFound();
+    $this->patchJson('/api/v1/sectors/01J00000000000000000000000', ['nome' => 'X'], $auth)->assertNotFound();
+    $this->patchJson('/api/v1/ebis/01J00000000000000000000000', ['nome' => 'X'], $auth)->assertNotFound();
+});
+
+it('permite reenvio do mesmo pai nas escritas de EBI', function () {
+    $central = CentralNacional::factory()->create();
+    $regional = Regional::factory()->create(['central_nacional_id' => $central->id]);
+    $setor = Setor::factory()->create(['regional_id' => $regional->id]);
+    $igreja = Igreja::factory()->create();
+    IgrejaVinculacao::create(['igreja_id' => $igreja->id, 'setor_id' => $setor->id, 'inicio' => '2020-01-01', 'fim' => null]);
+    $ebi = Ebi::factory()->create(['igreja_id' => $igreja->id]);
+
+    $authSetor = ($this->auth)('adm_setor', 'setor', $setor->id);
+    $this->patchJson("/api/v1/ebis/{$ebi->id}", ['igreja_id' => $igreja->id], $authSetor)->assertOk();
+});
+
+it('permite reenvio do mesmo pai na escrita de divisao (setor)', function () {
+    $central = app(ConsultarHierarquia::class)->garantirCentralId();
+    $outraCentral = CentralNacional::factory()->create()->id;
+    $regional = Regional::factory()->create(['central_nacional_id' => $central]);
+    $outraRegional = Regional::factory()->create(['central_nacional_id' => $central]);
+    $setor = Setor::factory()->create(['regional_id' => $regional->id]);
+
+    $authSetor = ($this->auth)('adm_setor', 'setor', $setor->id);
+    $this->patchJson("/api/v1/sectors/{$setor->id}", ['regional_id' => $regional->id], $authSetor)->assertOk();
+    $this->patchJson("/api/v1/sectors/{$setor->id}", ['regional_id' => $outraRegional->id], $authSetor)->assertForbidden();
+});
+
+it('deixa claro o buraco de escopo na escrita de regional (nao ha vinculo de tipo central)', function () {
+    $central = app(ConsultarHierarquia::class)->garantirCentralId();
+    $outraCentral = CentralNacional::factory()->create()->id;
+    $regional = Regional::factory()->create(['central_nacional_id' => $central]);
+    $outraRegional = Regional::factory()->create(['central_nacional_id' => $outraCentral]);
+
+    $authSetor = ($this->auth)('adm_setor', 'setor', $outraRegional->id);
+    $this->patchJson("/api/v1/regions/{$regional->id}", ['central_nacional_id' => $outraCentral], $authSetor)
+        ->assertForbidden();
 });
