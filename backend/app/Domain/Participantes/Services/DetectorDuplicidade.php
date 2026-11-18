@@ -35,9 +35,29 @@ class DetectorDuplicidade
         }
 
         return $consulta->get()
-            ->filter(fn (Participante $p): bool => $this->normalizar($p->nome) === $nome)
+            ->filter(fn (Participante $p): bool => $this->casa($this->normalizar($p->nome), $nome))
             ->values()
             ->all();
+    }
+
+    /**
+     * `q` e termo de busca do operador: casa o nome completo exato (dedup do
+     * cadastro) e tambem prefixo de qualquer palavra do nome, para que buscar
+     * "Patota" ache "Patota (7 anos)".
+     */
+    private function casa(string $nomeNormalizado, string $termo): bool
+    {
+        if ($nomeNormalizado === $termo) {
+            return true;
+        }
+
+        foreach (preg_split('/\s+/', $nomeNormalizado) ?: [] as $palavra) {
+            if ($palavra !== '' && str_starts_with($palavra, $termo)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function normalizar(string $texto): string

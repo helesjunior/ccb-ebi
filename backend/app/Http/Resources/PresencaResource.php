@@ -15,6 +15,11 @@ class PresencaResource extends JsonResource
         return [
             'id' => $this->id, 'sessao_id' => $this->sessaoId, 'participante_id' => $this->participanteId,
             'participante_nome' => $this->participanteNome, 'matricula' => $this->matricula,
+            'participante' => [
+                'id' => $this->participanteId,
+                'nome' => $this->participanteNome,
+                'matricula' => $this->matricula,
+            ],
             'registrado_por' => $this->registradoPor, 'registrado_em' => $this->registradoEm,
             'origem' => $this->origem, 'status' => $this->status,
             'estornado_em' => $this->estornadoEm, 'motivo_estorno' => $this->motivoEstorno,
