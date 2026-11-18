@@ -98,7 +98,8 @@ export function Sessoes({ onAbrirPresenca, papeis }: {
       })
       if (signal.aborted) return
       if (error || !data) throw error
-      setSessoes(data.data ?? [])
+      const lista = Array.isArray(data) ? data : (data.data ?? [])
+      setSessoes(lista as Sessao[])
     } catch (error) {
       if (!signal.aborted) {
         setErro(lerErro(error, 'Não foi possível carregar as sessões.').detail)

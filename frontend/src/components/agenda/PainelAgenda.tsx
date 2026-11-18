@@ -79,8 +79,8 @@ export function PainelAgenda({ ebiId, podeGerenciar, onAgendaAlterada }: {
       if (signal?.aborted) return
       if (agenda.error || !agenda.data) throw agenda.error
       if (exceptions.error || !exceptions.data) throw exceptions.error
-      setFaixas(agenda.data.data ?? [])
-      setExcecoes(exceptions.data.data ?? [])
+      setFaixas(Array.isArray(agenda.data) ? agenda.data : (agenda.data.data ?? []))
+      setExcecoes(Array.isArray(exceptions.data) ? exceptions.data : (exceptions.data.data ?? []))
     } catch (error) {
       if (!signal?.aborted) {
         setErro(lerErro(error, 'Não foi possível carregar a agenda.').detail)

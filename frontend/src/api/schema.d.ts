@@ -3286,6 +3286,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/guardian-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar pedidos de vínculo (RF-03)
+         * @description Lista vínculos visíveis ao ator: os do seu território, para quem tem `vinculo.gerenciar`, e os que ele mesmo abriu, por propriedade. Exige a finalidade declarada, registrada na auditoria.
+         */
+        get: {
+            parameters: {
+                query: {
+                    validacao?: "pendente" | "aprovada" | "aguardando_documento" | "recusada" | "todos";
+                    /** @description Finalidade declarada da leitura identificável (matriz `*` da leitura), registrada na auditoria. Não reusa a finalidade do termo de consentimento. */
+                    finalidade: components["parameters"]["FinalidadeLeitura"];
+                };
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Pedidos visíveis ao ator */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["ResponsavelParticipante"][];
+                        };
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/guardian-requests/{id}": {
         parameters: {
             query?: never;
@@ -3905,10 +3956,16 @@ export interface components {
              */
             evidencia: string;
         };
+        VinculoParticipanteResumo: {
+            id?: string;
+            nome?: string;
+            matricula?: string;
+        };
         ResponsavelParticipante: {
             id?: string;
             usuario_id?: string | null;
             participante_id?: string;
+            participante?: components["schemas"]["VinculoParticipanteResumo"] | null;
             nome?: string;
             tipo_relacao?: string;
             status?: string;

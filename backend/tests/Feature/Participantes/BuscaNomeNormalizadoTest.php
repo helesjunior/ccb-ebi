@@ -41,3 +41,18 @@ it('nao expoe a coluna derivada de busca', function () {
     expect($participante->toArray())->not->toHaveKey('nome_busca')
         ->and($resposta->getContent())->not->toContain('nome_busca');
 });
+
+it('busca por prefixo de palavra do nome no cadastro', function () {
+    $participante = participanteNaIgreja($this->igreja, ['nome' => 'Patota (7 anos)']);
+    participanteNaIgreja($this->igreja, ['nome' => 'Pinguinho (2 anos)']);
+    $url = '/api/v1/participants?q=';
+
+    $this->getJson($url.'patota&finalidade=confirmacao_cadastro', $this->auth)
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $participante->id);
+
+    $this->getJson($url.'an&finalidade=confirmacao_cadastro', $this->auth)
+        ->assertOk()
+        ->assertJsonCount(2, 'data');
+});

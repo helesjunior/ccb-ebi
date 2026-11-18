@@ -5,11 +5,16 @@ use App\Domain\Participantes\Models\ResponsavelParticipante;
 use App\Domain\Participantes\Models\SolicitacaoVinculo;
 
 beforeEach(function () {
+    ['igreja' => $this->igreja, 'ebi' => $this->ebi] = igrejaComEbi();
+
     $this->responsavel = criarUsuarioComPapel('responsavel', 'central', 'c1');
     $this->authResp = ['Authorization' => 'Bearer '.$this->responsavel->createToken('t')->plainTextToken];
 
-    $this->coordenadora = criarUsuarioComPapel('coordenadora', 'ebi', (string) Str::ulid());
-    $this->authCoord = ['Authorization' => 'Bearer '.$this->coordenadora->createToken('t')->plainTextToken];
+    $this->coordenadora = criarUsuarioComPapel('coordenadora', 'ebi', $this->ebi->id);
+    $this->authCoord = [
+        'Authorization' => 'Bearer '.$this->coordenadora->createToken('t')->plainTextToken,
+        'X-Acting-Scope' => "papel=coordenadora;escopo=ebi:{$this->ebi->id}",
+    ];
 });
 
 it('responsavel solicita vinculo e fica pendente', function () {
@@ -30,7 +35,9 @@ it('responsavel solicita vinculo e fica pendente', function () {
 });
 
 it('coordenadora aprova e a validacao vira aprovada', function () {
-    $vinculo = ResponsavelParticipante::factory()->create(['validacao' => 'pendente']);
+    $vinculo = ResponsavelParticipante::factory()->create([
+        'participante_id' => participanteNaIgreja($this->igreja)->id, 'validacao' => 'pendente',
+    ]);
 
     $this->patchJson("/api/v1/guardian-requests/{$vinculo->id}", ['decisao' => 'aprovar'], $this->authCoord)
         ->assertOk()->assertJsonPath('validacao', 'aprovada');
@@ -39,7 +46,9 @@ it('coordenadora aprova e a validacao vira aprovada', function () {
 });
 
 it('duvida muda para aguardando_documento registrando quem conferiu', function () {
-    $vinculo = ResponsavelParticipante::factory()->create(['validacao' => 'pendente']);
+    $vinculo = ResponsavelParticipante::factory()->create([
+        'participante_id' => participanteNaIgreja($this->igreja)->id, 'validacao' => 'pendente',
+    ]);
 
     $this->patchJson("/api/v1/guardian-requests/{$vinculo->id}", ['decisao' => 'pedir_documento'], $this->authCoord)
         ->assertOk()->assertJsonPath('validacao', 'aguardando_documento');
@@ -51,7 +60,9 @@ it('duvida muda para aguardando_documento registrando quem conferiu', function (
 });
 
 it('revoga encerrando o vinculo mas preservando o log', function () {
-    $vinculo = ResponsavelParticipante::factory()->aprovado()->create();
+    $vinculo = ResponsavelParticipante::factory()->aprovado()->create([
+        'participante_id' => participanteNaIgreja($this->igreja)->id,
+    ]);
 
     $this->patchJson("/api/v1/guardian-requests/{$vinculo->id}", [
         'decisao' => 'revogar', 'motivo' => 'Pedido do responsável',
@@ -59,4 +70,21 @@ it('revoga encerrando o vinculo mas preservando o log', function () {
 
     expect($vinculo->fresh()->fim)->not->toBeNull();
     expect(SolicitacaoVinculo::query()->where('tipo', SolicitacaoVinculo::TIPO_REVOGACAO)->exists())->toBeTrue();
+});
+
+it('coordenadora nao decide vinculo de participante fora do seu territorio', function () {
+    ['igreja' => $outraIgreja] = igrejaComEbi();
+    $vinculo = ResponsavelParticipante::factory()->create([
+        'participante_id' => participanteNaIgreja($outraIgreja)->id, 'validacao' => 'pendente',
+    ]);
+
+    $this->patchJson("/api/v1/guardian-requests/{$vinculo->id}", ['decisao' => 'aprovar'], $this->authCoord)
+        ->assertStatus(404);
+
+    expect($vinculo->fresh()->validacao)->toBe('pendente');
+});
+
+it('devolve 404 para vinculo inexistente', function () {
+    $this->patchJson('/api/v1/guardian-requests/'.Str::ulid(), ['decisao' => 'aprovar'], $this->authCoord)
+        ->assertStatus(404);
 });

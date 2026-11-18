@@ -118,10 +118,13 @@ it('lista presencas com nome e matricula e audita apenas o primeiro registro', f
     $url = "/api/v1/sessions/{$this->sessao->id}/attendance";
     $id = $this->postJson($url, ['participante_id' => $p->id, 'origem' => 'app'], $this->auth)
         ->assertCreated()->assertJsonPath('presenca.participante_nome', $p->nome)
-        ->assertJsonPath('presenca.matricula', $p->matricula)->json('presenca.id');
+        ->assertJsonPath('presenca.matricula', $p->matricula)
+        ->assertJsonPath('presenca.participante.nome', $p->nome)
+        ->assertJsonPath('presenca.participante.matricula', $p->matricula)->json('presenca.id');
     $this->postJson($url, ['participante_id' => $p->id], $this->auth)->assertOk();
     $this->getJson($url, $this->auth)->assertOk()->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.id', $id)->assertJsonPath('data.0.participante_nome', $p->nome)
+        ->assertJsonPath('data.0.participante.nome', $p->nome)
         ->assertJsonPath('data.0.matricula', $p->matricula);
     $eventos = EventoAuditoria::query()->where('acao', 'presenca.registrada')->get();
     expect($eventos)->toHaveCount(1)
