@@ -10,6 +10,7 @@ import {
   type Participante,
 } from '../components/FormularioParticipante'
 import { EstadoTabela } from '../components/EstadoTabela'
+import { HistoricoPresencas } from '../components/HistoricoPresencas'
 import { Sugestoes } from '../components/Sugestoes'
 import { formatarData, SUGESTOES_FINALIDADE } from '@/lib/formatos'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -139,11 +140,12 @@ export function Participantes() {
                 <TableHead>Nome</TableHead>
                 <TableHead>Nascimento</TableHead>
                 <TableHead>Matrícula</TableHead>
+                <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               <EstadoTabela
-                colunas={3}
+                colunas={4}
                 carregando={buscando}
                 vazio={resultados.length === 0}
                 mensagemVazio={
@@ -159,6 +161,9 @@ export function Participantes() {
                     <TableCell>{formatarData(p.data_nascimento)}</TableCell>
                     <TableCell>
                       <code>{p.matricula}</code>
+                    </TableCell>
+                    <TableCell>
+                      <HistoricoPresencas participanteId={p.id} rota="operador" />
                     </TableCell>
                   </TableRow>
                 ))}

@@ -23,4 +23,12 @@ interface ConsultarOrganizacao
      * Regional a que pertence um setor.
      */
     public function regionalDoSetor(string $setorId): ?Regional;
+
+    /**
+     * Mapa `id => nome` das igrejas indicadas (dados de exibicao).
+     *
+     * @param  array<int, string>  $igrejaIds
+     * @return array<string, string>
+     */
+    public function nomesDeIgrejas(array $igrejaIds): array;
 }

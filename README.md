@@ -35,6 +35,7 @@ Comandos úteis (backend no contêiner; frontend em `frontend/`):
 docker compose run --rm app composer test      # suíte de testes
 docker compose run --rm app composer pint      # formatação de código
 docker compose run --rm app composer phpstan   # análise estática
+docker compose exec scheduler php artisan sessoes:gerar --dias=28  # sessões previstas (o scheduler já roda diariamente)
 ```
 
 O detalhamento do fluxo de contribuição, do contrato de API e das regras de PR está em [CONTRIBUTING.md](CONTRIBUTING.md).

@@ -2,11 +2,14 @@
 
 namespace App\Domain\Participantes\Services;
 
+use App\Domain\Participantes\Contracts\AvaliarElegibilidade;
+use App\Domain\Participantes\Contracts\ResultadoElegibilidade;
 use App\Domain\Participantes\Models\ExcecaoEtaria;
 use App\Domain\Participantes\Models\Participante;
 use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
+use RuntimeException;
 
 /**
  * Elegibilidade etaria para a presenca (RN-16, CA-17, CA-19).
@@ -21,8 +24,16 @@ use DateTimeZone;
  * idade). RN-16: quem nasceu 29/02 completa ano em 01/03 nos anos nao bissextos.
  * Nao depende de presenca/sessao (o chamador passa a data).
  */
-class AvaliadorElegibilidade
+class AvaliadorElegibilidade implements AvaliarElegibilidade
 {
+    public function avaliarPorId(string $participanteId, DateTimeInterface $dataSessao, string $fusoIgreja): ResultadoElegibilidade
+    {
+        $participante = Participante::query()->find($participanteId)
+            ?? throw new RuntimeException("Participante nao encontrado: {$participanteId}");
+
+        return $this->avaliar($participante, $dataSessao, $fusoIgreja, $participante->excecaoVigente());
+    }
+
     public function avaliar(
         Participante $participante,
         DateTimeInterface $dataSessao,

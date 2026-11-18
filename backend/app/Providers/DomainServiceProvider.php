@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Domain\Agenda\Contracts\ConsultarAgenda;
+use App\Domain\Agenda\Contracts\GerirAgenda;
+use App\Domain\Agenda\Services\ConsultaAgenda;
+use App\Domain\Agenda\Services\GerenciadorAgenda;
 use App\Domain\Auditoria\Contracts\ConsultarAuditoria;
 use App\Domain\Auditoria\Contracts\RegistrarEvento;
 use App\Domain\Auditoria\Services\ConsultaAuditoria;
@@ -44,22 +48,30 @@ use App\Domain\Identidade\Services\GerenciadorVinculo;
 use App\Domain\Identidade\Services\ResolvedorContextoAtuacao;
 use App\Domain\Identidade\Services\ResolvedorEscopo;
 use App\Domain\Identidade\Services\ServicoRecuperacaoSenha;
+use App\Domain\Organizacao\Contracts\ConsultarEbi;
 use App\Domain\Organizacao\Contracts\ConsultarHierarquia;
 use App\Domain\Organizacao\Contracts\ConsultarOrganizacao;
 use App\Domain\Organizacao\Contracts\GerirOrganizacao;
 use App\Domain\Organizacao\Contracts\TransferirIgreja;
+use App\Domain\Organizacao\Services\ConsultaEbi;
 use App\Domain\Organizacao\Services\ConsultaHierarquia;
 use App\Domain\Organizacao\Services\ConsultaOrganizacao;
 use App\Domain\Organizacao\Services\GerenciadorOrganizacao;
 use App\Domain\Organizacao\Services\ServicoTransferencia;
+use App\Domain\Participantes\Contracts\AvaliarElegibilidade;
+use App\Domain\Participantes\Contracts\ConsultarParticipante;
 use App\Domain\Participantes\Contracts\GerirExcecaoEtaria;
 use App\Domain\Participantes\Contracts\GerirMesclagem;
 use App\Domain\Participantes\Contracts\GerirParticipante;
 use App\Domain\Participantes\Contracts\GerirVinculoResponsavel;
+use App\Domain\Participantes\Contracts\VerificarPropriedadeParticipante;
+use App\Domain\Participantes\Services\AvaliadorElegibilidade;
+use App\Domain\Participantes\Services\ConsultaParticipante;
 use App\Domain\Participantes\Services\GerenciadorExcecao;
 use App\Domain\Participantes\Services\GerenciadorMesclagem;
 use App\Domain\Participantes\Services\GerenciadorParticipante;
 use App\Domain\Participantes\Services\GerenciadorVinculoResponsavel;
+use App\Domain\Participantes\Services\VerificadorPropriedadeParticipante;
 use App\Domain\Privacidade\Contracts\ConsultarConsentimentos;
 use App\Domain\Privacidade\Contracts\GerirTermos;
 use App\Domain\Privacidade\Contracts\RegistrarConsentimento;
@@ -67,6 +79,20 @@ use App\Domain\Privacidade\Contracts\SolicitarDireitoTitular;
 use App\Domain\Privacidade\Services\GerenciadorConsentimento;
 use App\Domain\Privacidade\Services\GerenciadorSolicitacao;
 use App\Domain\Privacidade\Services\GerenciadorTermos;
+use App\Domain\Sessoes\Contracts\CancelarSessoesPrevistas;
+use App\Domain\Sessoes\Contracts\ConsultarPresenca;
+use App\Domain\Sessoes\Contracts\ConsultarSessao;
+use App\Domain\Sessoes\Contracts\EstornarPresenca;
+use App\Domain\Sessoes\Contracts\GerarSessoesPrevistas;
+use App\Domain\Sessoes\Contracts\GerirSessaoEbi;
+use App\Domain\Sessoes\Contracts\RegistrarPresenca;
+use App\Domain\Sessoes\Services\CanceladorSessoesPrevistas;
+use App\Domain\Sessoes\Services\ConsultaPresenca;
+use App\Domain\Sessoes\Services\ConsultaSessao;
+use App\Domain\Sessoes\Services\EstornadorPresenca;
+use App\Domain\Sessoes\Services\GeradorSessoesPrevistas;
+use App\Domain\Sessoes\Services\GerenciadorSessao as GerenciadorSessaoEbi;
+use App\Domain\Sessoes\Services\RegistradorPresenca;
 use Illuminate\Support\ServiceProvider;
 
 class DomainServiceProvider extends ServiceProvider
@@ -93,6 +119,7 @@ class DomainServiceProvider extends ServiceProvider
         $this->app->bind(RegistrarConta::class, GerenciadorConta::class);
         $this->app->bind(VerificarEmail::class, GerenciadorConta::class);
         $this->app->bind(ConsultarHierarquia::class, ConsultaHierarquia::class);
+        $this->app->bind(ConsultarEbi::class, ConsultaEbi::class);
         $this->app->bind(ConsultarOrganizacao::class, ConsultaOrganizacao::class);
         $this->app->bind(TransferirIgreja::class, ServicoTransferencia::class);
         $this->app->bind(GerirOrganizacao::class, GerenciadorOrganizacao::class);
@@ -107,5 +134,17 @@ class DomainServiceProvider extends ServiceProvider
         $this->app->bind(GerirVinculoResponsavel::class, GerenciadorVinculoResponsavel::class);
         $this->app->bind(GerirExcecaoEtaria::class, GerenciadorExcecao::class);
         $this->app->bind(GerirMesclagem::class, GerenciadorMesclagem::class);
+        $this->app->bind(AvaliarElegibilidade::class, AvaliadorElegibilidade::class);
+        $this->app->bind(ConsultarParticipante::class, ConsultaParticipante::class);
+        $this->app->bind(VerificarPropriedadeParticipante::class, VerificadorPropriedadeParticipante::class);
+        $this->app->bind(GerirAgenda::class, GerenciadorAgenda::class);
+        $this->app->bind(ConsultarAgenda::class, ConsultaAgenda::class);
+        $this->app->bind(CancelarSessoesPrevistas::class, CanceladorSessoesPrevistas::class);
+        $this->app->bind(GerarSessoesPrevistas::class, GeradorSessoesPrevistas::class);
+        $this->app->bind(ConsultarSessao::class, ConsultaSessao::class);
+        $this->app->bind(ConsultarPresenca::class, ConsultaPresenca::class);
+        $this->app->bind(EstornarPresenca::class, EstornadorPresenca::class);
+        $this->app->bind(RegistrarPresenca::class, RegistradorPresenca::class);
+        $this->app->bind(GerirSessaoEbi::class, GerenciadorSessaoEbi::class);
     }
 }

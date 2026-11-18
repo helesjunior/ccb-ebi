@@ -4,6 +4,7 @@ import { UsersIcon } from 'lucide-react'
 import { api } from '../api/client'
 import { lerErro } from '../api/erro'
 import { EstadoTabela } from '../components/EstadoTabela'
+import { HistoricoPresencas } from '../components/HistoricoPresencas'
 import { formatarData } from '@/lib/formatos'
 import { cabecalhos } from '../api/sessao'
 import type { components } from '../api/schema'
@@ -84,16 +85,20 @@ export function Dependentes() {
                   <TableHead>Nome</TableHead>
                   <TableHead>Nascimento</TableHead>
                   <TableHead>Matrícula</TableHead>
+                  <TableHead>Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                <EstadoTabela colunas={3} carregando={carregando} vazio={false} mensagemVazio="" />
+                <EstadoTabela colunas={4} carregando={carregando} vazio={false} mensagemVazio="" />
                 {dependentes.map((p) => (
                   <TableRow key={p.id}>
                     <TableCell className="font-medium whitespace-normal">{p.nome}</TableCell>
                     <TableCell>{formatarData(p.data_nascimento)}</TableCell>
                     <TableCell>
                       <code>{p.matricula}</code>
+                    </TableCell>
+                    <TableCell>
+                      <HistoricoPresencas participanteId={p.id} rota="responsavel" />
                     </TableCell>
                   </TableRow>
                 ))}

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Identidade\Support\Operacoes;
 use App\Domain\Organizacao\Contracts\GerirOrganizacao;
 use App\Http\Requests\Organizacao\RegionalRequest;
 use App\Http\Resources\RegionResource;
@@ -9,6 +10,7 @@ use App\Http\Resources\SectorResource;
 use App\Support\PaginacaoCursor;
 use App\Support\ProblemException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\Response;
 
 class RegionController
@@ -33,7 +35,18 @@ class RegionController
 
     public function update(RegionalRequest $request, string $id): Response
     {
-        $regional = $this->gerir->atualizarRegional($id, $request->validated());
+        $regional = $this->gerir->encontrarRegional($id);
+
+        if ($regional === null) {
+            throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Regional não encontrada');
+        }
+
+        Gate::authorize(Operacoes::ORGANIZACAO_GERENCIAR, ['regional', $id]);
+        $dados = $request->validated();
+        if (isset($dados['central_nacional_id']) && (string) $dados['central_nacional_id'] !== (string) $regional->central_nacional_id) {
+            Gate::authorize(Operacoes::ORGANIZACAO_GERENCIAR, ['central', (string) $dados['central_nacional_id']]);
+        }
+        $regional = $this->gerir->atualizarRegional($id, $dados);
 
         if ($regional === null) {
             throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Regional não encontrada');

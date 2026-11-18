@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Str;
 
 class Participante extends Model
 {
@@ -43,6 +44,15 @@ class Participante extends Model
         'data_nascimento' => 'date',
         'snapshot_mesclagem' => 'array',
     ];
+
+    protected $hidden = ['nome_busca'];
+
+    protected static function booted(): void
+    {
+        static::saving(function (Participante $participante): void {
+            $participante->nome_busca = mb_strtolower(Str::ascii((string) $participante->nome));
+        });
+    }
 
     /** @return HasMany<ResponsavelParticipante, $this> */
     public function responsaveis(): HasMany

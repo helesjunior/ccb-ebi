@@ -331,6 +331,29 @@ paths:
       responses:
         '204': { description: Sessão revogada }
         '401': { $ref: '#/components/responses/Problem' }
+  /me/ebis:
+    get:
+      tags: [sessions]
+      summary: EBIs que o usuário pode operar
+      description: >-
+        Vínculos vigentes do usuário em escopos do tipo `ebi`, para o seletor de
+        EBI da área de sessões (RF-06).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+      responses:
+        '200':
+          description: EBIs disponíveis para o usuário
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/EbiResumo' }
+        '401': { $ref: '#/components/responses/Problem' }
   /users:
     get:
       tags: [team]
@@ -490,34 +513,70 @@ paths:
       responses:
         '204': { description: Vínculo revogado }
         '403': { $ref: '#/components/responses/Problem' }
-  /sessions/{sessionId}/attendance:
+  /sessions/{id}/attendance:
     post:
       tags: [sessions]
       summary: Registrar presença
-      description: Idempotente. Aplica a regra de elegibilidade etária (RN-13 a RN-16).
+      description: Idempotente. Aplica a regra de elegibilidade etária (RN-13 a RN-16). `422` indica participante `inelegivel` (com `motivo_bloqueio` no corpo do erro) e `409` indica sessão não aberta.
+      security:
+        - bearerAuth: []
       parameters:
-        - $ref: '#/components/parameters/SessionId'
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/SessaoId'
         - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
           application/json:
-            schema:
-              type: object
-              required: [participantId]
-              properties:
-                participantId: { type: string }
-                origin: { type: string, enum: [web, app] }
+            schema: { $ref: '#/components/schemas/PresencaRegistroInput' }
       responses:
         '201':
           description: Presença registrada
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Attendance' }
-        '200': { description: Presença já existente (mesma chave ou mesmo participante e sessão) }
+              schema:
+                type: object
+                required: [presenca]
+                properties:
+                  presenca: { $ref: '#/components/schemas/Presenca' }
+                  aviso: { type: [string, 'null'] }
+        '200':
+          description: Presença já existente (mesma chave ou mesmo participante e sessão)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [presenca]
+                properties:
+                  presenca: { $ref: '#/components/schemas/Presenca' }
+                  aviso: { type: [string, 'null'] }
+        '401': { $ref: '#/components/responses/Problem' }
         '403': { $ref: '#/components/responses/Problem' }
-        '422':
-          description: 'Participante inelegível pela idade, ou sessão não aberta'
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+    get:
+      tags: [sessions]
+      summary: Presenças da sessão
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/SessaoId'
+      responses:
+        '200':
+          description: Presenças da sessão
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Presenca' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
   /churches:
     get:
       tags: [organization]
@@ -763,6 +822,439 @@ paths:
               schema: { $ref: '#/components/schemas/Ebi' }
         '403': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
+  /ebis/{id}/agenda:
+    get:
+      tags: [sessions]
+      summary: Faixas semanais da agenda do EBI
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/EbiId'
+      responses:
+        '200':
+          description: Faixas semanais do EBI (vigentes e encerradas)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/AgendaEbi' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+    post:
+      tags: [sessions]
+      summary: Criar faixa semanal na agenda do EBI
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/EbiId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AgendaEbiInput' }
+      responses:
+        '201':
+          description: Faixa criada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AgendaEbi' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /agenda/{id}:
+    patch:
+      tags: [sessions]
+      summary: Alterar faixa semanal
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/AgendaId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AgendaEbiUpdateInput' }
+      responses:
+        '200':
+          description: Faixa atualizada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AgendaEbi' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+    delete:
+      tags: [sessions]
+      summary: Encerrar faixa semanal
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/AgendaId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '204': { description: Faixa encerrada }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /ebis/{id}/agenda-exceptions:
+    get:
+      tags: [sessions]
+      summary: Exceções da agenda do EBI
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/EbiId'
+      responses:
+        '200':
+          description: Exceções cadastradas (feriados, cancelamentos e horários especiais)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/AgendaExcecao' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+    post:
+      tags: [sessions]
+      summary: Criar exceção na agenda do EBI
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/EbiId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AgendaExcecaoInput' }
+      responses:
+        '201':
+          description: Exceção criada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AgendaExcecao' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /agenda-exceptions/{id}:
+    delete:
+      tags: [sessions]
+      summary: Remover exceção da agenda
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/ExcecaoAgendaId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '204': { description: Exceção removida }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /ebis/{id}/sessions:
+    get:
+      tags: [sessions]
+      summary: Sessões do EBI no período
+      description: >-
+        Exige `de` e `ate` (datas ISO); intervalo máximo de 92 dias. Resultado
+        ordenado por `inicio_previsto`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/EbiId'
+        - name: de
+          in: query
+          required: true
+          description: Início do intervalo (inclusive).
+          schema: { type: string, format: date }
+        - name: ate
+          in: query
+          required: true
+          description: Fim do intervalo (inclusive), no máximo 92 dias após `de`.
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: Sessões do EBI no período, ordenadas por `inicio_previsto`
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Sessao' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /ebis/{id}/sessions/generate:
+    post:
+      tags: [sessions]
+      summary: Gerar sessões previstas
+      description: >-
+        Gera as sessões previstas a partir das faixas da agenda, aplicando as
+        exceções do período. Aceita `de?`, `ate?` e `semanas?` (padrão 4
+        semanas, máximo 12). Idempotente: sessões previstas já existentes para
+        a mesma janela não são duplicadas.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/EbiId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                de: { type: string, format: date }
+                ate: { type: string, format: date }
+                semanas: { type: integer, minimum: 1, maximum: 12, default: 4 }
+      responses:
+        '201':
+          description: Sessões previstas geradas (contagem de criadas e ignoradas)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GeracaoSessoes' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /sessions/{id}:
+    get:
+      tags: [sessions]
+      summary: Detalhe da sessão
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/SessaoId'
+      responses:
+        '200':
+          description: Sessão com o resumo de equipe mínima
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SessaoDetalhe' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    patch:
+      tags: [sessions]
+      summary: Correção da sessão
+      description: >-
+        Corrige dados da sessão (`tema`, `passagem_biblica`, `inicio_real`,
+        `fim_real`, `realizada`, `auxiliares_escalados`). `motivo` é
+        obrigatório quando a sessão está `encerrada`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/SessaoId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SessaoCorrecaoInput' }
+      responses:
+        '200':
+          description: Sessão atualizada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Sessao' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /sessions/{id}/open:
+    post:
+      tags: [sessions]
+      summary: Abrir a sessão
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/SessaoId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Sessão aberta
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Sessao' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /sessions/{id}/close:
+    post:
+      tags: [sessions]
+      summary: Encerrar a sessão
+      description: >-
+        Exige `realizada` (boolean) e aceita `fim_real?`. Transita a sessão
+        para `encerrada`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/SessaoId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SessaoFechamentoInput' }
+      responses:
+        '200':
+          description: Sessão encerrada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Sessao' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /sessions/{id}/cancel:
+    post:
+      tags: [sessions]
+      summary: Cancelar a sessão
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/SessaoId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SessaoCancelamentoInput' }
+      responses:
+        '200':
+          description: Sessão cancelada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Sessao' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /sessions/{id}/participants:
+    get:
+      tags: [sessions]
+      summary: Buscar participantes elegíveis na sessão (finalidade obrigatória)
+      description: >-
+        Busca por nome (mínimo 3 caracteres) entre os participantes elegíveis
+        para registro de presença na sessão, devolvendo no máximo 20 resultados.
+        Exige a finalidade declarada (`finalidade`), registrada na auditoria.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/SessaoId'
+        - name: busca
+          in: query
+          required: true
+          description: Termo de busca pelo nome (mínimo 3 caracteres).
+          schema: { type: string, minLength: 3 }
+        - $ref: '#/components/parameters/FinalidadeLeitura'
+      responses:
+        '200':
+          description: Candidatos elegíveis (no máximo 20 resultados)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    maxItems: 20
+                    items: { $ref: '#/components/schemas/CandidatoPresenca' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /sessions/{id}/contingency-attendance:
+    post:
+      tags: [sessions]
+      summary: Lançar presença de lista em papel
+      description: >-
+        Registro contingencial de presença em papel, com motivo obrigatório.
+        Escrita idempotente (`Idempotency-Key`).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/SessaoId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PresencaContingenciaInput' }
+      responses:
+        '201':
+          description: Presença contingencial registrada
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [presenca]
+                properties:
+                  presenca: { $ref: '#/components/schemas/Presenca' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /attendance/{id}/reversal:
+    post:
+      tags: [sessions]
+      summary: Estornar presença
+      description: >-
+        Estorna uma presença válida, com motivo obrigatório; a presença passa a
+        `estornada` e o motivo é registrado. Escrita idempotente
+        (`Idempotency-Key`).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/PresencaId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EstornoInput' }
+      responses:
+        '200':
+          description: Presença estornada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Presenca' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
   /central:
     get:
       tags: [organization]
@@ -1040,6 +1532,30 @@ paths:
         '403': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/Problem' }
+  /participants/{id}/attendance:
+    get:
+      tags: [participants]
+      summary: Histórico de presenças (operador)
+      description: Histórico de presenças do participante, do mais recente ao mais antigo.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/ParticipanteId'
+      responses:
+        '200':
+          description: Histórico de presenças do participante
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/HistoricoPresenca' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
   /participants/{id}/guardians:
     post:
       tags: [participants]
@@ -1091,6 +1607,31 @@ paths:
                     type: array
                     items: { $ref: '#/components/schemas/Participante' }
         '401': { $ref: '#/components/responses/Problem' }
+  /me/participants/{id}/attendance:
+    get:
+      tags: [participants]
+      summary: Histórico de presenças do dependente (autorização por propriedade, CA-04)
+      description: >-
+        Histórico de presenças de um participante representado pelo responsável
+        autenticado (vínculo `aprovada` e vigente).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ParticipanteId'
+      responses:
+        '200':
+          description: Histórico de presenças do dependente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/HistoricoPresenca' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
   /guardian-requests/{id}:
     patch:
       tags: [participants]
@@ -1252,11 +1793,6 @@ components:
       type: http
       scheme: bearer
   parameters:
-    SessionId:
-      name: sessionId
-      in: path
-      required: true
-      schema: { type: string }
     IdempotencyKey:
       name: Idempotency-Key
       in: header
@@ -1302,6 +1838,21 @@ components:
       required: true
       schema: { type: string }
     SessaoId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+    PresencaId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+    AgendaId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+    ExcecaoAgendaId:
       name: id
       in: path
       required: true
@@ -1492,15 +2043,6 @@ components:
           properties:
             database: { type: string, enum: [ok, fail] }
             redis: { type: string, enum: [ok, fail] }
-    Attendance:
-      type: object
-      properties:
-        id: { type: string }
-        sessionId: { type: string }
-        participantId: { type: string }
-        status: { type: string, enum: [valid, reversed] }
-        origin: { type: string, enum: [web, app] }
-        recordedAt: { type: string, format: date-time }
     Church:
       type: object
       properties:
@@ -1762,3 +2304,185 @@ components:
       required: [duplicado_id]
       properties:
         duplicado_id: { type: string }
+    EbiResumo:
+      type: object
+      properties:
+        id: { type: string }
+        nome: { type: string }
+        igreja_id: { type: string }
+        igreja_nome: { type: string }
+        timezone: { type: string }
+    AgendaEbi:
+      type: object
+      properties:
+        id: { type: string }
+        ebi_id: { type: string }
+        dia_semana: { type: integer, minimum: 1, maximum: 7 }
+        hora_inicio: { type: string, description: 'HH:MM no fuso da igreja' }
+        hora_fim: { type: string }
+        inicio_vigencia: { type: string, format: date }
+        fim_vigencia: { type: [string, 'null'], format: date }
+        vigente: { type: boolean }
+    AgendaEbiInput:
+      type: object
+      required: [dia_semana, hora_inicio, hora_fim, inicio_vigencia]
+      properties:
+        dia_semana: { type: integer, minimum: 1, maximum: 7 }
+        hora_inicio: { type: string, pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$' }
+        hora_fim: { type: string, pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$' }
+        inicio_vigencia: { type: string, format: date }
+        fim_vigencia: { type: [string, 'null'], format: date }
+    AgendaEbiUpdateInput:
+      type: object
+      properties:
+        dia_semana: { type: integer, minimum: 1, maximum: 7 }
+        hora_inicio: { type: string, pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$' }
+        hora_fim: { type: string, pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$' }
+        inicio_vigencia: { type: string, format: date }
+        fim_vigencia: { type: [string, 'null'], format: date }
+    AgendaExcecao:
+      type: object
+      properties:
+        id: { type: string }
+        ebi_id: { type: string }
+        agenda_ebi_id: { type: [string, 'null'] }
+        data: { type: string, format: date }
+        tipo: { type: string, enum: [feriado, cancelamento, horario_especial] }
+        hora_inicio: { type: [string, 'null'] }
+        hora_fim: { type: [string, 'null'] }
+        motivo: { type: string }
+    AgendaExcecaoInput:
+      type: object
+      required: [tipo, data, motivo]
+      properties:
+        tipo: { type: string, enum: [feriado, cancelamento, horario_especial] }
+        data: { type: string, format: date }
+        agenda_ebi_id: { type: [string, 'null'] }
+        hora_inicio: { type: [string, 'null'] }
+        hora_fim: { type: [string, 'null'] }
+        motivo: { type: string, minLength: 3, maxLength: 500 }
+    Sessao:
+      type: object
+      properties:
+        id: { type: string }
+        ebi_id: { type: string }
+        ebi_nome: { type: string }
+        timezone: { type: string, description: 'Fuso IANA da igreja; datas/horas da sessão são exibidas nele.' }
+        igreja_id: { type: string }
+        agenda_ebi_id: { type: [string, 'null'] }
+        inicio_previsto: { type: string, format: date-time }
+        fim_previsto: { type: string, format: date-time }
+        inicio_real: { type: [string, 'null'], format: date-time }
+        fim_real: { type: [string, 'null'], format: date-time }
+        tema: { type: [string, 'null'] }
+        passagem_biblica: { type: [string, 'null'] }
+        status: { type: string, enum: [prevista, aberta, encerrada, cancelada] }
+        realizada: { type: [boolean, 'null'] }
+        motivo_cancelamento: { type: [string, 'null'] }
+        auxiliares_escalados: { type: [integer, 'null'], minimum: 0 }
+        presentes: { type: integer, minimum: 0 }
+    EquipeMinima:
+      type: object
+      properties:
+        presentes: { type: integer }
+        participantes_por_auxiliar: { type: integer }
+        auxiliares_necessarios: { type: integer }
+        auxiliares_informados: { type: [integer, 'null'] }
+        alerta: { type: boolean }
+    SessaoDetalhe:
+      allOf:
+        - $ref: '#/components/schemas/Sessao'
+        - type: object
+          properties:
+            equipe_minima: { $ref: '#/components/schemas/EquipeMinima' }
+    SessaoFechamentoInput:
+      type: object
+      required: [realizada]
+      properties:
+        realizada: { type: boolean }
+        fim_real: { type: [string, 'null'], format: date-time }
+    SessaoCancelamentoInput:
+      type: object
+      required: [motivo]
+      properties:
+        motivo: { type: string, minLength: 3, maxLength: 500 }
+    SessaoCorrecaoInput:
+      type: object
+      properties:
+        tema: { type: [string, 'null'], maxLength: 255 }
+        passagem_biblica: { type: [string, 'null'], maxLength: 255 }
+        inicio_real: { type: [string, 'null'], format: date-time }
+        fim_real: { type: [string, 'null'], format: date-time }
+        realizada: { type: [boolean, 'null'] }
+        auxiliares_escalados: { type: [integer, 'null'], minimum: 0 }
+        motivo: { type: [string, 'null'], minLength: 3, maxLength: 500 }
+    GeracaoSessoes:
+      type: object
+      properties:
+        criadas: { type: integer }
+        ignoradas: { type: integer }
+        de: { type: string, format: date }
+        ate: { type: string, format: date }
+    CandidatoPresenca:
+      type: object
+      properties:
+        id: { type: string }
+        nome: { type: string }
+        matricula: { type: string }
+        igreja_referencia:
+          oneOf:
+            - type: object
+              properties:
+                id: { type: string }
+                nome: { type: string }
+            - type: 'null'
+        elegivel: { type: boolean }
+        motivo_bloqueio: { type: [string, 'null'] }
+    Presenca:
+      type: object
+      properties:
+        id: { type: string }
+        sessao_id: { type: string }
+        participante:
+          type: object
+          properties:
+            id: { type: string }
+            nome: { type: string }
+            matricula: { type: string }
+        registrado_por: { type: string }
+        registrado_em: { type: string, format: date-time }
+        origem: { type: string, enum: [web, app, contingencia] }
+        status: { type: string, enum: [valida, estornada] }
+        estornado_em: { type: [string, 'null'], format: date-time }
+        motivo_estorno: { type: [string, 'null'] }
+    PresencaRegistroInput:
+      type: object
+      required: [participante_id]
+      properties:
+        participante_id: { type: string }
+        origem: { type: string, enum: [web, app], description: 'Padrão: web' }
+    PresencaContingenciaInput:
+      type: object
+      required: [participante_id, motivo]
+      properties:
+        participante_id: { type: string }
+        motivo: { type: string, minLength: 3, maxLength: 500 }
+    EstornoInput:
+      type: object
+      required: [motivo]
+      properties:
+        motivo: { type: string, minLength: 3, maxLength: 500 }
+    HistoricoPresenca:
+      type: object
+      properties:
+        id: { type: string }
+        sessao_id: { type: string }
+        ebi:
+          type: object
+          properties:
+            id: { type: string }
+            nome: { type: string }
+            timezone: { type: string }
+        inicio_previsto: { type: string, format: date-time }
+        status: { type: string, enum: [valida, estornada] }
+        registrado_em: { type: string, format: date-time }

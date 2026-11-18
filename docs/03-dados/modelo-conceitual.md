@@ -78,10 +78,11 @@ erDiagram
 |---|---|
 | `agenda_ebi` | id, ebi_id, dia_semana, hora_inicio, hora_fim, vigência |
 | `agenda_excecao` | id, agenda_ebi_id ou ebi_id, data, tipo (feriado, cancelamento, horário especial), motivo *(novo, RF-06)* |
-| `sessao` | id, ebi_id, agenda_ebi_id, igreja_id, inicio_previsto, fim_previsto, inicio_real, fim_real, tema, passagem_biblica, status, realizada *(setor e regional derivam do vínculo vigente da igreja — a igreja é a âncora e o setor é sempre o atual, RN-09; previsto/real separados)* |
+| `sessao` | id, ebi_id, agenda_ebi_id, igreja_id, inicio_previsto, fim_previsto, inicio_real, fim_real, tema, passagem_biblica, status, realizada, auxiliares_escalados *(setor e regional derivam do vínculo vigente da igreja — a igreja é a âncora e o setor é sempre o atual, RN-09; previsto/real separados; `auxiliares_escalados` alimenta o aviso de equipe mínima, ADR-0010)* |
+| `sessao_correcao` | id, sessao_id, autor_id, antes (json), depois (json), motivo, ocorrido_em *(novo, RF-06)* |
 | `escala` | id, sessao_id, usuario_id, função, horário, status, aprovado_por, aprovado_em, confirmado_em, presente *(aprovação pela coordenadora chefe, ADR-0010)* |
 | `solicitacao_troca_escala` | id, escala_id, solicitante_id, substituto_id, status, aprovado_por *(novo, RF-07)* |
-| `presenca` | id, sessao_id, participante_id, registrado_por, registrado_em, origem (web, app), status, estornado_por, estornado_em, motivo_estorno *(origem e estorno novos, RF-08)* |
+| `presenca` | id, sessao_id, participante_id, registrado_por, registrado_em, origem (web, app, contingencia), status, estornado_por, estornado_em, motivo_estorno *(origem e estorno novos, RF-08; `contingencia` na E04)* |
 | `feedback` | id, sessao_id, participante_id, autor_id, conteúdo, participação, visibilidade, status, moderado_por (Ministério Local), moderado_em |
 
 ### Biblioteca
@@ -107,6 +108,7 @@ erDiagram
 - `participante.matricula` UNIQUE.
 - `usuario.email_normalizado` UNIQUE.
 - `presenca(sessao_id, participante_id)` UNIQUE parcial onde `status = 'valida'`.
+- `sessao(ebi_id, inicio_previsto)` UNIQUE parcial onde `status <> 'cancelada'`.
 - `utilizacao_atividade(sessao_id, atividade_versao_id)` UNIQUE.
 - `avaliacao_atividade(utilizacao_id, usuario_id)` UNIQUE ([ADR-0014](../06-arquitetura/decisoes/ADR-0014-avaliacao-por-utilizacao.md)).
 - `igreja_vinculacao`: sem sobreposição de vigência para a mesma igreja.

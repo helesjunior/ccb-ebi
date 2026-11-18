@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Identidade\Support\Operacoes;
 use App\Domain\Organizacao\Contracts\GerirOrganizacao;
 use App\Http\Requests\Organizacao\SetorRequest;
 use App\Http\Resources\SectorResource;
 use App\Support\PaginacaoCursor;
 use App\Support\ProblemException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\Response;
 
 class SectorController
@@ -32,7 +34,18 @@ class SectorController
 
     public function update(SetorRequest $request, string $id): Response
     {
-        $setor = $this->gerir->atualizarSetor($id, $request->validated());
+        $setor = $this->gerir->encontrarSetor($id);
+
+        if ($setor === null) {
+            throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Setor não encontrado');
+        }
+
+        Gate::authorize(Operacoes::ORGANIZACAO_GERENCIAR, ['setor', $id]);
+        $dados = $request->validated();
+        if (isset($dados['regional_id']) && (string) $dados['regional_id'] !== (string) $setor->regional_id) {
+            Gate::authorize(Operacoes::ORGANIZACAO_GERENCIAR, ['regional', (string) $dados['regional_id']]);
+        }
+        $setor = $this->gerir->atualizarSetor($id, $dados);
 
         if ($setor === null) {
             throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Setor não encontrado');

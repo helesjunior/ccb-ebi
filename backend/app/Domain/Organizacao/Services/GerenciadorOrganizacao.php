@@ -60,6 +60,11 @@ class GerenciadorOrganizacao implements GerirOrganizacao
         return Regional::query()->create($dados);
     }
 
+    public function encontrarRegional(string $id): ?Regional
+    {
+        return Regional::query()->find($id);
+    }
+
     public function atualizarRegional(string $id, array $dados): ?Regional
     {
         $regional = Regional::query()->find($id);
@@ -89,6 +94,11 @@ class GerenciadorOrganizacao implements GerirOrganizacao
     public function criarSetor(array $dados): Setor
     {
         return Setor::query()->create($dados);
+    }
+
+    public function encontrarSetor(string $id): ?Setor
+    {
+        return Setor::query()->find($id);
     }
 
     public function atualizarSetor(string $id, array $dados): ?Setor

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Identidade\Services\ContextoAtuacao;
+use App\Domain\Identidade\Support\Operacoes;
 use App\Domain\Organizacao\Contracts\ConsultarOrganizacao;
 use App\Domain\Organizacao\Contracts\GerirOrganizacao;
 use App\Domain\Organizacao\Contracts\TransferirIgreja;
@@ -14,6 +15,7 @@ use App\Support\PaginacaoCursor;
 use App\Support\ProblemException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\Response;
 
 class ChurchController
@@ -68,6 +70,11 @@ class ChurchController
 
     public function update(IgrejaRequest $request, string $id): Response
     {
+        if ($this->gerir->encontrarIgreja($id) === null) {
+            throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Igreja não encontrada');
+        }
+
+        Gate::authorize(Operacoes::ORGANIZACAO_GERENCIAR, ['igreja', $id]);
         $igreja = $this->gerir->atualizarIgreja($id, $request->validated());
 
         if ($igreja === null) {
@@ -81,12 +88,20 @@ class ChurchController
 
     public function transfer(TransferenciaRequest $request, string $id): Response
     {
+        if ($this->gerir->encontrarIgreja($id) === null) {
+            throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Igreja não encontrada');
+        }
+
+        Gate::authorize(Operacoes::ORGANIZACAO_GERENCIAR, ['igreja', $id]);
+        $sectorId = $request->string('sector_id')->toString();
+        Gate::authorize(Operacoes::ORGANIZACAO_GERENCIAR, ['setor', $sectorId]);
+
         try {
             $contexto = $request->attributes->get('contexto_atuacao');
 
             $this->transferir->executar(
                 $id,
-                $request->string('sector_id')->toString(),
+                $sectorId,
                 new \DateTimeImmutable($request->string('date')->toString()),
                 $request->input('reason'),
                 $contexto instanceof ContextoAtuacao ? $contexto->usuarioId : null,
@@ -97,7 +112,7 @@ class ChurchController
 
         $igreja = $this->gerir->encontrarIgreja($id);
 
-        if ($igreja === null) {
+        if ($igreja->getKey() === null) {
             throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Igreja não encontrada');
         }
 

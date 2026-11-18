@@ -3,6 +3,8 @@
 use App\Domain\Identidade\Services\DesafioMfa;
 use App\Http\Controllers\Api\V1\AccessGrantController;
 use App\Http\Controllers\Api\V1\AgeExceptionController;
+use App\Http\Controllers\Api\V1\AgendaController;
+use App\Http\Controllers\Api\V1\AgendaExcecaoController;
 use App\Http\Controllers\Api\V1\ArquivoController;
 use App\Http\Controllers\Api\V1\AuditEventController;
 use App\Http\Controllers\Api\V1\AuthController;
@@ -12,6 +14,7 @@ use App\Http\Controllers\Api\V1\EbiController;
 use App\Http\Controllers\Api\V1\GuardianController;
 use App\Http\Controllers\Api\V1\GuardianRequestController;
 use App\Http\Controllers\Api\V1\HealthController;
+use App\Http\Controllers\Api\V1\HistoricoPresencaController;
 use App\Http\Controllers\Api\V1\InvitationAcceptController;
 use App\Http\Controllers\Api\V1\InvitationController;
 use App\Http\Controllers\Api\V1\MeController;
@@ -19,12 +22,14 @@ use App\Http\Controllers\Api\V1\MfaController;
 use App\Http\Controllers\Api\V1\ParticipantController;
 use App\Http\Controllers\Api\V1\ParticipantMergeController;
 use App\Http\Controllers\Api\V1\PasswordController;
+use App\Http\Controllers\Api\V1\PresencaController;
 use App\Http\Controllers\Api\V1\PrivacyConsentController;
 use App\Http\Controllers\Api\V1\PrivacyRequestController;
 use App\Http\Controllers\Api\V1\PrivacyTermController;
 use App\Http\Controllers\Api\V1\RegionController;
 use App\Http\Controllers\Api\V1\RegisterController;
 use App\Http\Controllers\Api\V1\SectorController;
+use App\Http\Controllers\Api\V1\SessaoController;
 use App\Http\Controllers\Api\V1\SessionController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Middleware\IdempotenciaMiddleware;
@@ -58,6 +63,10 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         Route::patch('me', [MeController::class, 'atualizarPerfil'])->name('me.update');
         Route::post('me/password', [MeController::class, 'alterarSenha'])->name('me.password');
         Route::get('me/scopes', [MeController::class, 'scopes'])->name('me.scopes');
+
+        // Seletor de EBIs do ator (RF-06/E04): sem Gate — a lista e sempre o
+        // recorte dos proprios vinculos (ou do contexto de atuacao presente).
+        Route::get('me/ebis', [MeController::class, 'ebis'])->name('me.ebis');
 
         // Termos de privacidade (RF-04): qualquer usuario autenticado le a
         // versao vigente que precisa aceitar.
@@ -130,25 +139,25 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         // Escritas de criacao/transferencia sob idempotencia (Idempotency-Key).
         Route::middleware(IdempotenciaMiddleware::class)->group(function (): void {
             Route::post('churches', [ChurchController::class, 'store'])
-                ->middleware('can:organizacao.gerenciar,igreja')->name('churches.store');
+                ->middleware('can:organizacao.gerenciar')->name('churches.store');
             Route::post('churches/{id}/transfers', [ChurchController::class, 'transfer'])
-                ->middleware('can:organizacao.gerenciar,igreja,{id}')->name('churches.transfer');
+                ->name('churches.transfer');
             Route::post('regions', [RegionController::class, 'store'])
-                ->middleware('can:organizacao.gerenciar,regional')->name('regions.store');
+                ->middleware('can:organizacao.gerenciar')->name('regions.store');
             Route::post('sectors', [SectorController::class, 'store'])
-                ->middleware('can:organizacao.gerenciar,setor')->name('sectors.store');
+                ->middleware('can:organizacao.gerenciar')->name('sectors.store');
             Route::post('ebis', [EbiController::class, 'store'])
-                ->middleware('can:organizacao.gerenciar,ebi')->name('ebis.store');
+                ->middleware('can:organizacao.gerenciar')->name('ebis.store');
         });
 
         Route::patch('churches/{id}', [ChurchController::class, 'update'])
-            ->middleware('can:organizacao.gerenciar,igreja,{id}')->name('churches.update');
+            ->name('churches.update');
         Route::patch('regions/{id}', [RegionController::class, 'update'])
-            ->middleware('can:organizacao.gerenciar,regional,{id}')->name('regions.update');
+            ->name('regions.update');
         Route::patch('sectors/{id}', [SectorController::class, 'update'])
-            ->middleware('can:organizacao.gerenciar,setor,{id}')->name('sectors.update');
+            ->name('sectors.update');
         Route::patch('ebis/{id}', [EbiController::class, 'update'])
-            ->middleware('can:organizacao.gerenciar,ebi,{id}')->name('ebis.update');
+            ->name('ebis.update');
 
         // Participantes (RF-02, RF-03). Cadastro pelo responsavel sob
         // idempotencia; leitura por operador sob `participante.ler` (matriz).
@@ -191,6 +200,46 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         });
         Route::patch('age-exceptions/{id}', [AgeExceptionController::class, 'update'])
             ->middleware('can:excecao.decidir')->name('age-exceptions.update');
+
+        Route::get('ebis/{id}/agenda', [AgendaController::class, 'index'])->name('agenda.index');
+        Route::post('ebis/{id}/agenda', [AgendaController::class, 'store'])
+            ->middleware(IdempotenciaMiddleware::class)->name('agenda.store');
+        Route::patch('agenda/{id}', [AgendaController::class, 'update'])->name('agenda.update');
+        Route::delete('agenda/{id}', [AgendaController::class, 'destroy'])->name('agenda.destroy');
+
+        Route::get('ebis/{id}/agenda-exceptions', [AgendaExcecaoController::class, 'index'])->name('agenda-exceptions.index');
+        Route::post('ebis/{id}/agenda-exceptions', [AgendaExcecaoController::class, 'store'])
+            ->middleware(IdempotenciaMiddleware::class)->name('agenda-exceptions.store');
+        Route::delete('agenda-exceptions/{id}', [AgendaExcecaoController::class, 'destroy'])->name('agenda-exceptions.destroy');
+
+        Route::post('ebis/{id}/sessions/generate', [SessaoController::class, 'gerar'])
+            ->middleware(IdempotenciaMiddleware::class)
+            ->name('sessions.generate');
+
+        Route::get('ebis/{id}/sessions', [SessaoController::class, 'index'])->name('sessions.index');
+        Route::get('sessions/{id}', [SessaoController::class, 'show'])->name('sessions.show');
+        Route::get('sessions/{id}/participants', [PresencaController::class, 'participantes'])
+            ->name('sessions.participants');
+        Route::get('sessions/{id}/attendance', [PresencaController::class, 'index'])
+            ->name('sessions.attendance.index');
+        Route::post('sessions/{id}/attendance', [PresencaController::class, 'store'])
+            ->middleware(IdempotenciaMiddleware::class)->name('sessions.attendance.store');
+        Route::post('sessions/{id}/contingency-attendance', [PresencaController::class, 'contingencia'])
+            ->middleware(IdempotenciaMiddleware::class)->name('sessions.attendance.contingency');
+        Route::post('attendance/{id}/reversal', [PresencaController::class, 'estornar'])
+            ->middleware(IdempotenciaMiddleware::class)->name('attendance.reversal');
+        Route::get('participants/{id}/attendance', [HistoricoPresencaController::class, 'operador'])
+            ->name('participants.attendance');
+        Route::get('me/participants/{id}/attendance', [HistoricoPresencaController::class, 'responsavel'])
+            ->name('me.participants.attendance');
+        Route::post('sessions/{id}/open', [SessaoController::class, 'open'])
+            ->middleware(IdempotenciaMiddleware::class)->name('sessions.open');
+        Route::post('sessions/{id}/close', [SessaoController::class, 'close'])
+            ->middleware(IdempotenciaMiddleware::class)->name('sessions.close');
+        Route::post('sessions/{id}/cancel', [SessaoController::class, 'cancel'])
+            ->middleware(IdempotenciaMiddleware::class)->name('sessions.cancel');
+        Route::patch('sessions/{id}', [SessaoController::class, 'update'])
+            ->middleware(IdempotenciaMiddleware::class)->name('sessions.update');
 
         // Evidencia/arquivo (E08, design §6.5): download so por URL assinada de
         // curta duracao, apos autorizacao (`evidencia.ler`).

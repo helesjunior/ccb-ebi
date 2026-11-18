@@ -40,6 +40,8 @@ interface GerirOrganizacao
      */
     public function listarRegionais(int $limit): CursorPaginator;
 
+    public function encontrarRegional(string $id): ?Regional;
+
     /**
      * @param  array<string, mixed>  $dados
      */
@@ -59,6 +61,8 @@ interface GerirOrganizacao
      * @return CursorPaginator<int, Setor>
      */
     public function listarSetores(int $limit): CursorPaginator;
+
+    public function encontrarSetor(string $id): ?Setor;
 
     /**
      * @param  array<string, mixed>  $dados

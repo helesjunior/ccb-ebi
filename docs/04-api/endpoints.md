@@ -58,7 +58,7 @@ Proposta inicial, prefixo `/api/v1`. Rotas marcadas *novo* não existiam na vers
 | Método | Rota | Finalidade | RF |
 |---|---|---|---|
 | GET | `/me/participants` | Dependentes vinculados (era `/me/children`) (`no OpenAPI`) | RF-13 |
-| GET | `/me/participants/{id}/attendance` | Histórico do dependente *novo* | RF-13 |
+| GET | `/me/participants/{id}/attendance` | Histórico de presenças do dependente *novo* (`no OpenAPI`) | RF-08 |
 | POST | `/participants` | Solicitar cadastro (era `/children`) (`no OpenAPI`) | RF-02 |
 | GET | `/participants` | Pesquisa no escopo do operador *novo* (`no OpenAPI`) | RF-02 |
 | GET | `/participants/{id}` | Consultar participante (`no OpenAPI`) | RF-02 |
@@ -74,17 +74,27 @@ Proposta inicial, prefixo `/api/v1`. Rotas marcadas *novo* não existiam na vers
 ## Agenda, sessões e presença
 | Método | Rota | Finalidade | RF |
 |---|---|---|---|
-| GET/POST | `/ebis/{id}/agenda` | Programação *novo* | RF-06 |
-| GET | `/ebis/{id}/sessions` | Sessões | RF-06 |
-| POST | `/sessions/{id}/open`, `/close`, `/cancel` | Ciclo da sessão *novo* | RF-06 |
 | POST | `/sessions/{id}/attendance` | Registrar presença, idempotente (`no OpenAPI`) | RF-08 |
-| POST | `/attendance/{id}/reversal` | Estornar presença *novo* | RF-08 |
+| GET | `/sessions/{id}/attendance` | Presenças da sessão *novo* (`no OpenAPI`) | RF-08 |
+| POST | `/attendance/{id}/reversal` | Estornar presença *novo* (`no OpenAPI`) | RF-08 |
 | GET | `/ebis/{id}/schedules` | Consultar escala (era `/roster`) | RF-07 |
 | POST | `/sessions/{id}/schedules` | Criar escala *novo* | RF-07 |
 | POST | `/schedules/{id}/approve` | Aprovação pela coordenadora chefe *novo (2.2)* | RF-07 |
 | POST/PATCH | `/schedule-swaps` | Pedir e aprovar troca *novo* | RF-07 |
 | POST | `/sessions/{id}/feedback` | Registrar feedback | RF-09 |
 | POST | `/feedback/{id}/moderation` | Ministério Local libera ou devolve *novo* | RF-09 |
+| GET | `/me/ebis` | EBIs que o usuário pode operar *novo* (`no OpenAPI`) | RF-06 |
+| GET/POST | `/ebis/{id}/agenda` | Faixas semanais do EBI *novo* (`no OpenAPI`) | RF-06 |
+| PATCH/DELETE | `/agenda/{id}` | Alterar/encerrar faixa *novo* (`no OpenAPI`) | RF-06 |
+| GET/POST | `/ebis/{id}/agenda-exceptions` | Exceções da agenda *novo* (`no OpenAPI`) | RF-06 |
+| DELETE | `/agenda-exceptions/{id}` | Remover exceção *novo* (`no OpenAPI`) | RF-06 |
+| GET | `/ebis/{id}/sessions` | Sessões do EBI no período (`no OpenAPI`) | RF-06 |
+| POST | `/ebis/{id}/sessions/generate` | Gerar sessões previstas *novo* (`no OpenAPI`) | RF-06 |
+| GET/PATCH | `/sessions/{id}` | Detalhe e correção da sessão *novo* (`no OpenAPI`) | RF-06 |
+| POST | `/sessions/{id}/open`, `/sessions/{id}/close`, `/sessions/{id}/cancel` | Ciclo da sessão *novo* (`no OpenAPI`) | RF-06 |
+| GET | `/sessions/{id}/participants` | Buscar participantes elegíveis na sessão (finalidade obrigatória) *novo* (`no OpenAPI`) | RF-08 |
+| POST | `/sessions/{id}/contingency-attendance` | Lançar presença de lista em papel *novo* (`no OpenAPI`) | RNF-03 |
+| GET | `/participants/{id}/attendance` | Histórico de presenças (operador) *novo* (`no OpenAPI`) | RF-08 |
 
 ## Biblioteca
 | Método | Rota | Finalidade | RF |

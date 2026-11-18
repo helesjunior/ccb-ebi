@@ -24,7 +24,9 @@ import { Login } from './pages/Login'
 import { Mesclagem } from './pages/Mesclagem'
 import { MeuPerfil } from './pages/MeuPerfil'
 import { Participantes } from './pages/Participantes'
+import { Presenca } from './pages/Presenca'
 import { Privacidade } from './pages/Privacidade'
+import { Sessoes } from './pages/Sessoes'
 import { Vinculos } from './pages/Vinculos'
 
 type Tela = IdTela
@@ -39,6 +41,8 @@ const ROTULOS: Record<Tela, string> = {
   auditoria: 'Auditoria',
   participantes: 'Participantes',
   dependentes: 'Meus dependentes',
+  sessoes: 'Sessões',
+  presenca: 'Presença',
   'cadastro-assistido': 'Cadastro assistido',
   vinculos: 'Vínculos',
   excecao: 'Exceção inclusiva',
@@ -64,6 +68,7 @@ function App() {
   const [escopos, setEscopos] = useState<ContextoAtuacao[]>([])
   const [escopo, setEscopo] = useState<ContextoAtuacao | null>(lerEscopo)
   const [tela, setTela] = useState<Tela>('inicio')
+  const [sessaoAtiva, setSessaoAtiva] = useState<string | null>(null)
 
   const carregarSessao = useCallback(async () => {
     const [me, scopes] = await Promise.all([
@@ -137,6 +142,22 @@ function App() {
       {tela === 'privacidade' && <Privacidade />}
       {tela === 'participantes' && <Participantes />}
       {tela === 'dependentes' && <Dependentes />}
+      {tela === 'sessoes' && (
+        <Sessoes
+          papeis={usuario.papeis ?? []}
+          onAbrirPresenca={(id) => {
+            setSessaoAtiva(id)
+            setTela('presenca')
+          }}
+        />
+      )}
+      {tela === 'presenca' && sessaoAtiva && (
+        <Presenca
+          sessaoId={sessaoAtiva}
+          papeis={usuario.papeis ?? []}
+          onVoltar={() => setTela('sessoes')}
+        />
+      )}
       {tela === 'cadastro-assistido' && <CadastroAssistido />}
       {tela === 'vinculos' && <Vinculos />}
       {tela === 'excecao' && <ExcecaoInclusiva />}

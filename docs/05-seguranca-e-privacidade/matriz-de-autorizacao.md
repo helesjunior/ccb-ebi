@@ -43,6 +43,12 @@ Cada operação é um gate `can:<operacao>` nas rotas, decidido por **papel × o
 | `acesso.gerenciar` | super_admin, adm_regional, adm_setor, adm_igreja | `POST /access-grants`, `DELETE /access-grants/{id}` | papel |
 | `consentimento.ler` | super_admin, adm_regional, adm_setor, adm_igreja | `GET /privacy/consents/{id}` | papel + subárvore do titular |
 | `auditoria.ler` | super_admin, adm_regional, adm_setor | `GET /audit-events` | papel + filtro territorial por evento |
+| `agenda.gerenciar` | adm_igreja, coordenadora | `GET/POST /ebis/{id}/agenda`, `PATCH/DELETE /agenda/{id}`, `GET/POST /ebis/{id}/agenda-exceptions`, `DELETE /agenda-exceptions/{id}` | papel + escopo (subárvore) |
+| `sessao.ler` | super_admin, adm_regional, adm_setor, adm_igreja, coordenadora, auxiliar, ministerio_local | `GET /ebis/{id}/sessions`, `GET /sessions/{id}`, `GET /sessions/{id}/participants` | papel + escopo (subárvore) |
+| `sessao.gerenciar` | adm_igreja, coordenadora | `POST /ebis/{id}/sessions/generate`, `PATCH /sessions/{id}`, `POST /sessions/{id}/open`, `/close`, `/cancel` | papel + escopo (subárvore) |
+| `presenca.ler` | super_admin, adm_regional, adm_setor, adm_igreja, coordenadora, auxiliar, ministerio_local | `GET /sessions/{id}/attendance`, `GET /participants/{id}/attendance` | papel + escopo (subárvore) |
+| `presenca.registrar` | coordenadora, auxiliar | `POST /sessions/{id}/attendance`, `/sessions/{id}/contingency-attendance`, `POST /participants/{id}/attendance` | papel + escopo (subárvore) |
+| `presenca.estornar` | adm_igreja, coordenadora | `POST /attendance/{id}/reversal` | papel + escopo (subárvore) |
 
 Notas: o `*` (finalidade registrada) ainda não é aplicado — fora do escopo da Etapa 3 ([ADR-0022](../06-arquitetura/decisoes/ADR-0022-identidade-e-acesso.md)). A listagem de `/users` já filtra por subárvore; as demais listagens de organização ainda são apenas por papel (dívida registrada). As operações `consentimento.ler` e `auditoria.ler` chegaram com a **Etapa 4 (sub-etapa A1)** ([ADR-0030](../06-arquitetura/decisoes/ADR-0030-privacidade-e-auditoria.md)).
 

@@ -2,6 +2,7 @@
 
 namespace App\Domain\Participantes\Services;
 
+use App\Domain\Participantes\Contracts\VerificarPropriedadeParticipante as VerificarPropriedadeParticipanteContract;
 use App\Domain\Participantes\Models\ResponsavelParticipante;
 
 /**
@@ -12,7 +13,7 @@ use App\Domain\Participantes\Models\ResponsavelParticipante;
  * `validacao = aprovada` e vinculo vigente (`fim IS NULL`). Contestar/recusar
  * derruba o acesso imediatamente (RN-15).
  */
-class VerificadorPropriedadeParticipante
+class VerificadorPropriedadeParticipante implements VerificarPropriedadeParticipanteContract
 {
     public function podeAcessar(string $usuarioId, string $participanteId): bool
     {

@@ -41,5 +41,18 @@ final class Operacoes
 
     public const EVIDENCIA_LER = 'evidencia.ler';
 
+    // E04 — Agenda, sessões e presença (RF-06, RF-08).
+    public const AGENDA_GERENCIAR = 'agenda.gerenciar';
+
+    public const SESSAO_LER = 'sessao.ler';
+
+    public const SESSAO_GERENCIAR = 'sessao.gerenciar';
+
+    public const PRESENCA_LER = 'presenca.ler';
+
+    public const PRESENCA_REGISTRAR = 'presenca.registrar';
+
+    public const PRESENCA_ESTORNAR = 'presenca.estornar';
+
     private function __construct() {}
 }
