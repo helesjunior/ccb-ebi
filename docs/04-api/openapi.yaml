@@ -1674,9 +1674,11 @@ paths:
         A coordenadora aprova, recusa, pede documento, revoga ou contesta um
         vínculo. Exige `vinculo.gerenciar`
         sobre o território do participante; fora dele responde 404 (ser
-        responsável pela criança não basta). O autor do pedido não pode decidir
-        o próprio vínculo: nesse caso responde 403 `acesso_negado`, e a decisão
-        deve ficar com outro operador do mesmo território.
+        responsável pela criança não basta). Dentro do território autorizado, o
+        autor do pedido não pode decidir o próprio vínculo: nesse caso responde
+        403 `acesso_negado`, e a decisão deve ficar com outro operador do mesmo
+        território. O gate territorial precede a recusa de autoria: o autor fora
+        do território recebe 404, como qualquer outro.
       security:
         - bearerAuth: []
       parameters:

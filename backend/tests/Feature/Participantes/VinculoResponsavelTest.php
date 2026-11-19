@@ -94,7 +94,7 @@ it('devolve 404 para vinculo inexistente', function () {
         ->assertStatus(404);
 });
 
-it('o dominio recusa o autor decidindo o proprio pedido', function () {
+it('o dominio recusa o autor decidindo o proprio pedido', function (string $decisao) {
     $vinculo = ResponsavelParticipante::factory()->create([
         'participante_id' => participanteNaIgreja($this->igreja)->id,
         'usuario_id' => $this->coordenadora->id,
@@ -106,7 +106,7 @@ it('o dominio recusa o autor decidindo o proprio pedido', function () {
 
     $servico = app(GerirVinculoResponsavel::class);
 
-    expect(fn () => $servico->decidir((string) $this->coordenadora->id, $vinculo->id, 'aprovar'))
+    expect(fn () => $servico->decidir((string) $this->coordenadora->id, $vinculo->id, $decisao))
         ->toThrow(function (ProblemException $e) {
             expect($e->status)->toBe(403)
                 ->and($e->problemCode)->toBe('acesso_negado');
@@ -115,7 +115,7 @@ it('o dominio recusa o autor decidindo o proprio pedido', function () {
     expect($vinculo->fresh()->toArray())->toBe($antes)
         ->and(SolicitacaoVinculo::query()->count())->toBe($logsAntes)
         ->and(EventoAuditoria::query()->count())->toBe($auditoriaAntes);
-});
+})->with(['aprovar', 'recusar', 'pedir_documento', 'revogar', 'contestar']);
 
 it('autor recebe 403 com acesso_negado em qualquer decisao', function (string $decisao) {
     $vinculo = ResponsavelParticipante::factory()->create([
@@ -145,6 +145,21 @@ it('autor nao revoga o proprio vinculo ja aprovado', function () {
         ->assertStatus(403);
 
     expect($vinculo->fresh()->fim)->toBeNull();
+});
+
+it('autor fora do territorio recebe 404 e nao 403 de autoria', function () {
+    ['igreja' => $outraIgreja] = igrejaComEbi();
+    $vinculo = ResponsavelParticipante::factory()->create([
+        'participante_id' => participanteNaIgreja($outraIgreja)->id,
+        'usuario_id' => $this->coordenadora->id,
+        'validacao' => ResponsavelParticipante::VALIDACAO_PENDENTE,
+    ]);
+
+    // O gate territorial precede a recusa de autoria: fora dele o vinculo se
+    // comporta como inexistente, mesmo para quem o abriu.
+    $this->patchJson("/api/v1/guardian-requests/{$vinculo->id}", ['decisao' => 'aprovar'], $this->authCoord)
+        ->assertStatus(404)
+        ->assertJsonPath('code', 'not_found');
 });
 
 it('outro operador do territorio aprova o pedido do autor', function () {
