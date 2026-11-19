@@ -31,4 +31,22 @@ interface ConsultarOrganizacao
      * @return array<string, string>
      */
     public function nomesDeIgrejas(array $igrejaIds): array;
+
+    /**
+     * Mapa `id => nome` de nos de um tipo (`central|regional|setor|igreja`).
+     * Ids inexistentes ficam de fora.
+     *
+     * @param  array<int, string>  $ids
+     * @return array<string, string>
+     */
+    public function nomes(string $tipo, array $ids): array;
+
+    /**
+     * Mapa `igreja_id => timezone`, usado para recortar o periodo no fuso da
+     * igreja (RN-16). Igrejas de fuso unico no piloto devolvem um unico valor.
+     *
+     * @param  array<int, string>  $igrejaIds
+     * @return array<string, string>
+     */
+    public function fusosDasIgrejas(array $igrejaIds): array;
 }

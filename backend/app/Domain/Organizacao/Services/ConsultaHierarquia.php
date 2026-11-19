@@ -6,6 +6,7 @@ use App\Domain\Organizacao\Contracts\ConsultarHierarquia;
 use App\Domain\Organizacao\Models\CentralNacional;
 use App\Domain\Organizacao\Models\Ebi;
 use App\Domain\Organizacao\Models\Igreja;
+use App\Domain\Organizacao\Models\IgrejaVinculacao;
 use App\Domain\Organizacao\Models\Regional;
 use App\Domain\Organizacao\Models\Setor;
 use App\Support\RecursoNaoEncontradoException;
@@ -45,6 +46,89 @@ class ConsultaHierarquia implements ConsultarHierarquia
         $central = CentralNacional::query()->firstOrCreate(['nome' => 'Central (Brás)']);
 
         return $central->id;
+    }
+
+    public function filhos(string $tipo, string $id): array
+    {
+        return match ($tipo) {
+            'central' => $this->mapear(Regional::query()->where('central_nacional_id', $id)->orderBy('nome'), 'regional'),
+            'regional' => $this->mapear(Setor::query()->where('regional_id', $id)->orderBy('nome'), 'setor'),
+            'setor' => $this->mapear(
+                Igreja::query()->whereIn('id', $this->igrejasDoSetor($id))->orderBy('nome'),
+                'igreja',
+            ),
+            'igreja' => $this->mapear(Ebi::query()->where('igreja_id', $id)->orderBy('nome'), 'ebi'),
+            'ebi' => [],
+            default => throw new RuntimeException("Tipo de escopo desconhecido: {$tipo}"),
+        };
+    }
+
+    /** @return array<int, string> */
+    public function igrejasDaSubarvore(string $tipo, string $id): array
+    {
+        return match ($tipo) {
+            'central' => $this->igrejasDaCentral($id),
+            'regional' => $this->igrejasDaRegional($id),
+            'setor' => $this->igrejasDoSetor($id),
+            'igreja' => Igreja::query()->whereKey($id)->pluck('id')->all(),
+            'ebi' => [],
+            default => throw new RuntimeException("Tipo de escopo desconhecido: {$tipo}"),
+        };
+    }
+
+    /** @return array<int, string> */
+    public function ebisDaSubarvore(string $tipo, string $id): array
+    {
+        if ($tipo === 'ebi') {
+            return Ebi::query()->whereKey($id)->pluck('id')->all();
+        }
+
+        return Ebi::query()->whereIn('igreja_id', $this->igrejasDaSubarvore($tipo, $id))->pluck('id')->all();
+    }
+
+    /** @return array<int, string> */
+    private function igrejasDaCentral(string $centralId): array
+    {
+        return IgrejaVinculacao::query()
+            ->whereNull('fim')
+            ->whereIn('setor_id', Setor::query()
+                ->whereIn('regional_id', Regional::query()
+                    ->where('central_nacional_id', $centralId)
+                    ->select('id'))
+                ->select('id'))
+            ->pluck('igreja_id')
+            ->all();
+    }
+
+    /** @return array<int, string> */
+    private function igrejasDaRegional(string $regionalId): array
+    {
+        return IgrejaVinculacao::query()
+            ->whereNull('fim')
+            ->whereIn('setor_id', Setor::query()->where('regional_id', $regionalId)->select('id'))
+            ->pluck('igreja_id')
+            ->all();
+    }
+
+    /** @return array<int, string> */
+    private function igrejasDoSetor(string $setorId): array
+    {
+        return IgrejaVinculacao::query()
+            ->where('setor_id', $setorId)
+            ->whereNull('fim')
+            ->pluck('igreja_id')
+            ->all();
+    }
+
+    /**
+     * @param  \Illuminate\Database\Eloquent\Builder<covariant \Illuminate\Database\Eloquent\Model>  $consulta
+     * @return array<int, array{tipo: string, id: string, nome: string}>
+     */
+    private function mapear($consulta, string $tipo): array
+    {
+        return $consulta->get()
+            ->map(fn ($no): array => ['tipo' => $tipo, 'id' => (string) $no->id, 'nome' => (string) $no->nome])
+            ->all();
     }
 
     /** @return array<string, string> */

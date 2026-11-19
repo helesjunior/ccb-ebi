@@ -42,4 +42,29 @@ interface ConsultarHierarquia
      * Usado no cadastro publico, que nao pode depender do seed organizacional.
      */
     public function garantirCentralId(): string;
+
+    /**
+     * Filhos diretos de um no, na ordem de exibicao. Sempre no formato
+     * `['tipo' => string, 'id' => string, 'nome' => string]`; vazio para `ebi`.
+     *
+     * @return array<int, array{tipo: string, id: string, nome: string}>
+     *
+     * @throws RuntimeException se o tipo de no nao existir.
+     */
+    public function filhos(string $tipo, string $id): array;
+
+    /**
+     * IDs das igrejas sob o no (o proprio, quando `tipo = igreja`), pelo
+     * vinculo vigente da igreja (RN-09). Vazio para `ebi`.
+     *
+     * @return array<int, string>
+     */
+    public function igrejasDaSubarvore(string $tipo, string $id): array;
+
+    /**
+     * IDs das EBIs sob o no; para `tipo = ebi`, a propria EBI.
+     *
+     * @return array<int, string>
+     */
+    public function ebisDaSubarvore(string $tipo, string $id): array;
 }
