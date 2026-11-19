@@ -118,6 +118,20 @@ function acoesDoPedido(pedido: Vinculo): typeof DECISOES {
 }
 
 /**
+ * Linha de autoria do usuário: ele vê o pedido, mas a decisão é de outro
+ * operador. Só vale com identificadores presentes — `undefined === undefined`
+ * marcaria linhas alheias como próprias.
+ */
+function ehDoUsuario(pedido: Vinculo, usuarioId: string | null): boolean {
+  return usuarioId !== null && !!pedido.usuario_id && pedido.usuario_id === usuarioId
+}
+
+/** Pedido ainda admite decisão do autor? Estado final não pede espera. */
+function aguardaOutroOperador(pedido: Vinculo): boolean {
+  return !pedido.fim && (pedido.validacao === 'pendente' || pedido.validacao === 'aguardando_documento')
+}
+
+/**
  * Vínculos: pedidos de vínculo do responsável e decisão da coordenadora (RF-03).
  *
  * Duas abas. *Pedidos* lista o que o servidor considera visível ao ator — o
@@ -126,7 +140,13 @@ function acoesDoPedido(pedido: Vinculo): typeof DECISOES {
  * nome: o produto nunca pede ULID ao usuário. A tela não calcula escopo: só
  * esconde o que o servidor recusaria de qualquer forma.
  */
-export function Vinculos({ escopos }: { escopos: ContextoAtuacao[] }) {
+export function Vinculos({
+  escopos,
+  usuarioId,
+}: {
+  escopos: ContextoAtuacao[]
+  usuarioId: string | null
+}) {
   const [aba, setAba] = useState<string>('pedidos')
 
   const [validacao, setValidacao] = useState<Situacao>('pendente')
@@ -257,20 +277,28 @@ export function Vinculos({ escopos }: { escopos: ContextoAtuacao[] }) {
                       <TableCell>{formatarData(pedido.inicio)}</TableCell>
                       {gerencia && (
                         <TableCell>
-                          <div className="flex flex-wrap gap-2">
-                            {acoesDoPedido(pedido).map((d) => (
-                              <Button
-                                key={d.valor}
-                                type="button"
-                                size="sm"
-                                variant={d.valor === 'aprovar' ? 'default' : 'outline'}
-                                disabled={ocupado}
-                                onClick={() => void decidir(pedido.id ?? '', d.valor)}
-                              >
-                                {d.rotulo}
-                              </Button>
-                            ))}
-                          </div>
+                          {ehDoUsuario(pedido, usuarioId) ? (
+                            aguardaOutroOperador(pedido) && (
+                              <span className="text-xs text-muted-foreground">
+                                Aguardando outro operador
+                              </span>
+                            )
+                          ) : (
+                            <div className="flex flex-wrap gap-2">
+                              {acoesDoPedido(pedido).map((d) => (
+                                <Button
+                                  key={d.valor}
+                                  type="button"
+                                  size="sm"
+                                  variant={d.valor === 'aprovar' ? 'default' : 'outline'}
+                                  disabled={ocupado}
+                                  onClick={() => void decidir(pedido.id ?? '', d.valor)}
+                                >
+                                  {d.rotulo}
+                                </Button>
+                              ))}
+                            </div>
+                          )}
                         </TableCell>
                       )}
                     </TableRow>
