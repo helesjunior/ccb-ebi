@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Auditoria\Contracts\RegistrarEvento;
 use App\Domain\Identidade\Contracts\ResolverEscopo;
 use App\Domain\Identidade\Services\ContextoAtuacao;
 use App\Domain\Identidade\Support\Operacoes;
@@ -11,6 +12,7 @@ use App\Http\Requests\Relatorios\RelatorioPresencaRequest;
 use App\Http\Resources\RelatorioPresencaResource;
 use App\Support\ProblemException;
 use App\Support\RecursoNaoEncontradoException;
+use App\Support\Relatorios\ExportadorCsv;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\Response;
@@ -31,6 +33,7 @@ class ReportController
         private readonly ConsultarRelatorio $relatorio,
         private readonly ConsultarHierarquia $hierarquia,
         private readonly ResolverEscopo $escopo,
+        private readonly RegistrarEvento $auditoria,
     ) {}
 
     public function attendance(RelatorioPresencaRequest $request): Response
@@ -62,7 +65,43 @@ class ReportController
             $this->suprimir($contexto),
         );
 
+        if (($dados['formato'] ?? 'json') === 'csv') {
+            return $this->csv($payload, $contexto);
+        }
+
         return (new RelatorioPresencaResource($payload))->response();
+    }
+
+    /**
+     * Mesma supressao do JSON, auditada com escopo, no e periodo e sem nomes.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    private function csv(array $payload, ContextoAtuacao $contexto): Response
+    {
+        $exportador = new ExportadorCsv;
+        $corpo = $exportador->gerar($payload);
+
+        $this->auditoria->registrar([
+            'acao' => 'relatorio.exportado',
+            'recurso' => 'relatorio',
+            'ator_id' => $contexto->usuarioId,
+            'origem' => 'api',
+            'escopo' => "{$contexto->tipoEscopo}:{$contexto->escopoId}",
+            'motivo' => null,
+            'metadados_minimizados' => [
+                'nivel' => $payload['no']['nivel'],
+                'id' => $payload['no']['id'],
+                'inicio' => $payload['periodo']['inicio'],
+                'fim' => $payload['periodo']['fim'],
+            ],
+            'ocorrido_em' => now(),
+        ]);
+
+        return response($corpo, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="'.$exportador->nomeDoArquivo($payload).'"',
+        ]);
     }
 
     private function contexto(Request $request): ContextoAtuacao

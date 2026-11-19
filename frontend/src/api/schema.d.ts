@@ -3664,8 +3664,8 @@ export interface paths {
                     inicio: string;
                     /** @description Último dia do período, no máximo 366 dias após `inicio`. */
                     fim: string;
-                    /** @description `json` (padrão) devolve o relatório em JSON. */
-                    formato?: "json";
+                    /** @description `json` (padrão) devolve o relatório em JSON; `csv` devolve o mesmo cálculo em arquivo, com uma linha para o nó e uma por filho. */
+                    formato?: "json" | "csv";
                 };
                 header?: {
                     /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
@@ -3676,13 +3676,18 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Relatório do nó e dos filhos diretos */
+                /** @description Relatório do nó e dos filhos diretos, em JSON ou CSV conforme `formato`. */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
                         "application/json": components["schemas"]["RelatorioPresenca"];
+                        /**
+                         * @example nivel,id,nome,participantes_distintos,presencas,sessoes_realizadas,media_por_sessao,participantes_cadastrados,participantes_ativos,igrejas_com_ebi_ativo,periodo_inicio,periodo_fim,fuso,gerado_em,criterios
+                         *     igreja,01H...,Igreja,42,120,8,15.0,60,58,1,2026-10-20,2026-11-19,America/Sao_Paulo,2026-11-19T12:00:00+00:00,"Participantes sem igreja de referencia..."
+                         */
+                        "text/csv": string;
                     };
                 };
                 401: components["responses"]["Problem"];

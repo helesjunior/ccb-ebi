@@ -1867,14 +1867,23 @@ paths:
         - name: formato
           in: query
           required: false
-          description: "`json` (padrão) devolve o relatório em JSON."
-          schema: { type: string, enum: [json], default: json }
+          description: >-
+            `json` (padrão) devolve o relatório em JSON; `csv` devolve o mesmo
+            cálculo em arquivo, com uma linha para o nó e uma por filho.
+          schema: { type: string, enum: [json, csv], default: json }
       responses:
         '200':
-          description: Relatório do nó e dos filhos diretos
+          description: >-
+            Relatório do nó e dos filhos diretos, em JSON ou CSV conforme
+            `formato`.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/RelatorioPresenca' }
+            text/csv:
+              schema: { type: string }
+              example: |
+                nivel,id,nome,participantes_distintos,presencas,sessoes_realizadas,media_por_sessao,participantes_cadastrados,participantes_ativos,igrejas_com_ebi_ativo,periodo_inicio,periodo_fim,fuso,gerado_em,criterios
+                igreja,01H...,Igreja,42,120,8,15.0,60,58,1,2026-10-20,2026-11-19,America/Sao_Paulo,2026-11-19T12:00:00+00:00,"Participantes sem igreja de referencia..."
         '401': { $ref: '#/components/responses/Problem' }
         '403': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
