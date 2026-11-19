@@ -1426,8 +1426,10 @@ paths:
         finalidade declarada (`finalidade`), registrada na auditoria. Para quem
         atua acima da igreja, o resultado é cortado por igreja de referência:
         grupos com 1 a 4 participantes ativos, ou sem nenhum ativo, saem da
-        resposta inteiros (ADR-0020, decisão 11). Quem atua na igreja ou no EBI
-        vê a lista completa.
+        resposta inteiros (ADR-0020, decisão 11). Só papéis locais
+        (coordenadora, administração da igreja, ministério local) e o auxiliar,
+        em escopo de igreja ou EBI, veem a lista completa; os demais recebem o
+        corte mesmo com contexto de igreja.
       security:
         - bearerAuth: []
       parameters:
@@ -1852,7 +1854,7 @@ paths:
         pessoas (ADR-0029). O nó é `nivel` + `id`; sem eles, usa o nó do
         contexto de atuação. A supressão segue o ADR-0020: valores de 1 a 4 são
         escondidos para quem atua acima da igreja, e um filho suprimido suprime
-        os indicadores de pessoas e de sessão do pai (`filho_suprimido`). Zero
+        os indicadores de pessoas e a média do pai (`filho_suprimido`). Zero
         aparece. Ficam isentos só papéis locais (coordenadora, administração da
         igreja, ministério local) em escopo de igreja ou EBI; papel
         administrativo em escopo de igreja continua suprimido. M-02 e M-03

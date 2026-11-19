@@ -141,7 +141,7 @@ Não existe uma tela por perfil: é **um único relatório**, que começa no esc
    - **Regra, avaliada de baixo para cima, das folhas (EBIs) até a Central:**
      - Um nó fica **suprimido** quando algum indicador dele foi escondido pelo limiar, ou quando algum filho direto está suprimido.
      - Se algum filho direto está suprimido, por qualquer motivo, **todos** os indicadores suprimíveis do nó voltam `valor: null`, `suprimido: true`, `motivo: filho_suprimido`. Isso inclui M-02, M-03, a média, M-01 e ativos. M-05 e M-09 não são indicadores de pessoas: continuam visíveis e nunca entram na cascata (decisão 5).
-   - **Quem dispara:** só indicadores de pessoas ou sessões, com o mesmo limiar de 5 do ADR-0020. Zero e `nao_se_aplica` não disparam.
+   - **Quem dispara:** só indicadores de pessoas, com o mesmo limiar de 5 do ADR-0020. Zero e `nao_se_aplica` não disparam.
    - **Mesma representação em todo lugar.** A situação de um nó depende só da sua subárvore, então é a mesma em qualquer nível em que ele apareça: como nó aberto ou como linha no relatório do pai. Um setor suprimido aparece suprimido também na linha da regional, o que suprime a regional, e assim até a Central.
    - **Motivo na linha do pai.** Cada linha de filho mostra o motivo do próprio filho: `limiar` se ele mesmo tem valor de 1 a 4, ou `filho_suprimido` se foi escondido pela cascata. Os totais do nó aberto recebem `filho_suprimido`.
    - **Quando um indicador se qualificaria pelos dois motivos**, prevalece `filho_suprimido`. Esse motivo revela menos, porque não diz que o valor é pequeno.

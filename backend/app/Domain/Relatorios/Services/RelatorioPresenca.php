@@ -369,7 +369,7 @@ class RelatorioPresenca implements ConsultarRelatorio
             'Participantes distintos e presencas somam as igrejas da unidade; sessoes realizadas e media usam as sessoes da unidade; tudo no periodo escolhido.',
             'Cadastrados, ativos (presenca valida nos ultimos 12 meses ou cadastro nos ultimos 90 dias) e igrejas com EBI ativo (sessao realizada nos ultimos 90 dias) contam pela igreja de referencia, com janela ate a data de geracao.',
             'No EBI, cadastrados, ativos e igrejas com EBI ativo nao se aplicam: o EBI e medido por participantes, presencas, sessoes e media.',
-            'Valores entre 1 e 4 sao suprimidos para quem atua acima da igreja; um filho suprimido suprime os indicadores de pessoas e de sessao do pai.',
+            'Valores entre 1 e 4 sao suprimidos para quem atua acima da igreja; um filho suprimido suprime os indicadores de pessoas e a media do pai.',
             'Sessoes realizadas e igrejas com EBI ativo nunca sao suprimidas.',
             'A data de cada sessao usa o fuso da igreja dele.',
         ]), 2000, '');
