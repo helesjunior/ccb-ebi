@@ -45,6 +45,7 @@ export function Participantes() {
   const [termo, setTermo] = useState('')
   const [finalidade, setFinalidade] = useState('confirmacao_cadastro')
   const [resultados, setResultados] = useState<Participante[]>([])
+  const [suprimido, setSuprimido] = useState(false)
   const [erroBusca, setErroBusca] = useState<string | null>(null)
   const [buscando, setBuscando] = useState(false)
   const [buscou, setBuscou] = useState(false)
@@ -64,10 +65,14 @@ export function Participantes() {
       headers: cabecalhos(),
     })
     setBuscando(false)
+    setSuprimido(false)
     if (error || !data) {
       setErroBusca(lerErro(error, 'Não foi possível buscar participantes.').detail)
       return
     }
+    // Acima da igreja, um grupo de 1 a 4 vem escondido (ADR-0020): dizer
+    // "ninguém encontrado" aqui seria mentira e revelaria o grupo.
+    setSuprimido(data.suprimido === true)
     setResultados(data.data ?? [])
     setBuscou(true)
   }
@@ -127,12 +132,20 @@ export function Participantes() {
               <AlertDescription>{erroBusca}</AlertDescription>
             </Alert>
           )}
-          {buscou && !erroBusca && !buscando && (
+          {buscou && !erroBusca && !buscando && !suprimido && (
             <p role="status" className="text-sm text-muted-foreground">
               {resultados.length === 1
                 ? '1 participante encontrado.'
                 : `${resultados.length} participantes encontrados.`}
             </p>
+          )}
+          {suprimido && !erroBusca && !buscando && (
+            <Alert role="status" data-testid="busca-suprimida">
+              <AlertDescription>
+                Para proteger as pessoas, o sistema não divulga listas de menos de 5 resultados.
+                Ajuste a busca ou consulte a igreja responsável.
+              </AlertDescription>
+            </Alert>
           )}
           <Table data-testid="resultados">
             <TableHeader>
@@ -147,11 +160,13 @@ export function Participantes() {
               <EstadoTabela
                 colunas={4}
                 carregando={buscando}
-                vazio={resultados.length === 0}
+                vazio={suprimido || resultados.length === 0}
                 mensagemVazio={
-                  buscou
-                    ? 'Ninguém encontrado com esse nome. Você pode cadastrar logo abaixo.'
-                    : 'Faça uma busca para ver os resultados.'
+                  suprimido
+                    ? 'A lista tem menos de 5 pessoas e não é divulgada para o seu nível.'
+                    : buscou
+                      ? 'Ninguém encontrado com esse nome. Você pode cadastrar logo abaixo.'
+                      : 'Faça uma busca para ver os resultados.'
                 }
               />
               {!buscando &&

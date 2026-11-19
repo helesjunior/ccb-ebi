@@ -90,7 +90,7 @@ describe('tela de relatorios', () => {
         ? resposta('Unidade;Presencas\nRegional Sul;40\n')
         : resposta({ ...relatorio(), filhos: [filho('ig-1', 'Igreja Centro')] }),
     )
-    const criarUrl = vi.fn((_blob: Blob) => 'blob:csv')
+    const criarUrl = vi.fn((_objeto: Blob | MediaSource): string => 'blob:csv')
     vi.spyOn(URL, 'createObjectURL').mockImplementation(criarUrl)
     vi.spyOn(URL, 'revokeObjectURL').mockImplementation(vi.fn())
 
@@ -111,20 +111,31 @@ describe('tela de relatorios', () => {
     expect(await blob.text()).toBe('Unidade;Presencas\nRegional Sul;40\n')
   })
 
-  it('recarrega a raiz do novo contexto quando ele muda', async () => {
+  it('volta a raiz do novo contexto quando ele muda', async () => {
+    const usuario = userEvent.setup()
     const outro: ContextoAtuacao = { papel: 'adm_regional', tipo_escopo: 'regional', escopo_id: 'reg-2' }
-    getJson.mockImplementation(async (_caminho: string, opcoes: { params?: { query?: Record<string, string> } }) => {
-      const id = opcoes.params?.query?.id
-      return resposta(id === undefined ? relatorio() : relatorio({ id, nome: 'Regional Norte' }))
-    })
+    getJson.mockImplementation(async (_caminho: string, opcoes: { params?: { query?: Record<string, string> } }) =>
+      resposta(
+        opcoes.params?.query?.id === 'ig-1'
+          ? {
+              ...relatorio({ nivel: 'igreja', id: 'ig-1', nome: 'Igreja Centro' }),
+              filhos: [],
+            }
+          : { ...relatorio(), filhos: [filho('ig-1', 'Igreja Centro')] },
+      ),
+    )
 
     const { rerender } = render(<Relatorios contexto={escopo} />)
-    await acharTitulo('Regional Sul (Regional)')
+    await usuario.click(await screen.findByRole('button', { name: 'Abrir Igreja Centro' }))
+    await acharTitulo('Igreja Centro (Igreja)')
 
     rerender(<Relatorios contexto={outro} />)
 
-    await acharTitulo('Regional Norte (Regional)')
-    expect(screen.queryByText((_, e) => e?.textContent === 'Regional Sul (Regional)')).not.toBeInTheDocument()
+    // O novo contexto recomeça na raiz: a igreja aberta some e a trilha zera.
+    await acharTitulo('Regional Sul (Regional)')
+    const trilha = screen.getByRole('navigation', { name: /trilha/i })
+    expect(within(trilha).queryByRole('button', { name: 'Igreja Centro' })).not.toBeInTheDocument()
+    expect(consultaDe(getJson.mock.calls.at(-1)!)).not.toHaveProperty('id')
   })
 
   it('recarrega a unidade aberta ao aplicar um novo periodo', async () => {
@@ -149,8 +160,11 @@ describe('tela de relatorios', () => {
     await usuario.click(screen.getByRole('button', { name: /aplicar período/i }))
 
     // A tela continua na igreja aberta: título e trilha não voltam à raiz.
-    await waitFor(() => expect(getJson).toHaveBeenCalled())
-    expect(consultaDe(getJson.mock.calls.at(-1)!)).toMatchObject({
+    await waitFor(() =>
+      expect(getJson.mock.calls.some((c) => consultaDe(c).inicio === '2026-10-01')).toBe(true),
+    )
+    const comNovoPeriodo = getJson.mock.calls.filter((c) => consultaDe(c).inicio === '2026-10-01')
+    expect(consultaDe(comNovoPeriodo.at(-1)!)).toMatchObject({
       nivel: 'igreja',
       id: 'ig-1',
       inicio: '2026-10-01',

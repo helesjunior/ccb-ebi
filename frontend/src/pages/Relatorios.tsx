@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { BarChart3Icon, ChevronRightIcon, DownloadIcon } from 'lucide-react'
 
 import { api } from '../api/client'
@@ -64,6 +64,16 @@ function CelulaIndicador({ totais, chave }: { totais: TotaisRelatorio; chave: Ch
   return <TableCell title={explicacao}>{textoIndicador(indicador)}</TableCell>
 }
 
+/** Monta a consulta do nó: sem nó explícito, o servidor usa o contexto. */
+function consultar(no: NoRelatorio | null, janela: { inicio: string; fim: string }) {
+  const parametros = new URLSearchParams({ inicio: janela.inicio, fim: janela.fim })
+  if (no) {
+    parametros.set('nivel', no.nivel)
+    parametros.set('id', no.id)
+  }
+  return parametros
+}
+
 /**
  * Relatórios básicos (RF-14). O servidor calcula e decide a supressão; a tela só
  * troca os rótulos (`< 5`, "Não divulgado", "—") e oferece período, trilha e
@@ -80,27 +90,29 @@ export function Relatorios({ contexto }: { contexto: ContextoAtuacao | null }) {
   const [exportando, setExportando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
 
-  /** Monta a consulta do nó: sem nó explícito, o servidor usa o contexto. */
-  const consulta = useCallback(
-    (no: NoRelatorio | null, janela: { inicio: string; fim: string }) => {
-      const parametros = new URLSearchParams({ inicio: janela.inicio, fim: janela.fim })
-      if (no) {
-        parametros.set('nivel', no.nivel)
-        parametros.set('id', no.id)
-      }
-      return parametros
-    },
-    [],
-  )
+  /** Última consulta pedida; resposta de consulta antiga é descartada. */
+  const sequencia = useRef(0)
 
-  const carregar = useCallback(
-    async (no: NoRelatorio | null, janela: { inicio: string; fim: string }) => {
-      setCarregando(true)
-      setErro(null)
+  /** Identidade do contexto: trocar de escopo descarta relatório e trilha. */
+  const chaveContexto = contexto
+    ? `${contexto.papel}:${contexto.tipo_escopo}:${contexto.escopo_id}`
+    : ''
+
+  // O que a tela mostra: a raiz do contexto ou o filho aberto por último.
+  const [alvo, setAlvo] = useState<NoRelatorio | null>(null)
+
+  // Nó, período e contexto mudam a consulta: a raiz do novo contexto é
+  // recarregada e o nó aberto também, quando só a janela muda.
+  useEffect(() => {
+    const pedido = ++sequencia.current
+    setCarregando(true)
+    setErro(null)
+    void (async () => {
       const { data, error } = await api.GET('/reports/attendance', {
         headers: cabecalhos(),
-        params: { query: Object.fromEntries(consulta(no, janela)) as never },
+        params: { query: Object.fromEntries(consultar(alvo, periodo)) as never },
       })
+      if (pedido !== sequencia.current) return
       setCarregando(false)
       // O 200 é `string` no spec por causa do ramo CSV; aqui só chega JSON.
       if (error || !data || typeof data === 'string') {
@@ -109,23 +121,46 @@ export function Relatorios({ contexto }: { contexto: ContextoAtuacao | null }) {
         return
       }
       setRelatorio(data)
-    },
-    [consulta],
-  )
+    })()
+  }, [alvo, periodo, chaveContexto])
 
+  // Troca de escopo: some com a tela anterior antes de pedir a raiz nova.
   useEffect(() => {
-    void carregar(null, periodo)
-  }, [carregar, periodo])
+    setAlvo(null)
+    setRelatorio(null)
+    setErro(null)
+    setTrilha([])
+  }, [chaveContexto])
+
+  /** Recarrega o nó exibido no período já aplicado (mesmo período ou erro). */
+  function recarregarNoAtual() {
+    const pedido = ++sequencia.current
+    setCarregando(true)
+    setErro(null)
+    void (async () => {
+      const { data, error } = await api.GET('/reports/attendance', {
+        headers: cabecalhos(),
+        params: { query: Object.fromEntries(consultar(alvo, periodo)) as never },
+      })
+      if (pedido !== sequencia.current) return
+      setCarregando(false)
+      if (error || !data || typeof data === 'string') {
+        setRelatorio(null)
+        setErro(lerErro(error, 'Não foi possível carregar o relatório.').detail)
+        return
+      }
+      setRelatorio(data)
+    })()
+  }
 
   function abrirFilho(filho: NoRelatorio) {
     setTrilha((anteriores) => [...anteriores, { no: filho, filhos: [] }])
-    void carregar(filho, periodo)
+    setAlvo(filho)
   }
 
   function voltarPara(indice: number) {
-    const destino = indice < 0 ? null : trilha[indice].no
     setTrilha((anteriores) => anteriores.slice(0, indice + 1))
-    void carregar(destino, periodo)
+    setAlvo(indice < 0 ? null : trilha[indice].no)
   }
 
   function aplicarPeriodo(evento: FormEvent) {
@@ -134,27 +169,36 @@ export function Relatorios({ contexto }: { contexto: ContextoAtuacao | null }) {
       setErro('O início precisa ser anterior ou igual ao fim.')
       return
     }
+    // Aplica o período na unidade aberta: só a janela muda, o nó continua.
+    if (inicio === periodo.inicio && fim === periodo.fim) {
+      // Mesmo período: o efeito não roda, então recarrega aqui.
+      recarregarNoAtual()
+      return
+    }
     setPeriodo({ inicio, fim })
   }
 
   async function exportar() {
     if (!relatorio) return
     setExportando(true)
-    const parametros = consulta(trilha.length > 0 ? trilha[trilha.length - 1].no : null, periodo)
+    const parametros = consultar(alvo, periodo)
     parametros.set('formato', 'csv')
-    const { data, error } = await api.GET('/reports/attendance', {
-      headers: cabecalhos(),
-      params: { query: Object.fromEntries(parametros) as never },
-    })
-    setExportando(false)
-    if (error || !data) {
-      setErro(lerErro(error, 'Não foi possível exportar o relatório.').detail)
-      return
+    try {
+      // O CSV é `text/csv` no spec: sem `parseAs`, o cliente tentaria JSON.
+      const { data, error } = await api.GET('/reports/attendance', {
+        headers: cabecalhos(),
+        params: { query: Object.fromEntries(parametros) as never },
+        parseAs: 'text',
+      })
+      if (error || !data) {
+        setErro(lerErro(error, 'Não foi possível exportar o relatório.').detail)
+        return
+      }
+      baixarCsv(data, `relatorio-presenca-${relatorio.no.nivel}-${periodo.inicio}_${periodo.fim}.csv`)
+    } finally {
+      setExportando(false)
     }
-    baixarCsv(String(data), `relatorio-presenca-${relatorio.no.nivel}-${periodo.inicio}_${periodo.fim}.csv`)
   }
-
-  const noAtual = relatorio?.no
 
   return (
     <section className="mx-auto flex w-full max-w-6xl flex-col gap-6">
@@ -316,7 +360,7 @@ export function Relatorios({ contexto }: { contexto: ContextoAtuacao | null }) {
       )}
 
       {!relatorio && carregando && <p role="status">Carregando…</p>}
-      {!relatorio && !carregando && noAtual === undefined && !erro && (
+      {!relatorio && !carregando && !erro && (
         <p className="text-muted-foreground">Nenhum relatório disponível para esta unidade.</p>
       )}
     </section>
