@@ -33,9 +33,9 @@ it('conta presenca valida, ignora estornada e sessoes nao realizadas', function 
 
     $totais = $this->indicadores->totais([$this->no['igreja']->id], [$this->no['ebi']->id], '2026-11-01', '2026-11-30');
 
-    expect($totais["ebi:{$this->no['ebi']->id}"])->toBe([
+    expect($totais["ebi:{$this->no['ebi']->id}"])->toMatchArray([
         'participantes_distintos' => 1, 'presencas' => 1, 'sessoes_realizadas' => 2,
-    ])->and($totais["igreja:{$this->no['igreja']->id}"])->toBe([
+    ])->and($totais["igreja:{$this->no['igreja']->id}"])->toMatchArray([
         'participantes_distintos' => 1, 'presencas' => 1, 'sessoes_realizadas' => 2,
     ]);
 });
@@ -76,7 +76,7 @@ it('deduplica pelo id canonico da mesclagem', function () {
     $totais = $this->indicadores->totais([$this->no['igreja']->id], [], '2026-11-01', '2026-11-30', $canonico);
 
     expect($totais["igreja:{$this->no['igreja']->id}"])
-        ->toBe(['participantes_distintos' => 1, 'presencas' => 2, 'sessoes_realizadas' => 1]);
+        ->toMatchArray(['participantes_distintos' => 1, 'presencas' => 2, 'sessoes_realizadas' => 1]);
 });
 
 it('lista quem tem presenca valida desde uma data, pelo id canonico', function () {

@@ -10,6 +10,7 @@ use App\Domain\Organizacao\Models\IgrejaVinculacao;
 use App\Domain\Organizacao\Models\Regional;
 use App\Domain\Organizacao\Models\Setor;
 use App\Support\RecursoNaoEncontradoException;
+use Illuminate\Database\Eloquent\Builder;
 use RuntimeException;
 
 /**
@@ -121,7 +122,7 @@ class ConsultaHierarquia implements ConsultarHierarquia
     }
 
     /**
-     * @param  \Illuminate\Database\Eloquent\Builder<covariant \Illuminate\Database\Eloquent\Model>  $consulta
+     * @param  Builder<covariant \Illuminate\Database\Eloquent\Model>  $consulta
      * @return array<int, array{tipo: string, id: string, nome: string}>
      */
     private function mapear($consulta, string $tipo): array

@@ -20,7 +20,8 @@ interface ConsultarIndicadoresPresenca
      * - `sessoes_realizadas` (M-05): sessoes `encerrada` com `realizada = true`,
      *   inclusive sem nenhuma presenca.
      * - `participantes_distintos` (M-02): `COUNT(DISTINCT)` sobre o id canonico
-     *   (mapa duplicado -> principal, vindo do modulo Participantes).
+     *   (mapa duplicado -> principal, vindo do modulo Participantes). ids traz
+     *   os ids canonicos, para quem precisa deduplicar entre varios escopos.
      *
      * O periodo e inclusivo nas duas pontas e recortado pela data local de
      * `inicio_previsto` no fuso da igreja (RN-16).
@@ -28,7 +29,7 @@ interface ConsultarIndicadoresPresenca
      * @param  array<int, string>  $igrejaIds
      * @param  array<int, string>  $ebiIds
      * @param  array<string, string>  $canonico
-     * @return array<string, array{participantes_distintos: int, presencas: int, sessoes_realizadas: int}>
+     * @return array<string, array{participantes_distintos: int, presencas: int, sessoes_realizadas: int, ids: array<string, true>}>
      */
     public function totais(array $igrejaIds, array $ebiIds, string $inicio, string $fim, array $canonico = []): array;
 
@@ -66,4 +67,14 @@ interface ConsultarIndicadoresPresenca
      * @return array<string, array<string, true>>
      */
     public function igrejasComPresencaDesde(array $canonico, CarbonImmutable $desde): array;
+
+    /**
+     * Presenca valida por EBI no periodo, sem recorte de data: ebi_id =>
+     * [id canonico => true]. Base de M-02 no nivel EBI (o participante nao
+     * se atribui a EBI por igreja de referencia).
+     *
+     * @param  array<string, string>  $canonico
+     * @return array<string, array<string, true>>
+     */
+    public function ebisComPresencaDesde(array $canonico, CarbonImmutable $desde): array;
 }

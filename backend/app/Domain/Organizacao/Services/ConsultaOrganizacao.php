@@ -4,6 +4,7 @@ namespace App\Domain\Organizacao\Services;
 
 use App\Domain\Organizacao\Contracts\ConsultarOrganizacao;
 use App\Domain\Organizacao\Models\CentralNacional;
+use App\Domain\Organizacao\Models\Ebi;
 use App\Domain\Organizacao\Models\Igreja;
 use App\Domain\Organizacao\Models\IgrejaVinculacao;
 use App\Domain\Organizacao\Models\Regional;
@@ -43,6 +44,11 @@ class ConsultaOrganizacao implements ConsultarOrganizacao
         };
 
         return $modelo->whereIn('id', $ids)->pluck('nome', 'id')->all();
+    }
+
+    public function igrejaDosEbis(array $ebiIds): array
+    {
+        return Ebi::query()->whereIn('id', $ebiIds)->pluck('igreja_id', 'id')->all();
     }
 
     public function fusosDasIgrejas(array $igrejaIds): array

@@ -16,10 +16,10 @@ class ConsultaIndicadoresPresenca implements ConsultarIndicadoresPresenca
     {
         $totais = [];
         foreach ($igrejaIds as $id) {
-            $totais["igreja:{$id}"] = $this->vazio();
+            $totais["igreja:{$id}"] = $this->vazio() + ['ids' => []];
         }
         foreach ($ebiIds as $id) {
-            $totais["ebi:{$id}"] = $this->vazio();
+            $totais["ebi:{$id}"] = $this->vazio() + ['ids' => []];
         }
 
         // Sessoes realizadas e presencas por sessao: a contagem de presenca e
@@ -56,6 +56,9 @@ class ConsultaIndicadoresPresenca implements ConsultarIndicadoresPresenca
                 $totais[$chave]['participantes_distintos'] += count($nomes);
                 $totais[$chave]['presencas'] += $presencasPorSessao[$sessao['id']];
                 $totais[$chave]['sessoes_realizadas'] += 1;
+                foreach ($nomes as $nome) {
+                    $totais[$chave]['ids'][$nome] = true;
+                }
             }
         });
 
@@ -91,6 +94,27 @@ class ConsultaIndicadoresPresenca implements ConsultarIndicadoresPresenca
         }, $desde);
 
         return $porIgreja;
+    }
+
+    /**
+     * Presenca valida por EBI: ebi_id => [id canonico => true]. A EBI da
+     * sessao faz esse papel (o relatorio nao atribui participante a EBI por
+     * igreja de referencia).
+     *
+     * @param  array<string, string>  $canonico
+     * @return array<string, array<string, true>>
+     */
+    public function ebisComPresencaDesde(array $canonico, CarbonImmutable $desde): array
+    {
+        $porEbi = [];
+        $this->cadaPresencaValida(null, function (array $linha) use (&$porEbi, $canonico): void {
+            if ($linha['ebi_id'] === null) {
+                return;
+            }
+            $porEbi[$linha['ebi_id']][$canonico[$linha['participante_id']] ?? $linha['participante_id']] = true;
+        }, $desde);
+
+        return $porEbi;
     }
 
     public function ebisComSessaoDesde(CarbonImmutable $desde): array
@@ -164,7 +188,7 @@ class ConsultaIndicadoresPresenca implements ConsultarIndicadoresPresenca
         $ultimoId = '';
         do {
             $consulta = Presenca::query()
-                ->select(['presenca.id', 'presenca.sessao_id', 'presenca.participante_id', 'sessao.igreja_id'])
+                ->select(['presenca.id', 'presenca.sessao_id', 'presenca.participante_id', 'sessao.igreja_id', 'sessao.ebi_id'])
                 ->join('sessao', 'sessao.id', '=', 'presenca.sessao_id')
                 ->where('presenca.status', Presenca::STATUS_VALIDA)
                 ->where('presenca.id', '>', $ultimoId)
@@ -185,6 +209,7 @@ class ConsultaIndicadoresPresenca implements ConsultarIndicadoresPresenca
                     'sessao_id' => (string) $presenca->sessao_id,
                     'participante_id' => (string) $presenca->participante_id,
                     'igreja_id' => $presenca->igreja_id,
+                    'ebi_id' => $presenca->ebi_id,
                 ]);
             }
 

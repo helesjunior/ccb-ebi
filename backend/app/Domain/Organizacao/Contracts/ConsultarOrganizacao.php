@@ -42,6 +42,14 @@ interface ConsultarOrganizacao
     public function nomes(string $tipo, array $ids): array;
 
     /**
+     * Mapa `ebi_id => igreja_id` das EBIs indicadas.
+     *
+     * @param  array<int, string>  $ebiIds
+     * @return array<string, string>
+     */
+    public function igrejaDosEbis(array $ebiIds): array;
+
+    /**
      * Mapa `igreja_id => timezone`, usado para recortar o periodo no fuso da
      * igreja (RN-16). Igrejas de fuso unico no piloto devolvem um unico valor.
      *

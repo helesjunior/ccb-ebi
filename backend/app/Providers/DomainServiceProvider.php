@@ -81,6 +81,8 @@ use App\Domain\Privacidade\Contracts\SolicitarDireitoTitular;
 use App\Domain\Privacidade\Services\GerenciadorConsentimento;
 use App\Domain\Privacidade\Services\GerenciadorSolicitacao;
 use App\Domain\Privacidade\Services\GerenciadorTermos;
+use App\Domain\Relatorios\Contracts\ConsultarRelatorio as ContratoRelatorio;
+use App\Domain\Relatorios\Services\RelatorioPresenca as ServicoRelatorioPresenca;
 use App\Domain\Sessoes\Contracts\CancelarSessoesPrevistas;
 use App\Domain\Sessoes\Contracts\ConsultarIndicadoresPresenca;
 use App\Domain\Sessoes\Contracts\ConsultarPresenca;
@@ -149,6 +151,7 @@ class DomainServiceProvider extends ServiceProvider
         $this->app->bind(ConsultarPresenca::class, ConsultaPresenca::class);
         $this->app->bind(ConsultarIndicadoresPresenca::class, ConsultaIndicadoresPresenca::class);
         $this->app->bind(ContratoIndicadoresParticipante::class, ConsultaIndicadoresParticipante::class);
+        $this->app->bind(ContratoRelatorio::class, ServicoRelatorioPresenca::class);
         $this->app->bind(EstornarPresenca::class, EstornadorPresenca::class);
         $this->app->bind(RegistrarPresenca::class, RegistradorPresenca::class);
         $this->app->bind(GerirSessaoEbi::class, GerenciadorSessaoEbi::class);
