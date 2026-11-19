@@ -75,6 +75,58 @@ class GerenciadorParticipante implements GerirParticipante
         ]);
     }
 
+    /**
+     * @return array{0: array<int, Participante>, 1: bool}
+     */
+    public function buscarVisivel(string $nome, ?string $dataNascimento = null, ?string $igrejaReferenciaId = null, bool $suprimirGruposPequenos = false): array
+    {
+        $candidatos = $this->buscar($nome, $dataNascimento, $igrejaReferenciaId);
+
+        if (! $suprimirGruposPequenos) {
+            return [$candidatos, false];
+        }
+
+        return $this->cortarPorIgreja($candidatos);
+    }
+
+    /**
+     * Decisao 11 da spec: acima da igreja, um grupo de 1 a 4 ativos por igreja
+     * de referencia ja deduz o cadastro. Grupos pequenos saem inteiros; quem
+     * nao tem igreja de referencia nao entra em grupo nem na resposta.
+     *
+     * @param  array<int, Participante>  $candidatos
+     * @return array{0: array<int, Participante>, 1: bool} restantes e se algo foi retirado
+     */
+    private function cortarPorIgreja(array $candidatos): array
+    {
+        $porIgreja = [];
+
+        foreach ($candidatos as $candidato) {
+            if ($candidato->igreja_referencia_id === null) {
+                continue;
+            }
+
+            $porIgreja[$candidato->igreja_referencia_id][] = $candidato;
+        }
+
+        $restantes = [];
+        $suprimiu = false;
+
+        foreach ($porIgreja as $grupo) {
+            $ativos = count(array_filter($grupo, fn (Participante $p): bool => $p->status === Participante::STATUS_ATIVO));
+
+            if ($ativos >= 5) {
+                foreach ($grupo as $participante) {
+                    $restantes[] = $participante;
+                }
+            } else {
+                $suprimiu = true;
+            }
+        }
+
+        return [$restantes, $suprimiu];
+    }
+
     public function cadastrarAssistido(string $usuarioId, array $dados, string $evidenciaArquivoId): Participante
     {
         if ($evidenciaArquivoId === '') {

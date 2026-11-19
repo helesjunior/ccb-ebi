@@ -2,7 +2,7 @@
 
 namespace App\Domain\Sessoes\Services;
 
-use App\Domain\Organizacao\Models\Igreja;
+use App\Domain\Organizacao\Contracts\ConsultarOrganizacao;
 use App\Domain\Sessoes\Contracts\ConsultarIndicadoresPresenca;
 use App\Domain\Sessoes\Models\Presenca;
 use App\Domain\Sessoes\Models\Sessao;
@@ -11,6 +11,8 @@ use Carbon\CarbonImmutable;
 class ConsultaIndicadoresPresenca implements ConsultarIndicadoresPresenca
 {
     private const POR_PAGINA = 500;
+
+    public function __construct(private readonly ConsultarOrganizacao $organizacao) {}
 
     public function totais(array $igrejaIds, array $ebiIds, string $inicio, string $fim, array $canonico = []): array
     {
@@ -67,10 +69,7 @@ class ConsultaIndicadoresPresenca implements ConsultarIndicadoresPresenca
 
     public function fusos(array $igrejaIds): array
     {
-        return Igreja::query()
-            ->whereIn('id', $igrejaIds)
-            ->pluck('timezone', 'id')
-            ->all();
+        return $this->organizacao->fusosDasIgrejas($igrejaIds);
     }
 
     public function participantesComPresencaDesde(array $canonico, CarbonImmutable $desde): array

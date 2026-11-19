@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\V1;
 use App\Domain\Auditoria\Contracts\RegistrarEvento;
 use App\Domain\Identidade\Services\ContextoAtuacao;
 use App\Domain\Participantes\Contracts\GerirParticipante;
-use App\Domain\Participantes\Models\Participante;
 use App\Http\Requests\Participantes\CadastrarAssistidoRequest;
 use App\Http\Requests\Participantes\CadastrarParticipanteRequest;
 use App\Http\Resources\ParticipanteResource;
@@ -75,11 +74,22 @@ class ParticipantController
         ));
 
         // Decisao 11 da spec: acima da igreja, um grupo de 1 a 4 ativos por
-        // igreja de referencia ja deduz o cadastro. O corte vale depois do
-        // filtro territorial, porque o nome ja nao pode ter saido da API.
+        // igreja de referencia ja deduz o cadastro. O corte vem do modulo
+        // Participantes e vale depois do filtro territorial, porque o nome ja
+        // nao pode ter saido da API.
         $suprimido = false;
         if ($this->suprimeLista($contexto)) {
-            [$candidatos, $suprimido] = $this->cortarPorIgreja($candidatos);
+            [$visiveis, $suprimido] = $this->participantes->buscarVisivel(
+                (string) $request->query('q', ''),
+                $request->query('data_nascimento'),
+                $request->query('igreja_referencia_id'),
+                true,
+            );
+            $idsVisiveis = array_map(fn ($p): string => (string) $p->id, $visiveis);
+            $candidatos = array_values(array_filter(
+                $candidatos,
+                fn ($p): bool => in_array((string) $p->id, $idsVisiveis, true),
+            ));
         }
 
         $this->auditarLeitura($request, $finalidade, array_map(
@@ -104,44 +114,6 @@ class ParticipantController
     private function suprimeLista(?ContextoAtuacao $contexto): bool
     {
         return $contexto !== null && ! in_array($contexto->tipoEscopo, ['igreja', 'ebi'], true);
-    }
-
-    /**
-     * @param  array<int, mixed>  $candidatos
-     * @return array{0: array<int, mixed>, 1: bool} candidatos que passaram e se algo foi retirado
-     */
-    private function cortarPorIgreja(array $candidatos): array
-    {
-        $porIgreja = [];
-
-        foreach ($candidatos as $candidato) {
-            // Sem igreja de referencia nao entra em grupo nem em no nenhum
-            // (mesma regra do relatorio); nao ha o que suprimir.
-            if ($candidato->igreja_referencia_id === null) {
-                continue;
-            }
-
-            $porIgreja[$candidato->igreja_referencia_id][] = $candidato;
-        }
-
-        $restantes = [];
-        $suprimiu = false;
-
-        foreach ($porIgreja as $grupo) {
-            $ativos = count(array_filter($grupo, fn ($p): bool => $p->status === Participante::STATUS_ATIVO));
-
-            if ($ativos >= 5) {
-                foreach ($grupo as $participante) {
-                    $restantes[] = $participante;
-                }
-
-                continue;
-            }
-
-            $suprimiu = true;
-        }
-
-        return [$restantes, $suprimiu];
     }
 
     public function show(Request $request, string $id): JsonResponse
