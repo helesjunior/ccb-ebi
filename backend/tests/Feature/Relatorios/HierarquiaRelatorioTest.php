@@ -2,55 +2,9 @@
 
 use App\Domain\Organizacao\Contracts\ConsultarHierarquia;
 use App\Domain\Organizacao\Contracts\ConsultarOrganizacao;
-use App\Domain\Organizacao\Models\CentralNacional;
-use App\Domain\Organizacao\Models\Ebi;
-use App\Domain\Organizacao\Models\Igreja;
 use App\Domain\Organizacao\Models\IgrejaVinculacao;
 use App\Domain\Organizacao\Models\Regional;
 use App\Domain\Organizacao\Models\Setor;
-
-/**
- * Monta uma arvore Central > Regional > Setor > Igreja > EBI para os testes de
- * relatorio. Devolve os modelos criados.
- *
- * @param  array<string, mixed>  $atributos
- * @return array{central: CentralNacional, regional: Regional, setor: Setor, igreja: Igreja, ebi: Ebi}
- */
-function arvoreRelatorio(array $atributos = []): array
-{
-    $central = CentralNacional::factory()->create();
-    $regional = Regional::factory()->create(['central_nacional_id' => $central->id]);
-    $setor = Setor::factory()->create(['regional_id' => $regional->id]);
-    $igreja = Igreja::factory()->create($atributos);
-    IgrejaVinculacao::query()->create([
-        'igreja_id' => $igreja->id,
-        'setor_id' => $setor->id,
-        'inicio' => '2020-01-01',
-        'fim' => null,
-    ]);
-    $ebi = Ebi::factory()->create(['igreja_id' => $igreja->id]);
-
-    return compact('central', 'regional', 'setor', 'igreja', 'ebi');
-}
-
-/**
- * Cria mais uma igreja dentro do setor existente (com o EBI dela).
- *
- * @param  array<string, mixed>  $atributos
- * @return array{igreja: Igreja, ebi: Ebi}
- */
-function igrejaNoSetor(Setor $setor, array $atributos = []): array
-{
-    $igreja = Igreja::factory()->create($atributos);
-    IgrejaVinculacao::query()->create([
-        'igreja_id' => $igreja->id,
-        'setor_id' => $setor->id,
-        'inicio' => '2020-01-01',
-        'fim' => null,
-    ]);
-
-    return ['igreja' => $igreja, 'ebi' => Ebi::factory()->create(['igreja_id' => $igreja->id])];
-}
 
 it('devolve os filhos diretos de cada nivel e nada para a ebi', function () {
     $no = arvoreRelatorio();

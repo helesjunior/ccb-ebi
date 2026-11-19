@@ -6,8 +6,6 @@ use App\Domain\Sessoes\Models\Presenca;
 use App\Domain\Sessoes\Models\Sessao;
 use Carbon\CarbonImmutable;
 
-require_once __DIR__.'/HierarquiaRelatorioTest.php';
-
 beforeEach(function () {
     $this->no = arvoreRelatorio();
     $this->indicadores = app(ConsultarIndicadoresPresenca::class);
