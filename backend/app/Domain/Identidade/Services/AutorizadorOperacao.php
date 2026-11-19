@@ -34,6 +34,8 @@ class AutorizadorOperacao implements AutorizarOperacao
             Operacoes::EXCECAO_DECIDIR, Operacoes::EVIDENCIA_LER,
             // E04: acompanha (le) sessoes e presenca de todo o territorio.
             Operacoes::SESSAO_LER, Operacoes::PRESENCA_LER,
+            // E06: relatorio agregado (M-01 a M-05, M-09) de todo o territorio.
+            Operacoes::RELATORIO_LER,
         ],
         'adm_regional' => [
             Operacoes::ORGANIZACAO_LER, Operacoes::ORGANIZACAO_GERENCIAR,
@@ -43,6 +45,8 @@ class AutorizadorOperacao implements AutorizarOperacao
             Operacoes::PARTICIPANTE_LER, Operacoes::EXCECAO_LER,
             // E04: acompanha (le) sessoes e presenca da regional.
             Operacoes::SESSAO_LER, Operacoes::PRESENCA_LER,
+            // E06: relatorio agregado da regional.
+            Operacoes::RELATORIO_LER,
         ],
         'adm_setor' => [
             Operacoes::ORGANIZACAO_LER, Operacoes::ORGANIZACAO_GERENCIAR,
@@ -52,6 +56,8 @@ class AutorizadorOperacao implements AutorizarOperacao
             Operacoes::PARTICIPANTE_LER, Operacoes::EXCECAO_LER,
             // E04: acompanha (le) sessoes e presenca do setor.
             Operacoes::SESSAO_LER, Operacoes::PRESENCA_LER,
+            // E06: relatorio agregado do setor.
+            Operacoes::RELATORIO_LER,
         ],
         'adm_igreja' => [
             Operacoes::ORGANIZACAO_LER,
@@ -64,6 +70,8 @@ class AutorizadorOperacao implements AutorizarOperacao
             // coordenadora/auxiliar, mas pode estornar lancamentos.
             Operacoes::AGENDA_GERENCIAR, Operacoes::SESSAO_LER, Operacoes::SESSAO_GERENCIAR,
             Operacoes::PRESENCA_LER, Operacoes::PRESENCA_ESTORNAR,
+            // E06: relatorio agregado da igreja (numeros reais).
+            Operacoes::RELATORIO_LER,
         ],
         'coordenadora' => [
             Operacoes::ORGANIZACAO_LER, Operacoes::USUARIO_LER,
@@ -74,6 +82,8 @@ class AutorizadorOperacao implements AutorizarOperacao
             // E04: gere a agenda/sessoes da EBI e conduz a lista de presenca.
             Operacoes::AGENDA_GERENCIAR, Operacoes::SESSAO_LER, Operacoes::SESSAO_GERENCIAR,
             Operacoes::PRESENCA_LER, Operacoes::PRESENCA_REGISTRAR, Operacoes::PRESENCA_ESTORNAR,
+            // E06: relatorio agregado do EBI.
+            Operacoes::RELATORIO_LER,
         ],
         'auxiliar' => [
             Operacoes::ORGANIZACAO_LER,
@@ -84,18 +94,26 @@ class AutorizadorOperacao implements AutorizarOperacao
         ],
         'ministerio_central' => [
             Operacoes::ORGANIZACAO_LER,
+            // E06: relatorio agregado nacional.
+            Operacoes::RELATORIO_LER,
         ],
         'ministerio_regional' => [
             Operacoes::ORGANIZACAO_LER,
+            // E06: relatorio agregado da regional.
+            Operacoes::RELATORIO_LER,
         ],
         'ministerio_setorial' => [
             Operacoes::ORGANIZACAO_LER,
+            // E06: relatorio agregado do setor.
+            Operacoes::RELATORIO_LER,
         ],
         'ministerio_local' => [
             Operacoes::ORGANIZACAO_LER,
             Operacoes::PARTICIPANTE_LER, Operacoes::EXCECAO_LER,
             // E04: acompanha (le) sessoes e presenca da EBI da qual e membro.
             Operacoes::SESSAO_LER, Operacoes::PRESENCA_LER,
+            // E06: relatorio agregado da igreja (numeros reais).
+            Operacoes::RELATORIO_LER,
         ],
         'responsavel' => [
             // Cadastro do dependente (RF-02, FL-01): cria o participante e o

@@ -54,5 +54,8 @@ final class Operacoes
 
     public const PRESENCA_ESTORNAR = 'presenca.estornar';
 
+    // E06 ? Relatorios agregados (RF-14). Sem nomes; so para quem acompanha.
+    public const RELATORIO_LER = 'relatorio.ler';
+
     private function __construct() {}
 }
