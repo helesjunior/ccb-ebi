@@ -3683,7 +3683,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Relatório do nó e dos filhos diretos, em JSON ou CSV conforme `formato`. */
+                /** @description Relatório do nó e dos filhos diretos. O CSV sai quando `formato=csv`; o JSON nos demais casos. */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -3760,25 +3760,24 @@ export interface components {
             gerado_em: string;
             /** @description Explicação em texto das regras de cálculo e supressão. */
             criterios: string;
-            totais: {
-                participantes_distintos: components["schemas"]["RelatorioIndicador"];
-                presencas: components["schemas"]["RelatorioIndicador"];
-                sessoes_realizadas: components["schemas"]["RelatorioIndicador"];
-                media_por_sessao: components["schemas"]["RelatorioIndicador"];
-                participantes_cadastrados: components["schemas"]["RelatorioIndicador"];
-                participantes_ativos: components["schemas"]["RelatorioIndicador"];
-                igrejas_com_ebi_ativo: components["schemas"]["RelatorioIndicador"];
-            };
+            totais: components["schemas"]["TotaisRelatorio"];
             /** @description Totais de cada filho direto do nó. */
             filhos: {
                 /** @enum {string} */
                 nivel: "central" | "regional" | "setor" | "igreja" | "ebi";
                 id: string;
                 nome: string;
-                totais: {
-                    [key: string]: components["schemas"]["RelatorioIndicador"];
-                };
+                totais: components["schemas"]["TotaisRelatorio"];
             }[];
+        };
+        TotaisRelatorio: {
+            participantes_distintos: components["schemas"]["RelatorioIndicador"];
+            presencas: components["schemas"]["RelatorioIndicador"];
+            sessoes_realizadas: components["schemas"]["RelatorioIndicador"];
+            media_por_sessao: components["schemas"]["RelatorioIndicador"];
+            participantes_cadastrados: components["schemas"]["RelatorioIndicador"];
+            participantes_ativos: components["schemas"]["RelatorioIndicador"];
+            igrejas_com_ebi_ativo: components["schemas"]["RelatorioIndicador"];
         };
         Usuario: {
             id?: string;

@@ -26,6 +26,7 @@ import { MeuPerfil } from './pages/MeuPerfil'
 import { Participantes } from './pages/Participantes'
 import { Presenca } from './pages/Presenca'
 import { Privacidade } from './pages/Privacidade'
+import { Relatorios } from './pages/Relatorios'
 import { Sessoes } from './pages/Sessoes'
 import { Vinculos } from './pages/Vinculos'
 
@@ -39,6 +40,7 @@ const ROTULOS: Record<Tela, string> = {
   equipe: 'Equipe',
   privacidade: 'Privacidade',
   auditoria: 'Auditoria',
+  relatorios: 'Relatórios',
   participantes: 'Participantes',
   dependentes: 'Meus dependentes',
   sessoes: 'Sessões',
@@ -163,6 +165,7 @@ function App() {
       {tela === 'excecao' && <ExcecaoInclusiva />}
       {tela === 'mesclagem' && <Mesclagem />}
       {tela === 'auditoria' && <Auditoria />}
+      {tela === 'relatorios' && <Relatorios contexto={escopo} />}
     </AppShell>
   )
 }

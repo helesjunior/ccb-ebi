@@ -1887,8 +1887,8 @@ paths:
       responses:
         '200':
           description: >-
-            Relatório do nó e dos filhos diretos, em JSON ou CSV conforme
-            `formato`.
+            Relatório do nó e dos filhos diretos. O CSV sai quando `formato=csv`;
+            o JSON nos demais casos.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/RelatorioPresenca' }
@@ -2090,23 +2090,7 @@ components:
           type: string
           description: Explicação em texto das regras de cálculo e supressão.
         totais:
-          type: object
-          required:
-            - participantes_distintos
-            - presencas
-            - sessoes_realizadas
-            - media_por_sessao
-            - participantes_cadastrados
-            - participantes_ativos
-            - igrejas_com_ebi_ativo
-          properties:
-            participantes_distintos: { $ref: '#/components/schemas/RelatorioIndicador' }
-            presencas: { $ref: '#/components/schemas/RelatorioIndicador' }
-            sessoes_realizadas: { $ref: '#/components/schemas/RelatorioIndicador' }
-            media_por_sessao: { $ref: '#/components/schemas/RelatorioIndicador' }
-            participantes_cadastrados: { $ref: '#/components/schemas/RelatorioIndicador' }
-            participantes_ativos: { $ref: '#/components/schemas/RelatorioIndicador' }
-            igrejas_com_ebi_ativo: { $ref: '#/components/schemas/RelatorioIndicador' }
+          $ref: '#/components/schemas/TotaisRelatorio'
         filhos:
           type: array
           description: Totais de cada filho direto do nó.
@@ -2118,8 +2102,25 @@ components:
               id: { type: string }
               nome: { type: string }
               totais:
-                type: object
-                additionalProperties: { $ref: '#/components/schemas/RelatorioIndicador' }
+                $ref: '#/components/schemas/TotaisRelatorio'
+    TotaisRelatorio:
+      type: object
+      required:
+        - participantes_distintos
+        - presencas
+        - sessoes_realizadas
+        - media_por_sessao
+        - participantes_cadastrados
+        - participantes_ativos
+        - igrejas_com_ebi_ativo
+      properties:
+        participantes_distintos: { $ref: '#/components/schemas/RelatorioIndicador' }
+        presencas: { $ref: '#/components/schemas/RelatorioIndicador' }
+        sessoes_realizadas: { $ref: '#/components/schemas/RelatorioIndicador' }
+        media_por_sessao: { $ref: '#/components/schemas/RelatorioIndicador' }
+        participantes_cadastrados: { $ref: '#/components/schemas/RelatorioIndicador' }
+        participantes_ativos: { $ref: '#/components/schemas/RelatorioIndicador' }
+        igrejas_com_ebi_ativo: { $ref: '#/components/schemas/RelatorioIndicador' }
     Usuario:
       type: object
       properties:

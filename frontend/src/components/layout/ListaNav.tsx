@@ -1,4 +1,5 @@
 import {
+  BarChart3Icon,
   AccessibilityIcon,
   CalendarDaysIcon,
   CombineIcon,
@@ -34,6 +35,7 @@ export type IdTela =
   | 'excecao'
   | 'mesclagem'
   | 'auditoria'
+  | 'relatorios'
 
 /** Grupos da navegação, na ordem em que aparecem. */
 export type GrupoNav = 'Geral' | 'Participantes' | 'Administração' | 'Minha conta'
@@ -80,6 +82,18 @@ const SESSOES = [
 ]
 const MESCLAGEM = ['super_admin', 'coordenadora']
 const AUDITORIA = ['super_admin', 'adm_regional', 'adm_setor']
+// Quem tem `relatorio.ler` na matriz de autorizacao (ver docs).
+const RELATORIOS = [
+  'super_admin',
+  'adm_regional',
+  'adm_setor',
+  'adm_igreja',
+  'ministerio_central',
+  'ministerio_regional',
+  'ministerio_setorial',
+  'ministerio_local',
+  'coordenadora',
+]
 
 const ITENS: ItemNav[] = [
   { id: 'inicio', rotulo: 'Início', descricao: 'Visão geral e atalhos.', icone: HouseIcon, grupo: 'Geral', papeis: [] },
@@ -154,6 +168,14 @@ const ITENS: ItemNav[] = [
     icone: ScrollTextIcon,
     grupo: 'Administração',
     papeis: AUDITORIA,
+  },
+  {
+    id: 'relatorios',
+    rotulo: 'Relatórios',
+    descricao: 'Totais de presença e participantes por unidade.',
+    icone: BarChart3Icon,
+    grupo: 'Administração',
+    papeis: RELATORIOS,
   },
   {
     id: 'perfil',
