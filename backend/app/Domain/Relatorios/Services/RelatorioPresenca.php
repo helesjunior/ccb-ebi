@@ -163,12 +163,13 @@ class RelatorioPresenca implements ConsultarRelatorio
 
         if ($tipo !== 'ebi') {
             $cadastrados = $this->participantes->cadastradosPorIgreja();
-            $presentes = [];
-            foreach ($this->presenca->igrejasComPresencaDesde($canonico, $geracao->subMonths(12), $geracao) as $igreja => $ids) {
-                if (in_array($igreja, $igrejas, true)) {
-                    $presentes = array_merge($presentes, array_keys($ids));
-                }
-            }
+            // A presenca que torna alguem ativo vale em qualquer igreja (spec,
+            // decisao 5); o filtro por igreja de referencia fica so na contagem.
+            $presentes = $this->presenca->participantesComPresencaDesde(
+                $canonico,
+                $geracao->subMonths(12),
+                $geracao,
+            );
             $idsAtivos = $this->participantes->idsAtivos($canonico, $geracao->subDays(90), $presentes);
             $igrejaDe = $this->participantes->igrejaPorParticipante($canonico, $idsAtivos);
 

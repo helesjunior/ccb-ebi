@@ -80,7 +80,7 @@ class ParticipantController
         // revelaria pela sinalizacao `suprimido` que ele existe.
         [$candidatos, $suprimido] = $this->participantes->cortarVisiveis(
             $candidatos,
-            VisibilidadeIgreja::suprime($contexto),
+            VisibilidadeIgreja::suprimeLista($contexto),
         );
 
         $this->auditarLeitura($request, $finalidade, array_map(

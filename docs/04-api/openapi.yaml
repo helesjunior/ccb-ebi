@@ -1858,7 +1858,7 @@ paths:
         administrativo em escopo de igreja continua suprimido. M-02 e M-03
         contam pelas presenças nas igrejas da unidade; M-01, participantes
         ativos e M-09 contam pela igreja de referência, com janela até a data de
-        geração. O nó do EBI mede por `ebiIds` e marca M-01, ativos e M-09 como
+        geração; a presença que torna alguém ativo vale em qualquer igreja. O nó do EBI mede por `ebiIds` e marca M-01, ativos e M-09 como
         `nao_se_aplica`. Contagens de sessões (M-05) e de igrejas com EBI ativo
         (M-09) nunca são suprimidas nem entram na cascata. O fuso é o único da
         unidade ou, se variar, `fuso de cada igreja`. Exige `relatorio.ler`; nó

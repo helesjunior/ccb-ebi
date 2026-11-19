@@ -15,11 +15,11 @@
 | M-01 × ativo | M-01 conta cadastros com status `ativo`; "participante ativo" é a definição temporal abaixo. São indicadores diferentes e aparecem separados. |
 | Atribuição | M-02 e M-03 contam pelas **presenças** nas igrejas da unidade, independentemente da igreja de referência do participante. M-01, participantes ativos e M-09 contam pela **igreja de referência**, e só nas igrejas da unidade: quem não tem igreja de referência não entra em unidade nenhuma. |
 | Nó do EBI | O EBI se mede pelas próprias sessões (M-02, M-03, M-05, M-04). M-01, participantes ativos e M-09 não existem nele e aparecem como `nao_se_aplica`. |
-| Participante ativo | Pelo menos uma presença válida nos últimos 12 meses, ou cadastro feito nos últimos 90 dias. A janela termina na data de geração: evento futuro não conta. |
+| Participante ativo | Pelo menos uma presença válida nos últimos 12 meses — em **qualquer** igreja, que só o qualifica como ativo — ou cadastro feito nos últimos 90 dias. A contagem continua sendo pela igreja de referência. A janela termina na data de geração: evento futuro não conta. |
 | EBI ativo | Pelo menos uma sessão realizada nos últimos 90 dias, também com limite superior na data de geração. |
 | Fuso | A data de cada sessão usa o fuso da igreja. O relatório declara o fuso quando ele é único na unidade e "fuso de cada igreja" quando há mais de um. |
 
-A mesma regra vale para os relatórios em tela, para a exportação CSV e para a busca de participantes acima da igreja (grupos de 1 a 4 ativos por igreja de referência saem da resposta). Na busca, o corte roda sobre os candidatos já autorizados pelo território do ator e a tela avisa que a lista não é divulgada, em vez de dizer "ninguém encontrado".
+A mesma regra vale para os relatórios em tela, para a exportação CSV e para a busca de participantes acima da igreja (grupos de 1 a 4 ativos por igreja de referência saem da resposta). Na busca, o corte roda sobre os candidatos já autorizados pelo território do ator e a tela avisa que a lista não é divulgada, em vez de dizer "ninguém encontrado". Na lista, o **auxiliar** em escopo de igreja ou de EBI também vê os números reais: ele tem `participante.ler` e atua na própria igreja, mesmo sem `relatorio.ler`.
 
 ## Consequências
 - M-01 (participantes cadastrados) e M-09 (igrejas com EBI ativo) usam essas definições.

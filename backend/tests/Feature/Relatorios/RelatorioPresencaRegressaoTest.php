@@ -138,6 +138,20 @@ it('nao conta como ativo quem so tem sessao ou presenca futura', function () {
     expect(indicadorDo($payload, 'participantes_ativos')['valor'])->toBe(0);
 });
 
+it('conta como ativo quem tem presenca em igreja de outra subarvore', function () {
+    // Presenca em outra regional qualifica; a contagem continua na referencia.
+    $vizinha = regionalRelatorio();
+    $sessaoVizinha = sessaoRegressao($vizinha['igreja']->id, $vizinha['ebi']->id);
+    presencaDoTeste($sessaoVizinha, Participante::factory()->create([
+        'igreja_referencia_id' => $this->no['igreja']->id,
+        'created_at' => CarbonImmutable::now('UTC')->subYears(2),
+    ]));
+
+    $payload = $this->relatorio->presenca('igreja', $this->no['igreja']->id, $this->inicio, $this->fim, false);
+
+    expect(indicadorDo($payload, 'participantes_ativos')['valor'])->toBe(1);
+});
+
 it('descreve nos criterios as janelas, o EBI e o fuso', function () {
     $payload = $this->relatorio->presenca('igreja', $this->no['igreja']->id, $this->inicio, $this->fim, false);
 

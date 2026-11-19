@@ -12,7 +12,7 @@
 
 ## Relacionados
 - Critérios de aceite: [CA-14](../criterios-de-aceite.md#ca-14)
-- API: `GET /reports/attendance`, `GET /reports/participants`
+- API: `GET /reports/attendance` (M-01 e participantes ativos saem no mesmo endpoint; `/reports/participants` não é criado, conforme a Etapa 7)
 
 ## Pendências
 - [D-10](../../06-arquitetura/decisoes/README.md): a regra do [ADR-0029](../../06-arquitetura/decisoes/ADR-0029-dados-identificaveis-acima-da-igreja.md) aguarda validação da CCB e do DPO.

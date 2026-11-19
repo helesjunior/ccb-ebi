@@ -128,6 +128,19 @@ it('nao sinaliza supressao por grupo que esta fora do territorio', function () {
         ->and($resposta->json())->not->toHaveKey('suprimido');
 });
 
+it('mostra a propria igreja para o auxiliar', function () {
+    variosParticipantes($this->no['igreja'], 'Ana', 3);
+
+    // Auxiliar nao tem relatorio.ler, mas tem participante.ler e atua na
+    // propria igreja (spec, decisao 11).
+    $auth = ($this->auth)('auxiliar', 'igreja', $this->no['igreja']->id);
+
+    $resposta = $this->getJson("/api/v1/participants?q=Ana&{$this->finalidade}", $auth)->assertOk();
+
+    expect($resposta->json('data'))->toHaveCount(3)
+        ->and($resposta->json())->not->toHaveKey('suprimido');
+});
+
 it('nao isenta papel administrativo so porque o contexto e de igreja', function () {
     variosParticipantes($this->no['igreja'], 'Ana', 3);
 
