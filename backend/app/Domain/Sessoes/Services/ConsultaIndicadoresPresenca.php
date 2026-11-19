@@ -72,17 +72,17 @@ class ConsultaIndicadoresPresenca implements ConsultarIndicadoresPresenca
         return $this->organizacao->fusosDasIgrejas($igrejaIds);
     }
 
-    public function participantesComPresencaDesde(array $canonico, CarbonImmutable $desde): array
+    public function participantesComPresencaDesde(array $canonico, CarbonImmutable $desde, ?CarbonImmutable $ate = null): array
     {
         $ids = [];
         $this->cadaPresencaValida(null, function (array $linha) use (&$ids, $canonico): void {
             $ids[$canonico[$linha['participante_id']] ?? $linha['participante_id']] = true;
-        }, $desde);
+        }, $desde, $ate);
 
         return array_keys($ids);
     }
 
-    public function igrejasComPresencaDesde(array $canonico, CarbonImmutable $desde): array
+    public function igrejasComPresencaDesde(array $canonico, CarbonImmutable $desde, ?CarbonImmutable $ate = null): array
     {
         $porIgreja = [];
         $this->cadaPresencaValida(null, function (array $linha) use (&$porIgreja, $canonico): void {
@@ -90,7 +90,7 @@ class ConsultaIndicadoresPresenca implements ConsultarIndicadoresPresenca
                 return;
             }
             $porIgreja[$linha['igreja_id']][$canonico[$linha['participante_id']] ?? $linha['participante_id']] = true;
-        }, $desde);
+        }, $desde, $ate);
 
         return $porIgreja;
     }
@@ -103,7 +103,7 @@ class ConsultaIndicadoresPresenca implements ConsultarIndicadoresPresenca
      * @param  array<string, string>  $canonico
      * @return array<string, array<string, true>>
      */
-    public function ebisComPresencaDesde(array $canonico, CarbonImmutable $desde): array
+    public function ebisComPresencaDesde(array $canonico, CarbonImmutable $desde, ?CarbonImmutable $ate = null): array
     {
         $porEbi = [];
         $this->cadaPresencaValida(null, function (array $linha) use (&$porEbi, $canonico): void {
@@ -111,16 +111,27 @@ class ConsultaIndicadoresPresenca implements ConsultarIndicadoresPresenca
                 return;
             }
             $porEbi[$linha['ebi_id']][$canonico[$linha['participante_id']] ?? $linha['participante_id']] = true;
-        }, $desde);
+        }, $desde, $ate);
 
         return $porEbi;
     }
 
-    public function ebisComSessaoDesde(CarbonImmutable $desde): array
+    public function ebisComSessaoDesde(CarbonImmutable $desde, ?CarbonImmutable $ate = null): array
     {
-        return Sessao::query()
+        $consulta = fn () => Sessao::query()
             ->where('realizada', true)
-            ->whereDate('inicio_previsto', '>=', $desde->toDateString())
+            ->whereDate('inicio_previsto', '>=', $desde->toDateString());
+
+        if ($ate !== null) {
+            return $consulta()
+                ->where('inicio_previsto', '<=', $ate->utc()->format('Y-m-d H:i:s'))
+                ->whereNotNull('ebi_id')
+                ->distinct()
+                ->pluck('ebi_id')
+                ->all();
+        }
+
+        return $consulta()
             ->whereNotNull('ebi_id')
             ->distinct()
             ->pluck('ebi_id')
@@ -137,15 +148,21 @@ class ConsultaIndicadoresPresenca implements ConsultarIndicadoresPresenca
      * Percorre em paginas as sessoes realizadas cuja data local de inicio
      * cai no periodo [inicio, fim] (datas `Y-m-d` no fuso da igreja).
      *
+     * O fuso vem do contrato de Organizacao: Sessoes nao le a tabela de
+     * igrejas (ADR-0002). Igreja sem fuso conhecido fica de fora.
+     *
      * @param  callable(array{id: string, igreja_id: ?string, ebi_id: ?string}): void  $callback
      */
     private function cadaSessaoDoPeriodo(string $inicio, string $fim, callable $callback): void
     {
+        $fusos = $this->organizacao->fusosDasIgrejas(array_values(array_unique(
+            Sessao::query()->whereNotNull('igreja_id')->distinct()->pluck('igreja_id')->all(),
+        )));
+
         $ultimoId = '';
         do {
             $pagina = Sessao::query()
-                ->select(['sessao.id', 'sessao.igreja_id', 'sessao.ebi_id', 'sessao.inicio_previsto', 'igrejas.timezone'])
-                ->join('igrejas', 'igrejas.id', '=', 'sessao.igreja_id')
+                ->select(['sessao.id', 'sessao.igreja_id', 'sessao.ebi_id', 'sessao.inicio_previsto'])
                 ->where('sessao.status', Sessao::STATUS_ENCERRADA)
                 ->where('sessao.realizada', true)
                 ->where('sessao.id', '>', $ultimoId)
@@ -154,8 +171,13 @@ class ConsultaIndicadoresPresenca implements ConsultarIndicadoresPresenca
                 ->get();
 
             foreach ($pagina as $sessao) {
+                $fuso = $fusos[$sessao->igreja_id] ?? null;
+                if ($fuso === null) {
+                    continue;
+                }
+
                 $local = CarbonImmutable::parse($sessao->inicio_previsto, 'UTC')
-                    ->setTimezone($sessao->timezone ?? 'America/Sao_Paulo')
+                    ->setTimezone($fuso)
                     ->format('Y-m-d');
 
                 if ($local >= $inicio && $local <= $fim) {
@@ -178,7 +200,7 @@ class ConsultaIndicadoresPresenca implements ConsultarIndicadoresPresenca
      * @param  array<int, string>|null  $sessaoIds
      * @param  callable(array{sessao_id: string, participante_id: string, igreja_id: ?string}): void  $callback
      */
-    private function cadaPresencaValida(?array $sessaoIds, callable $callback, ?CarbonImmutable $desde = null): void
+    private function cadaPresencaValida(?array $sessaoIds, callable $callback, ?CarbonImmutable $desde = null, ?CarbonImmutable $ate = null): void
     {
         if ($sessaoIds === []) {
             return;
@@ -199,6 +221,9 @@ class ConsultaIndicadoresPresenca implements ConsultarIndicadoresPresenca
             }
             if ($desde !== null) {
                 $consulta->where('sessao.inicio_previsto', '>=', $desde->utc()->format('Y-m-d H:i:s'));
+            }
+            if ($ate !== null) {
+                $consulta->where('sessao.inicio_previsto', '<=', $ate->utc()->format('Y-m-d H:i:s'));
             }
 
             $pagina = $consulta->get();

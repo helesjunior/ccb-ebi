@@ -43,38 +43,39 @@ interface ConsultarIndicadoresPresenca
     public function fusos(array $igrejaIds): array;
 
     /**
-     * Ids canonicos com pelo menos uma presenca valida desde uma data (base de
-     * "participante ativo", ADR-0020).
+     * Ids canonicos com pelo menos uma presenca valida na janela [desde, ate]
+     * (base de "participante ativo", ADR-0020). `ate` e a data de geracao: uma
+     * sessao no futuro nao torna ninguem ativo.
      *
      * @param  array<string, string>  $canonico
      * @return array<int, string>
      */
-    public function participantesComPresencaDesde(array $canonico, CarbonImmutable $desde): array;
+    public function participantesComPresencaDesde(array $canonico, CarbonImmutable $desde, ?CarbonImmutable $ate = null): array;
 
     /**
-     * Ids das EBIs com pelo menos uma sessao realizada desde uma data (base de
-     * M-09, ADR-0020).
+     * Ids das EBIs com pelo menos uma sessao realizada na janela [desde, ate]
+     * (base de M-09, ADR-0020).
      *
      * @return array<int, string>
      */
-    public function ebisComSessaoDesde(CarbonImmutable $desde): array;
+    public function ebisComSessaoDesde(CarbonImmutable $desde, ?CarbonImmutable $ate = null): array;
 
     /**
-     * Presenca valida por igreja: `igreja_id => [id canonico => true]`, sem
-     * recorte de periodo (base de "participante ativo", que cruza igrejas).
+     * Presenca valida por igreja: `igreja_id => [id canonico => true]`, na
+     * janela [desde, ate] (base de "participante ativo", que cruza igrejas).
      *
      * @param  array<string, string>  $canonico
      * @return array<string, array<string, true>>
      */
-    public function igrejasComPresencaDesde(array $canonico, CarbonImmutable $desde): array;
+    public function igrejasComPresencaDesde(array $canonico, CarbonImmutable $desde, ?CarbonImmutable $ate = null): array;
 
     /**
-     * Presenca valida por EBI no periodo, sem recorte de data: ebi_id =>
+     * Presenca valida por EBI na janela [desde, ate]: ebi_id =>
      * [id canonico => true]. Base de M-02 no nivel EBI (o participante nao
      * se atribui a EBI por igreja de referencia).
      *
      * @param  array<string, string>  $canonico
      * @return array<string, array<string, true>>
      */
-    public function ebisComPresencaDesde(array $canonico, CarbonImmutable $desde): array;
+    public function ebisComPresencaDesde(array $canonico, CarbonImmutable $desde, ?CarbonImmutable $ate = null): array;
 }

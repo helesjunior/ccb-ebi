@@ -49,7 +49,7 @@ class RelatorioPresenca implements ConsultarRelatorio
     {
         $geracao = CarbonImmutable::now('UTC');
         $canonico = $this->participantes->mapaCanonico();
-        $iguais = $this->mesmoFuso($tipo, $id, $this->presenca->fusos($this->igrejasDo($tipo, $id)));
+        $iguais = $this->mesmoFuso($tipo, $this->fusosDoNo($tipo, $id));
 
         $buffer = [];
         $raiz = $this->resultadosDoNo($tipo, $id, $inicio, $fim, $suprimir, $canonico, $geracao, $buffer);
@@ -132,60 +132,73 @@ class RelatorioPresenca implements ConsultarRelatorio
     private function medir(string $tipo, string $id, string $inicio, string $fim, array $canonico, CarbonImmutable $geracao): array
     {
         $igrejas = $this->igrejasDo($tipo, $id);
-        $ebis = $this->hierarquia->ebisDaSubarvore($tipo, $id);
+        $ebis = $tipo === 'ebi' ? [$id] : [];
 
-        $totais = $this->presenca->totais($igrejas, [], $inicio, $fim, $canonico);
+        $totais = $this->presenca->totais($igrejas, $ebis, $inicio, $fim, $canonico);
         $presencas = 0;
         $sessoes = 0;
+        $distintos = [];
         foreach ($totais as $parcial) {
             $presencas += $parcial['presencas'];
             $sessoes += $parcial['sessoes_realizadas'];
+            foreach (array_keys($parcial['ids']) as $participante) {
+                $distintos[$participante] = true;
+            }
         }
 
         $crus = [
-            'participantes_distintos' => $this->distintosDaSubarvore($tipo, $id, $inicio, $fim, $canonico),
+            // M-02 vem sempre das presencas: quem veio em qualquer igreja ou
+            // EBI da subarvore conta, mesmo com referencia em outra igreja
+            // (a atribuicao por referencia vale so para M-01 e ativos).
+            'participantes_distintos' => count($distintos),
             'presencas' => $presencas,
             'sessoes_realizadas' => $sessoes,
             'media_por_sessao' => $sessoes > 0 ? round($presencas / $sessoes, 1) : null,
         ];
 
         // M-01 e ativos: so por igreja de referencia; no EBI nao se aplica.
-        $cadastrados = $this->participantes->cadastradosPorIgreja();
-        $porIgreja = [];
-        $ativos = [];
+        $crus['participantes_cadastrados'] = null;
+        $crus['participantes_ativos'] = null;
+        $crus['igrejas_com_ebi_ativo'] = null;
+
         if ($tipo !== 'ebi') {
-            $presentes = $this->presenca->participantesComPresencaDesde($canonico, $geracao->subMonths(12));
+            $cadastrados = $this->participantes->cadastradosPorIgreja();
+            $presentes = [];
+            foreach ($this->presenca->igrejasComPresencaDesde($canonico, $geracao->subMonths(12), $geracao) as $igreja => $ids) {
+                if (in_array($igreja, $igrejas, true)) {
+                    $presentes = array_merge($presentes, array_keys($ids));
+                }
+            }
             $idsAtivos = $this->participantes->idsAtivos($canonico, $geracao->subDays(90), $presentes);
             $igrejaDe = $this->participantes->igrejaPorParticipante($canonico, $idsAtivos);
 
+            $cadastradosNaSubarvore = 0;
+            $ativosNaSubarvore = 0;
+            foreach ($igrejas as $igreja) {
+                $cadastradosNaSubarvore += $cadastrados[$igreja] ?? 0;
+            }
             foreach ($idsAtivos as $ativo) {
                 $igreja = $igrejaDe[$ativo] ?? null;
-                if ($igreja !== null) {
-                    $ativos[$igreja] = ($ativos[$igreja] ?? 0) + 1;
+                // Ativo de igreja fora da subarvore nao entra na conta do no.
+                if ($igreja !== null && in_array($igreja, $igrejas, true)) {
+                    $ativosNaSubarvore++;
                 }
             }
-            foreach ($igrejas as $igreja) {
-                $porIgreja[$igreja] = $porIgreja[$igreja] ?? ($cadastrados[$igreja] ?? 0);
-            }
-        }
 
-        $crus['participantes_cadastrados'] = $tipo === 'ebi' ? null : array_sum($porIgreja);
-        $crus['participantes_ativos'] = $tipo === 'ebi' ? null : array_sum($ativos);
+            $crus['participantes_cadastrados'] = $cadastradosNaSubarvore;
+            $crus['participantes_ativos'] = $ativosNaSubarvore;
 
-        // M-09: igrejas da subarvore com ao menos um EBI ativo (sessao
-        // realizada nos ultimos 90 dias). Nunca e suprimido.
-        $igrejasComEbi = 0;
-        if ($tipo !== 'ebi') {
-            $ativos = array_flip($this->presenca->ebisComSessaoDesde($geracao->subDays(90)));
-            $igrejasComEbaAtiva = [];
+            // M-09: igrejas da subarvore com ao menos um EBI ativo (sessao
+            // realizada nos ultimos 90 dias). Nunca e suprimido.
+            $ativos = array_flip($this->presenca->ebisComSessaoDesde($geracao->subDays(90), $geracao));
+            $igrejasComEbiAtivo = [];
             foreach ($this->organizacao->igrejaDosEbis($this->hierarquia->ebisDaSubarvore($tipo, $id)) as $ebi => $igreja) {
                 if (isset($ativos[$ebi])) {
-                    $igrejasComEbaAtiva[$igreja] = true;
+                    $igrejasComEbiAtivo[$igreja] = true;
                 }
             }
-            $igrejasComEbi = count($igrejasComEbaAtiva);
+            $crus['igrejas_com_ebi_ativo'] = count($igrejasComEbiAtivo);
         }
-        $crus['igrejas_com_ebi_ativo'] = $tipo === 'ebi' ? null : $igrejasComEbi;
 
         return $crus;
     }
@@ -303,83 +316,61 @@ class RelatorioPresenca implements ConsultarRelatorio
     }
 
     /**
-     * Participantes distintos da subarvore. Somar os distintos de cada igreja
-     * ou EBI contaria duas vezes quem tem presenca em mais de uma, entao a
-     * unicidade e feita aqui, por id canonico.
-     *
-     * @param  array<string, string>  $canonico
-     */
-    private function distintosDaSubarvore(string $tipo, string $id, string $inicio, string $fim, array $canonico): int
-    {
-        $igrejas = $this->igrejasDo($tipo, $id);
-
-        $sessoes = $this->presenca->totais($igrejas, [], $inicio, $fim, []);
-        $distintos = [];
-        foreach ($sessoes as $parcial) {
-            foreach (array_keys($parcial['ids']) as $participante) {
-                $distintos[$canonico[$participante] ?? $participante] = true;
-            }
-        }
-
-        // No EBI, os participantes sao os da sessao (nao ha igreja de
-        // referencia por EBI); nos demais, so os atribuidos as igrejas da
-        // subarvore contam, mesmo que tenham presenca em outra igreja.
-        if ($tipo === 'ebi') {
-            $sessoes = $this->presenca->totais([], $this->hierarquia->ebisDaSubarvore($tipo, $id), $inicio, $fim, []);
-
-            return count($sessoes["ebi:{$id}"]['ids'] ?? []);
-        }
-
-        $residentes = 0;
-        foreach (array_keys($distintos) as $participante) {
-            $igreja = $this->participantes->igrejaPorParticipante($canonico, [$participante])[$participante] ?? null;
-            if ($igreja !== null && in_array($igreja, $igrejas, true)) {
-                $residentes++;
-            }
-        }
-
-        return $residentes;
-    }
-
-    /**
-     * Fuso declarado no relatorio: o da subarvore quando uniforme, senao o da
-     * igreja do no (ou o padrao do piloto).
+     * Fuso declarado no relatorio: o da subarvore quando uniforme. Com fusos
+     * diferentes (inclusive no EBI, cujo periodo depende do fuso da igreja),
+     * declara "fuso de cada igreja" em vez de escolher um deles.
      *
      * @param  array<string, string>  $fusos
      */
-    private function mesmoFuso(string $tipo, string $id, array $fusos): string
+    private function mesmoFuso(string $tipo, array $fusos): string
     {
         $unicos = array_unique(array_values($fusos));
         if (count($unicos) === 1) {
             return $unicos[0];
         }
 
-        $daIgreja = $this->organizacao->fusosDasIgrejas($this->igrejasDo($tipo, $id));
-
-        return array_values($daIgreja)[0] ?? 'America/Sao_Paulo';
+        return $unicos === [] ? 'America/Sao_Paulo' : 'fuso de cada igreja';
     }
 
     /**
-     * Nomes de exibicao do no (igreja/regional/setor/central). EBI nao tem
-     * nome no contrato de organizacao: usa o proprio id como rotulo.
+     * Fusos das igrejas que o no abrange. O EBI usa o fuso da igreja dele:
+     * e ele que recorta a data local das sessoes do periodo.
+     *
+     * @return array<string, string>
+     */
+    private function fusosDoNo(string $tipo, string $id): array
+    {
+        if ($tipo !== 'ebi') {
+            return $this->presenca->fusos($this->igrejasDo($tipo, $id));
+        }
+
+        $igreja = $this->organizacao->igrejaDosEbis([$id])[$id] ?? null;
+
+        return $igreja === null ? [] : $this->presenca->fusos([$igreja]);
+    }
+
+    /**
+     * Nomes de exibicao do no (igreja/regional/setor/central/EBI).
      *
      * @param  array<int, string>  $ids
      * @return array<string, string>
      */
     private function nomes(string $tipo, array $ids): array
     {
-        return $tipo === 'ebi' ? [] : $this->organizacao->nomes($tipo, $ids);
+        return $this->organizacao->nomes($tipo, $ids);
     }
 
     private function criterios(): string
     {
         return Str::limit(implode(' ', [
-            'Participantes sem igreja de referencia nao entram em cadastrados nem em ativos.',
+            'Participantes sem igreja de referencia nao entram em cadastrados nem em ativos, e so contam na igreja de referencia.',
             'Presencas com status valida; sessoes encerradas com realizada; participantes com status ativo.',
-            'Participantes distintos, presencas, sessoes e media sao do periodo escolhido;',
-            'cadastrados, ativos (presenca valida nos ultimos 12 meses ou cadastro nos ultimos 90 dias) e igrejas com EBI ativo (sessao realizada nos ultimos 90 dias) sao da data de geracao.',
-            'Valores entre 1 e 4 sao suprimidos para quem atua acima da igreja; um filho suprimido suprime os indicadores de pessoas e sessoes do pai.',
-            'Igrejas com EBI ativo nunca e suprimido.',
+            'Participantes distintos e presencas somam as igrejas da unidade; sessoes realizadas e media usam as sessoes da unidade; tudo no periodo escolhido.',
+            'Cadastrados, ativos (presenca valida nos ultimos 12 meses ou cadastro nos ultimos 90 dias) e igrejas com EBI ativo (sessao realizada nos ultimos 90 dias) contam pela igreja de referencia, com janela ate a data de geracao.',
+            'No EBI, cadastrados, ativos e igrejas com EBI ativo nao se aplicam: o EBI e medido por participantes, presencas, sessoes e media.',
+            'Valores entre 1 e 4 sao suprimidos para quem atua acima da igreja; um filho suprimido suprime os indicadores de pessoas e de sessao do pai.',
+            'Sessoes realizadas e igrejas com EBI ativo nunca sao suprimidas.',
+            'A data de cada sessao usa o fuso da igreja dele.',
         ]), 2000, '');
     }
 }

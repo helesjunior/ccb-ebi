@@ -40,6 +40,7 @@ class ConsultaOrganizacao implements ConsultarOrganizacao
             'regional' => Regional::query(),
             'setor' => Setor::query(),
             'igreja' => Igreja::query(),
+            'ebi' => Ebi::query(),
             default => throw new RuntimeException("Tipo de no sem nome: {$tipo}"),
         };
 

@@ -1459,8 +1459,11 @@ paths:
                   suprimido:
                     type: boolean
                     description: >-
-                      Presente e `true` quando algum grupo foi retirado da
-                      resposta; ausente quando nada foi escondido.
+                      Presente e `true` quando algum grupo de 1 a 4 candidatos
+                      já autorizados foi retirado da resposta (ADR-0020);
+                      ausente quando nada foi escondido. O corte roda depois da
+                      autorização, para não sinalizar cadastros fora do
+                      território do ator.
                   motivo:
                     type: string
                     enum: [limiar]
@@ -1849,10 +1852,17 @@ paths:
         pessoas (ADR-0029). O nó é `nivel` + `id`; sem eles, usa o nó do
         contexto de atuação. A supressão segue o ADR-0020: valores de 1 a 4 são
         escondidos para quem atua acima da igreja, e um filho suprimido suprime
-        os indicadores de pessoas do pai (`filho_suprimido`). Zero aparece.
-        Contagens de sessões (M-05) e de igrejas com EBI ativo (M-09) nunca são
-        suprimidas. Exige `relatorio.ler`; nó inexistente ou fora do território
-        responde 404.
+        os indicadores de pessoas e de sessão do pai (`filho_suprimido`). Zero
+        aparece. Ficam isentos só papéis locais (coordenadora, administração da
+        igreja, ministério local) em escopo de igreja ou EBI; papel
+        administrativo em escopo de igreja continua suprimido. M-02 e M-03
+        contam pelas presenças nas igrejas da unidade; M-01, participantes
+        ativos e M-09 contam pela igreja de referência, com janela até a data de
+        geração. O nó do EBI mede por `ebiIds` e marca M-01, ativos e M-09 como
+        `nao_se_aplica`. Contagens de sessões (M-05) e de igrejas com EBI ativo
+        (M-09) nunca são suprimidas nem entram na cascata. O fuso é o único da
+        unidade ou, se variar, `fuso de cada igreja`. Exige `relatorio.ler`; nó
+        inexistente ou fora do território responde 404.
       security:
         - bearerAuth: []
       parameters:
@@ -2084,7 +2094,9 @@ components:
             fim: { type: string, format: date }
         fuso:
           type: string
-          description: Fuso usado para decidir a data de cada sessão.
+          description: >-
+            Fuso usado para decidir a data de cada sessão: o único das igrejas
+            da unidade, ou `fuso de cada igreja` quando ela abrange mais de um.
         gerado_em: { type: string, format: date-time }
         criterios:
           type: string

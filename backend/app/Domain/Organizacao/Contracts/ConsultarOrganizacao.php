@@ -33,7 +33,7 @@ interface ConsultarOrganizacao
     public function nomesDeIgrejas(array $igrejaIds): array;
 
     /**
-     * Mapa `id => nome` de nos de um tipo (`central|regional|setor|igreja`).
+     * Mapa `id => nome` de nos de um tipo (`central|regional|setor|igreja|ebi`).
      * Ids inexistentes ficam de fora.
      *
      * @param  array<int, string>  $ids

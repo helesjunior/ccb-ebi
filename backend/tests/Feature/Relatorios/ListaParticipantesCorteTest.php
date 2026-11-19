@@ -111,3 +111,44 @@ it('nao conta para o limite quem esta fora do territorio', function () {
     expect($resposta->json('data'))->toBe([])
         ->and($resposta->json('suprimido'))->toBeTrue();
 });
+
+it('nao sinaliza supressao por grupo que esta fora do territorio', function () {
+    // Nada autorizado no setor do ator; seis homonimos em outro setor.
+    $outroSetor = Setor::factory()->create(['regional_id' => $this->no['regional']->id]);
+    ['igreja' => $fora] = igrejaNoSetor($outroSetor);
+    variosParticipantes($fora, 'Ana', 3);
+
+    $auth = ($this->auth)('adm_setor', 'setor', $this->no['setor']->id);
+
+    $resposta = $this->getJson("/api/v1/participants?q=Ana&{$this->finalidade}", $auth)->assertOk();
+
+    // O corte roda sobre o que o ator pode ver: sem resultado autorizado,
+    // nao ha grupo suprimido nem sinal de que existem cadastros fora.
+    expect($resposta->json('data'))->toBe([])
+        ->and($resposta->json())->not->toHaveKey('suprimido');
+});
+
+it('nao isenta papel administrativo so porque o contexto e de igreja', function () {
+    variosParticipantes($this->no['igreja'], 'Ana', 3);
+
+    // Vinculo aceito: administrador regional com contexto de igreja. A
+    // isencao exige papel local (decisao 6), senao o corte se contorna
+    // trocando o contexto.
+    $auth = ($this->auth)('adm_setor', 'igreja', $this->no['igreja']->id);
+
+    $resposta = $this->getJson("/api/v1/participants?q=Ana&{$this->finalidade}", $auth)->assertOk();
+
+    expect($resposta->json('data'))->toBe([])
+        ->and($resposta->json('suprimido'))->toBeTrue();
+});
+
+it('nao isenta papel local em contexto acima da igreja', function () {
+    variosParticipantes($this->no['igreja'], 'Ana', 3);
+
+    $auth = ($this->auth)('ministerio_local', 'setor', $this->no['setor']->id);
+
+    $resposta = $this->getJson("/api/v1/participants?q=Ana&{$this->finalidade}", $auth)->assertOk();
+
+    expect($resposta->json('data'))->toBe([])
+        ->and($resposta->json('suprimido'))->toBeTrue();
+});

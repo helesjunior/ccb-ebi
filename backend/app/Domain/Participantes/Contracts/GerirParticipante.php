@@ -40,13 +40,14 @@ interface GerirParticipante
     public function buscar(string $nome, ?string $dataNascimento = null, ?string $igrejaReferenciaId = null): array;
 
     /**
-     * Busca com o corte de 5 da decisao 11 da spec. Com
-     * `$suprimirGruposPequenos`, grupos de 1 a 4 ativos por igreja de
-     * referencia (e quem nao tem igreja de referencia) saem da resposta.
+     * Corte de 5 da decisao 11 da spec, sobre os candidatos ja autorizados:
+     * grupos de 1 a 4 ativos por igreja de referencia (e quem nao tem igreja
+     * de referencia) saem da resposta.
      *
+     * @param  array<int, Participante>  $candidatos
      * @return array{0: array<int, Participante>, 1: bool} candidatos e se algo foi retirado
      */
-    public function buscarVisivel(string $nome, ?string $dataNascimento = null, ?string $igrejaReferenciaId = null, bool $suprimirGruposPequenos = false): array;
+    public function cortarVisiveis(array $candidatos, bool $suprimir = true): array;
 
     /**
      * Corrige dados cadastrais permitidos. Registra auditoria com o estado

@@ -13,6 +13,7 @@ use App\Http\Resources\RelatorioPresencaResource;
 use App\Support\ProblemException;
 use App\Support\RecursoNaoEncontradoException;
 use App\Support\Relatorios\ExportadorCsv;
+use App\Support\Relatorios\VisibilidadeIgreja;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\Response;
@@ -23,12 +24,6 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class ReportController
 {
-    /**
-     * Papeis que veem os numeros reais da igreja (ADR-0020). Os demais recebem
-     * supressao. A isencao exige tambem contexto de igreja ou EBI (decisao 6).
-     */
-    private const VE_A_IGREJA = ['coordenadora', 'adm_igreja', 'ministerio_local'];
-
     public function __construct(
         private readonly ConsultarRelatorio $relatorio,
         private readonly ConsultarHierarquia $hierarquia,
@@ -128,9 +123,6 @@ class ReportController
 
     private function suprimir(ContextoAtuacao $contexto): bool
     {
-        $veAIgreja = in_array($contexto->papelCodigo, self::VE_A_IGREJA, true)
-            && in_array($contexto->tipoEscopo, ['igreja', 'ebi'], true);
-
-        return ! $veAIgreja;
+        return VisibilidadeIgreja::suprime($contexto);
     }
 }

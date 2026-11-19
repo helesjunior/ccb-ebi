@@ -76,13 +76,19 @@ class GerenciadorParticipante implements GerirParticipante
     }
 
     /**
-     * @return array{0: array<int, Participante>, 1: bool}
+     * Decisao 11 da spec: acima da igreja, um grupo de 1 a 4 ativos por igreja
+     * de referencia ja deduz o cadastro. Grupos pequenos saem inteiros; quem
+     * nao tem igreja de referencia nao entra em grupo nem na resposta.
+     *
+     * Roda sobre os candidatos que o chamador JA autorizou, para nao sinalizar
+     * (nem esconder) cadastro que o ator nao poderia ver.
+     *
+     * @param  array<int, Participante>  $candidatos
+     * @return array{0: array<int, Participante>, 1: bool} restantes e se algo foi retirado
      */
-    public function buscarVisivel(string $nome, ?string $dataNascimento = null, ?string $igrejaReferenciaId = null, bool $suprimirGruposPequenos = false): array
+    public function cortarVisiveis(array $candidatos, bool $suprimir = true): array
     {
-        $candidatos = $this->buscar($nome, $dataNascimento, $igrejaReferenciaId);
-
-        if (! $suprimirGruposPequenos) {
+        if (! $suprimir) {
             return [$candidatos, false];
         }
 
