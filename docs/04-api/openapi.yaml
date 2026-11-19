@@ -1827,6 +1827,58 @@ paths:
         '403': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
         '409': { $ref: '#/components/responses/Problem' }
+  /reports/attendance:
+    get:
+      tags: [reports]
+      summary: Relatório agregado de presença (RF-14)
+      description: >-
+        Totais de presença do nó pedido e dos filhos diretos, sem nomes de
+        pessoas (ADR-0029). O nó é `nivel` + `id`; sem eles, usa o nó do
+        contexto de atuação. A supressão segue o ADR-0020: valores de 1 a 4 são
+        escondidos para quem atua acima da igreja, e um filho suprimido suprime
+        os indicadores de pessoas do pai (`filho_suprimido`). Zero aparece.
+        Contagens de sessões (M-05) e de igrejas com EBI ativo (M-09) nunca são
+        suprimidas. Exige `relatorio.ler`; nó inexistente ou fora do território
+        responde 404.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - name: nivel
+          in: query
+          required: false
+          description: Tipo do nó pedido. Sem ele, usa o contexto de atuação.
+          schema: { type: string, enum: [central, regional, setor, igreja, ebi] }
+        - name: id
+          in: query
+          required: false
+          description: ID do nó pedido. Obrigatório junto de `nivel`.
+          schema: { type: string, maxLength: 64 }
+        - name: inicio
+          in: query
+          required: true
+          description: Primeiro dia do período (fuso da igreja do nó).
+          schema: { type: string, format: date }
+        - name: fim
+          in: query
+          required: true
+          description: Último dia do período, no máximo 366 dias após `inicio`.
+          schema: { type: string, format: date }
+        - name: formato
+          in: query
+          required: false
+          description: "`json` (padrão) devolve o relatório em JSON."
+          schema: { type: string, enum: [json], default: json }
+      responses:
+        '200':
+          description: Relatório do nó e dos filhos diretos
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RelatorioPresenca' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
 components:
   securitySchemes:
     bearerAuth:
@@ -1971,6 +2023,81 @@ components:
           type: string
           format: date-time
           description: Instante de expiração da URL.
+    RelatorioIndicador:
+      type: object
+      required: [valor, suprimido, motivo]
+      properties:
+        valor:
+          type: number
+          nullable: true
+          description: >-
+            Número do indicador. `null` quando suprimido ou quando o indicador
+            não existe no nível (`nao_se_aplica`).
+        suprimido: { type: boolean }
+        motivo:
+          type: string
+          nullable: true
+          enum: [limiar, filho_suprimido, nao_se_aplica]
+          description: >-
+            `limiar`: valor de 1 a 4 escondido para quem atua acima da igreja;
+            `filho_suprimido`: um nó abaixo tem valor suprimido;
+            `nao_se_aplica`: o indicador não existe neste nível (ex.: M-01 no
+            EBI).
+    RelatorioPresenca:
+      type: object
+      required: [no, periodo, fuso, gerado_em, criterios, totais, filhos]
+      properties:
+        no:
+          type: object
+          required: [nivel, id, nome]
+          properties:
+            nivel: { type: string, enum: [central, regional, setor, igreja, ebi] }
+            id: { type: string }
+            nome: { type: string }
+        periodo:
+          type: object
+          required: [inicio, fim]
+          properties:
+            inicio: { type: string, format: date }
+            fim: { type: string, format: date }
+        fuso:
+          type: string
+          description: Fuso usado para decidir a data de cada sessão.
+        gerado_em: { type: string, format: date-time }
+        criterios:
+          type: string
+          description: Explicação em texto das regras de cálculo e supressão.
+        totais:
+          type: object
+          required:
+            - participantes_distintos
+            - presencas
+            - sessoes_realizadas
+            - media_por_sessao
+            - participantes_cadastrados
+            - participantes_ativos
+            - igrejas_com_ebi_ativo
+          properties:
+            participantes_distintos: { $ref: '#/components/schemas/RelatorioIndicador' }
+            presencas: { $ref: '#/components/schemas/RelatorioIndicador' }
+            sessoes_realizadas: { $ref: '#/components/schemas/RelatorioIndicador' }
+            media_por_sessao: { $ref: '#/components/schemas/RelatorioIndicador' }
+            participantes_cadastrados: { $ref: '#/components/schemas/RelatorioIndicador' }
+            participantes_ativos: { $ref: '#/components/schemas/RelatorioIndicador' }
+            igrejas_com_ebi_ativo: { $ref: '#/components/schemas/RelatorioIndicador' }
+        filhos:
+          type: array
+          description: Totais de cada filho direto do nó.
+          items:
+            type: object
+            required: [nivel, id, nome, totais]
+            properties:
+              nivel: { type: string, enum: [central, regional, setor, igreja, ebi] }
+              id: { type: string }
+              nome: { type: string }
+              totais:
+                type: object
+                additionalProperties: { $ref: '#/components/schemas/RelatorioIndicador' }
     Usuario:
       type: object
       properties:

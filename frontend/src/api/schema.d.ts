@@ -3352,7 +3352,7 @@ export interface paths {
         head?: never;
         /**
          * Decidir pedido de vínculo (RF-03)
-         * @description A coordenadora aprova, recusa, pede documento, revoga ou contesta um vínculo. Exige a operação `vinculo.gerenciar`.
+         * @description A coordenadora aprova, recusa, pede documento, revoga ou contesta um vínculo. Exige `vinculo.gerenciar` sobre o território do participante; fora dele responde 404 (ser responsável pela criança não basta). Dentro do território autorizado, o autor do pedido não pode decidir o próprio vínculo: nesse caso responde 403 `acesso_negado`, e a decisão deve ficar com outro operador do mesmo território. O gate territorial precede a recusa de autoria: o autor fora do território recebe 404, como qualquer outro.
          */
         patch: {
             parameters: {
@@ -3642,6 +3642,63 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/reports/attendance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Relatório agregado de presença (RF-14)
+         * @description Totais de presença do nó pedido e dos filhos diretos, sem nomes de pessoas (ADR-0029). O nó é `nivel` + `id`; sem eles, usa o nó do contexto de atuação. A supressão segue o ADR-0020: valores de 1 a 4 são escondidos para quem atua acima da igreja, e um filho suprimido suprime os indicadores de pessoas do pai (`filho_suprimido`). Zero aparece. Contagens de sessões (M-05) e de igrejas com EBI ativo (M-09) nunca são suprimidas. Exige `relatorio.ler`; nó inexistente ou fora do território responde 404.
+         */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Tipo do nó pedido. Sem ele, usa o contexto de atuação. */
+                    nivel?: "central" | "regional" | "setor" | "igreja" | "ebi";
+                    /** @description ID do nó pedido. Obrigatório junto de `nivel`. */
+                    id?: string;
+                    /** @description Primeiro dia do período (fuso da igreja do nó). */
+                    inicio: string;
+                    /** @description Último dia do período, no máximo 366 dias após `inicio`. */
+                    fim: string;
+                    /** @description `json` (padrão) devolve o relatório em JSON. */
+                    formato?: "json";
+                };
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Relatório do nó e dos filhos diretos */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RelatorioPresenca"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -3661,6 +3718,55 @@ export interface components {
              * @description Instante de expiração da URL.
              */
             expira_em: string;
+        };
+        RelatorioIndicador: {
+            /** @description Número do indicador. `null` quando suprimido ou quando o indicador não existe no nível (`nao_se_aplica`). */
+            valor: number | null;
+            suprimido: boolean;
+            /**
+             * @description `limiar`: valor de 1 a 4 escondido para quem atua acima da igreja; `filho_suprimido`: um nó abaixo tem valor suprimido; `nao_se_aplica`: o indicador não existe neste nível (ex.: M-01 no EBI).
+             * @enum {string|null}
+             */
+            motivo: "limiar" | "filho_suprimido" | "nao_se_aplica" | null;
+        };
+        RelatorioPresenca: {
+            no: {
+                /** @enum {string} */
+                nivel: "central" | "regional" | "setor" | "igreja" | "ebi";
+                id: string;
+                nome: string;
+            };
+            periodo: {
+                /** Format: date */
+                inicio: string;
+                /** Format: date */
+                fim: string;
+            };
+            /** @description Fuso usado para decidir a data de cada sessão. */
+            fuso: string;
+            /** Format: date-time */
+            gerado_em: string;
+            /** @description Explicação em texto das regras de cálculo e supressão. */
+            criterios: string;
+            totais: {
+                participantes_distintos: components["schemas"]["RelatorioIndicador"];
+                presencas: components["schemas"]["RelatorioIndicador"];
+                sessoes_realizadas: components["schemas"]["RelatorioIndicador"];
+                media_por_sessao: components["schemas"]["RelatorioIndicador"];
+                participantes_cadastrados: components["schemas"]["RelatorioIndicador"];
+                participantes_ativos: components["schemas"]["RelatorioIndicador"];
+                igrejas_com_ebi_ativo: components["schemas"]["RelatorioIndicador"];
+            };
+            /** @description Totais de cada filho direto do nó. */
+            filhos: {
+                /** @enum {string} */
+                nivel: "central" | "regional" | "setor" | "igreja" | "ebi";
+                id: string;
+                nome: string;
+                totais: {
+                    [key: string]: components["schemas"]["RelatorioIndicador"];
+                };
+            }[];
         };
         Usuario: {
             id?: string;
