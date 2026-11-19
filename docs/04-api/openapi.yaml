@@ -1423,7 +1423,11 @@ paths:
       description: >-
         Busca candidatos por nome normalizado (sem acento, minúsculas) e, se
         informado, data de nascimento. Exige a operação `participante.ler` e a
-        finalidade declarada (`finalidade`), registrada na auditoria.
+        finalidade declarada (`finalidade`), registrada na auditoria. Para quem
+        atua acima da igreja, o resultado é cortado por igreja de referência:
+        grupos com 1 a 4 participantes ativos, ou sem nenhum ativo, saem da
+        resposta inteiros (ADR-0020, decisão 11). Quem atua na igreja ou no EBI
+        vê a lista completa.
       security:
         - bearerAuth: []
       parameters:
@@ -1452,6 +1456,15 @@ paths:
                   data:
                     type: array
                     items: { $ref: '#/components/schemas/Participante' }
+                  suprimido:
+                    type: boolean
+                    description: >-
+                      Presente e `true` quando algum grupo foi retirado da
+                      resposta; ausente quando nada foi escondido.
+                  motivo:
+                    type: string
+                    enum: [limiar]
+                    description: Presente junto de `suprimido`.
         '401': { $ref: '#/components/responses/Problem' }
         '403': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/Problem' }

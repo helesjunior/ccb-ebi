@@ -2915,7 +2915,7 @@ export interface paths {
         };
         /**
          * Buscar participantes por nome/data (dedup, CA-27)
-         * @description Busca candidatos por nome normalizado (sem acento, minúsculas) e, se informado, data de nascimento. Exige a operação `participante.ler` e a finalidade declarada (`finalidade`), registrada na auditoria.
+         * @description Busca candidatos por nome normalizado (sem acento, minúsculas) e, se informado, data de nascimento. Exige a operação `participante.ler` e a finalidade declarada (`finalidade`), registrada na auditoria. Para quem atua acima da igreja, o resultado é cortado por igreja de referência: grupos com 1 a 4 participantes ativos, ou sem nenhum ativo, saem da resposta inteiros (ADR-0020, decisão 11). Quem atua na igreja ou no EBI vê a lista completa.
          */
         get: {
             parameters: {
@@ -2943,6 +2943,13 @@ export interface paths {
                     content: {
                         "application/json": {
                             data?: components["schemas"]["Participante"][];
+                            /** @description Presente e `true` quando algum grupo foi retirado da resposta; ausente quando nada foi escondido. */
+                            suprimido?: boolean;
+                            /**
+                             * @description Presente junto de `suprimido`.
+                             * @enum {string}
+                             */
+                            motivo?: "limiar";
                         };
                     };
                 };
