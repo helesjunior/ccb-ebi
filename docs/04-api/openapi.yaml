@@ -17,6 +17,7 @@ tags:
   - name: team
   - name: participants
   - name: sessions
+  - name: escalas
   - name: activities
   - name: privacy
   - name: audit
@@ -963,6 +964,34 @@ paths:
         - $ref: '#/components/parameters/IdempotencyKey'
       responses:
         '204': { description: Exceção removida }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /ebis/{id}/team:
+    get:
+      tags: [escalas]
+      summary: Equipe do EBI para a escala
+      description: >-
+        Membros vigentes que podem ser escalados: coordenadora, coordenadora
+        chefe e auxiliar com vinculo no EBI ou na igreja dele, agrupados por
+        usuario e ordenados por nome. Exige `escala.gerenciar`; EBI fora do
+        alcance responde 404.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/EbiId'
+      responses:
+        '200':
+          description: Membros da equipe
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/MembroEquipe' }
         '401': { $ref: '#/components/responses/Problem' }
         '403': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
@@ -2575,6 +2604,16 @@ components:
         hora_inicio: { type: [string, 'null'] }
         hora_fim: { type: [string, 'null'] }
         motivo: { type: string, minLength: 3, maxLength: 500 }
+    MembroEquipe:
+      type: object
+      required: [usuario_id, nome, papeis]
+      properties:
+        usuario_id: { type: string }
+        nome: { type: string }
+        papeis:
+          type: array
+          description: Papeis de equipe vigentes agrupados (coordenadora, coordenadora_chefe, auxiliar).
+          items: { type: string }
     Sessao:
       type: object
       properties:

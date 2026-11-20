@@ -2104,6 +2104,55 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/ebis/{id}/team": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Equipe do EBI para a escala
+         * @description Membros vigentes que podem ser escalados: coordenadora, coordenadora chefe e auxiliar com vinculo no EBI ou na igreja dele, agrupados por usuario e ordenados por nome. Exige `escala.gerenciar`; EBI fora do alcance responde 404.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                };
+                path: {
+                    id: components["parameters"]["EbiId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Membros da equipe */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["MembroEquipe"][];
+                        };
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/ebis/{id}/sessions": {
         parameters: {
             query?: never;
@@ -4197,6 +4246,12 @@ export interface components {
             hora_inicio?: string | null;
             hora_fim?: string | null;
             motivo: string;
+        };
+        MembroEquipe: {
+            usuario_id: string;
+            nome: string;
+            /** @description Papeis de equipe vigentes agrupados (coordenadora, coordenadora_chefe, auxiliar). */
+            papeis: string[];
         };
         Sessao: {
             id?: string;

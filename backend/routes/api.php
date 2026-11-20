@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CentralController;
 use App\Http\Controllers\Api\V1\ChurchController;
 use App\Http\Controllers\Api\V1\EbiController;
+use App\Http\Controllers\Api\V1\EquipeEbiController;
 use App\Http\Controllers\Api\V1\GuardianController;
 use App\Http\Controllers\Api\V1\GuardianRequestController;
 use App\Http\Controllers\Api\V1\HealthController;
@@ -203,6 +204,10 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         });
         Route::patch('age-exceptions/{id}', [AgeExceptionController::class, 'update'])
             ->middleware('can:excecao.decidir')->name('age-exceptions.update');
+
+        // Equipe do EBI para montar a escala (E07): quem pode ser escalado.
+        Route::get('ebis/{id}/team', [EquipeEbiController::class, 'index'])
+            ->name('ebis.team');
 
         Route::get('ebis/{id}/agenda', [AgendaController::class, 'index'])->name('agenda.index');
         Route::post('ebis/{id}/agenda', [AgendaController::class, 'store'])
