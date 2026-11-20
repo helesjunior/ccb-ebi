@@ -34,6 +34,18 @@ interface ConsultarIndicadoresPresenca
     public function totais(array $igrejaIds, array $ebiIds, string $inicio, string $fim, array $canonico = []): array;
 
     /**
+     * Sessoes que ja deveriam ter acontecido: status `prevista`, `aberta` ou
+     * `encerrada` e inicio previsto ate a data de geracao (inclusive), com data
+     * local dentro do periodo. Base do denominador do M-06: sessao futura nao
+     * entra.
+     *
+     * @param  array<int, string>  $igrejaIds
+     * @param  array<int, string>  $ebiIds
+     * @return array<int, array{id: string, chave: string, data_local: string}>
+     */
+    public function sessoesPrevistas(array $igrejaIds, array $ebiIds, string $inicio, string $fim, CarbonImmutable $geracao): array;
+
+    /**
      * Fuso de cada igreja (`id => timezone`), para o recorte de periodo e para
      * declarar o fuso no relatorio.
      *
