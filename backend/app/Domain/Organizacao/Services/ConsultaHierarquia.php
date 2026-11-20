@@ -10,7 +10,7 @@ use App\Domain\Organizacao\Models\IgrejaVinculacao;
 use App\Domain\Organizacao\Models\Regional;
 use App\Domain\Organizacao\Models\Setor;
 use App\Support\RecursoNaoEncontradoException;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use RuntimeException;
 
 /**
@@ -51,14 +51,13 @@ class ConsultaHierarquia implements ConsultarHierarquia
 
     public function filhos(string $tipo, string $id): array
     {
+        // Cada ramo passa o proprio modelo para o mapear(), que assim sabe
+        // que os filhos tem id e nome.
         return match ($tipo) {
-            'central' => $this->mapear(Regional::query()->where('central_nacional_id', $id)->orderBy('nome'), 'regional'),
-            'regional' => $this->mapear(Setor::query()->where('regional_id', $id)->orderBy('nome'), 'setor'),
-            'setor' => $this->mapear(
-                Igreja::query()->whereIn('id', $this->igrejasDoSetor($id))->orderBy('nome'),
-                'igreja',
-            ),
-            'igreja' => $this->mapear(Ebi::query()->where('igreja_id', $id)->orderBy('nome'), 'ebi'),
+            'central' => $this->mapear('regional', Regional::query()->where('central_nacional_id', $id)->orderBy('nome')->get()),
+            'regional' => $this->mapear('setor', Setor::query()->where('regional_id', $id)->orderBy('nome')->get()),
+            'setor' => $this->mapear('igreja', Igreja::query()->whereIn('id', $this->igrejasDoSetor($id))->orderBy('nome')->get()),
+            'igreja' => $this->mapear('ebi', Ebi::query()->where('igreja_id', $id)->orderBy('nome')->get()),
             'ebi' => [],
             default => throw new RuntimeException("Tipo de escopo desconhecido: {$tipo}"),
         };
@@ -122,13 +121,17 @@ class ConsultaHierarquia implements ConsultarHierarquia
     }
 
     /**
-     * @param  Builder<covariant \Illuminate\Database\Eloquent\Model>  $consulta
+     * @param  iterable<int, Model>  $nos
      * @return array<int, array{tipo: string, id: string, nome: string}>
      */
-    private function mapear($consulta, string $tipo): array
+    private function mapear(string $tipo, iterable $nos): array
     {
-        return $consulta->get()
-            ->map(fn ($no): array => ['tipo' => $tipo, 'id' => (string) $no->id, 'nome' => (string) $no->nome])
+        return collect($nos)
+            ->map(fn (Model $no): array => [
+                'tipo' => $tipo,
+                'id' => (string) $no->getAttribute('id'),
+                'nome' => (string) $no->getAttribute('nome'),
+            ])
             ->all();
     }
 

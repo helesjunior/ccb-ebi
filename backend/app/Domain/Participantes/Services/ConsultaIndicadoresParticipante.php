@@ -73,6 +73,7 @@ class ConsultaIndicadoresParticipante implements ConsultarIndicadoresParticipant
         return array_keys($ids);
     }
 
+    /** @return array<string, string> */
     public function igrejaPorParticipante(array $canonico, array $ids): array
     {
         $porIgreja = [];
@@ -87,7 +88,8 @@ class ConsultaIndicadoresParticipante implements ConsultarIndicadoresParticipant
             ->chunkById(500, function ($participantes) use (&$porIgreja, $canonico): void {
                 foreach ($participantes as $participante) {
                     $principal = $canonico[$participante->id] ?? $participante->id;
-                    $porIgreja[$principal] = $participante->igreja_referencia_id;
+                    // O whereNotNull acima garante o valor; o cast fixa o tipo.
+                    $porIgreja[$principal] = (string) $participante->igreja_referencia_id;
                 }
             });
 
