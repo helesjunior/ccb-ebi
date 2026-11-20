@@ -16,6 +16,7 @@ class ConsultaIndicadoresPresenca implements ConsultarIndicadoresPresenca
 
     public function totais(array $igrejaIds, array $ebiIds, string $inicio, string $fim, array $canonico = []): array
     {
+        /** @var array<string, array{participantes_distintos: int, presencas: int, sessoes_realizadas: int, ids: array<string, true>}> $totais */
         $totais = [];
         foreach ($igrejaIds as $id) {
             $totais["igreja:{$id}"] = $this->vazio() + ['ids' => []];
@@ -54,13 +55,16 @@ class ConsultaIndicadoresPresenca implements ConsultarIndicadoresPresenca
             }
 
             $nomes = array_keys($distintosPorSessao[$sessao['id']] ?? []);
+            $quantasPresencas = $presencasPorSessao[$sessao['id']] ?? 0;
             foreach ($chaves as $chave) {
-                $totais[$chave]['participantes_distintos'] += count($nomes);
-                $totais[$chave]['presencas'] += $presencasPorSessao[$sessao['id']];
-                $totais[$chave]['sessoes_realizadas'] += 1;
+                $total = $totais[$chave];
+                $total['participantes_distintos'] += count($nomes);
+                $total['presencas'] += $quantasPresencas;
+                $total['sessoes_realizadas'] += 1;
                 foreach ($nomes as $nome) {
-                    $totais[$chave]['ids'][$nome] = true;
+                    $total['ids'][$nome] = true;
                 }
+                $totais[$chave] = $total;
             }
         });
 
@@ -198,7 +202,7 @@ class ConsultaIndicadoresPresenca implements ConsultarIndicadoresPresenca
      * conjunto de sessoes e/ou a partir de uma data de inicio.
      *
      * @param  array<int, string>|null  $sessaoIds
-     * @param  callable(array{sessao_id: string, participante_id: string, igreja_id: ?string}): void  $callback
+     * @param  callable(array{sessao_id: string, participante_id: string, igreja_id: ?string, ebi_id: ?string}): void  $callback
      */
     private function cadaPresencaValida(?array $sessaoIds, callable $callback, ?CarbonImmutable $desde = null, ?CarbonImmutable $ate = null): void
     {
@@ -226,14 +230,16 @@ class ConsultaIndicadoresPresenca implements ConsultarIndicadoresPresenca
                 $consulta->where('sessao.inicio_previsto', '<=', $ate->utc()->format('Y-m-d H:i:s'));
             }
 
+            // Join com sessao: igreja_id e ebi_id vem de la, fora do @property
+            // do model Presenca. Lidos pelo atributo para nao depender dele.
             $pagina = $consulta->get();
 
             foreach ($pagina as $presenca) {
                 $callback([
-                    'sessao_id' => (string) $presenca->sessao_id,
-                    'participante_id' => (string) $presenca->participante_id,
-                    'igreja_id' => $presenca->igreja_id,
-                    'ebi_id' => $presenca->ebi_id,
+                    'sessao_id' => (string) $presenca->getAttribute('sessao_id'),
+                    'participante_id' => (string) $presenca->getAttribute('participante_id'),
+                    'igreja_id' => $presenca->getAttribute('igreja_id'),
+                    'ebi_id' => $presenca->getAttribute('ebi_id'),
                 ]);
             }
 

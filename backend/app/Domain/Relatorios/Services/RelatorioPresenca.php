@@ -36,8 +36,6 @@ class RelatorioPresenca implements ConsultarRelatorio
         'participantes_ativos',
     ];
 
-    private const TIPOS = ['central', 'regional', 'setor', 'igreja', 'ebi'];
-
     public function __construct(
         private readonly ConsultarHierarquia $hierarquia,
         private readonly ConsultarOrganizacao $organizacao,
@@ -85,7 +83,7 @@ class RelatorioPresenca implements ConsultarRelatorio
      * no saem sempre da subarvore dele, nunca da soma dos filhos.
      *
      * @param  array<string, string>  $canonico
-     * @param  array<string, array{situacao: string, totais: array<string, array{valor: int|float|null, suprimido: bool, motivo: ?string}>}>  $buffer
+     * @param  array<string, array{situacao: string, totais: array<string, array{valor: int|float|null, suprimido: bool, motivo: ?string}>, filhos: array<int, array<string, array{valor: int|float|null, suprimido: bool, motivo: ?string}>>}>  $buffer
      * @return array{situacao: string, totais: array<string, array{valor: int|float|null, suprimido: bool, motivo: ?string}>, filhos: array<int, array<string, array{valor: int|float|null, suprimido: bool, motivo: ?string}>>}
      */
     private function resultadosDoNo(

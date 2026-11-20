@@ -53,6 +53,8 @@ class ExportadorCsv
 
     /**
      * Nome base do arquivo. Nunca leva nome de igreja nem de pessoa.
+     *
+     * @param  array<string, mixed>  $relatorio  payload de `ConsultarRelatorio::presenca`
      */
     public function nomeDoArquivo(array $relatorio): string
     {
@@ -88,6 +90,10 @@ class ExportadorCsv
     private function linha(array $valores): string
     {
         $saida = fopen('php://temp', 'r+');
+        if ($saida === false) {
+            throw new \RuntimeException('Nao foi possivel abrir o buffer do CSV.');
+        }
+
         fputcsv($saida, array_map(fn (string $valor): string => $this->neutralizar($valor), $valores), escape: '');
         rewind($saida);
         $linha = (string) stream_get_contents($saida);
