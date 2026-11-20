@@ -57,5 +57,15 @@ final class Operacoes
     // E06 ? Relatorios agregados (RF-14). Sem nomes; so para quem acompanha.
     public const RELATORIO_LER = 'relatorio.ler';
 
+    // E07 - Escalas (RF-07). Aprovar e decidir troca sao exclusivos da chefe;
+    // o adm_igreja so responde quando o EBI nao tem chefe vigente (servico).
+    public const ESCALA_LER = 'escala.ler';
+
+    public const ESCALA_GERENCIAR = 'escala.gerenciar';
+
+    public const ESCALA_APROVAR = 'escala.aprovar';
+
+    public const TROCA_DECIDIR = 'troca.decidir';
+
     private function __construct() {}
 }

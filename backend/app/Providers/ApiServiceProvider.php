@@ -8,6 +8,7 @@ use App\Policies\AgendaPolicy;
 use App\Policies\AuditoriaPolicy;
 use App\Policies\ConsentimentoPolicy;
 use App\Policies\ConvitePolicy;
+use App\Policies\EscalaPolicy;
 use App\Policies\OrganizacaoPolicy;
 use App\Policies\ParticipantePolicy;
 use App\Policies\PresencaPolicy;
@@ -57,5 +58,11 @@ class ApiServiceProvider extends ServiceProvider
 
         // E06 - Relatorios agregados (RF-14).
         Gate::define(Operacoes::RELATORIO_LER, [RelatorioPolicy::class, 'ler']);
+
+        // E07 - Escalas (RF-07).
+        Gate::define(Operacoes::ESCALA_LER, [EscalaPolicy::class, 'ler']);
+        Gate::define(Operacoes::ESCALA_GERENCIAR, [EscalaPolicy::class, 'gerenciar']);
+        Gate::define(Operacoes::ESCALA_APROVAR, [EscalaPolicy::class, 'aprovar']);
+        Gate::define(Operacoes::TROCA_DECIDIR, [EscalaPolicy::class, 'decidirTroca']);
     }
 }

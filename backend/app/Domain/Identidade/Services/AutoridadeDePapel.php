@@ -23,6 +23,7 @@ class AutoridadeDePapel
         'adm_regional' => 80,
         'adm_setor' => 60,
         'adm_igreja' => 40,
+        'coordenadora_chefe' => 35,
         'coordenadora' => 30,
         'ministerio_central' => 20,
         'ministerio_regional' => 20,

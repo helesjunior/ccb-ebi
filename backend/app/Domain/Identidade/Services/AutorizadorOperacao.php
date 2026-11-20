@@ -15,7 +15,25 @@ use App\Support\RecursoNaoEncontradoException;
  */
 class AutorizadorOperacao implements AutorizarOperacao
 {
-    public function __construct(private readonly ResolverEscopo $escopo) {}
+    /**
+     * Operacoes da coordenadora (E07: a chefe e superconjunto dela).
+     *
+     * @var array<int, string>
+     */
+    private const OPERACOES_COORDENADORA = [
+        Operacoes::ORGANIZACAO_LER, Operacoes::USUARIO_LER,
+        Operacoes::PARTICIPANTE_LER, Operacoes::PARTICIPANTE_CADASTRAR,
+        Operacoes::PARTICIPANTE_CORRIGIR, Operacoes::PARTICIPANTE_MESCLAR,
+        Operacoes::VINCULO_GERENCIAR, Operacoes::EXCECAO_LER,
+        Operacoes::EXCECAO_DECIDIR, Operacoes::EVIDENCIA_LER,
+        // E04: gere a agenda/sessoes da EBI e conduz a lista de presenca.
+        Operacoes::AGENDA_GERENCIAR, Operacoes::SESSAO_LER, Operacoes::SESSAO_GERENCIAR,
+        Operacoes::PRESENCA_LER, Operacoes::PRESENCA_REGISTRAR, Operacoes::PRESENCA_ESTORNAR,
+        // E06: relatorio agregado do EBI.
+        Operacoes::RELATORIO_LER,
+        // E07: monta e mantem a escala do EBI.
+        Operacoes::ESCALA_LER, Operacoes::ESCALA_GERENCIAR,
+    ];
 
     /**
      * Mapa papel => operacoes permitidas, derivado da matriz de autorizacao.
@@ -36,6 +54,8 @@ class AutorizadorOperacao implements AutorizarOperacao
             Operacoes::SESSAO_LER, Operacoes::PRESENCA_LER,
             // E06: relatorio agregado (M-01 a M-05, M-09) de todo o territorio.
             Operacoes::RELATORIO_LER,
+            // E07: le a escala nominal do territorio.
+            Operacoes::ESCALA_LER,
         ],
         'adm_regional' => [
             Operacoes::ORGANIZACAO_LER, Operacoes::ORGANIZACAO_GERENCIAR,
@@ -47,6 +67,8 @@ class AutorizadorOperacao implements AutorizarOperacao
             Operacoes::SESSAO_LER, Operacoes::PRESENCA_LER,
             // E06: relatorio agregado da regional.
             Operacoes::RELATORIO_LER,
+            // E07: le a escala nominal da regional.
+            Operacoes::ESCALA_LER,
         ],
         'adm_setor' => [
             Operacoes::ORGANIZACAO_LER, Operacoes::ORGANIZACAO_GERENCIAR,
@@ -58,6 +80,8 @@ class AutorizadorOperacao implements AutorizarOperacao
             Operacoes::SESSAO_LER, Operacoes::PRESENCA_LER,
             // E06: relatorio agregado do setor.
             Operacoes::RELATORIO_LER,
+            // E07: le a escala nominal do setor.
+            Operacoes::ESCALA_LER,
         ],
         'adm_igreja' => [
             Operacoes::ORGANIZACAO_LER,
@@ -72,18 +96,16 @@ class AutorizadorOperacao implements AutorizarOperacao
             Operacoes::PRESENCA_LER, Operacoes::PRESENCA_ESTORNAR,
             // E06: relatorio agregado da igreja (numeros reais).
             Operacoes::RELATORIO_LER,
+            // E07: monta a escala do EBI; aprova e decide troca so sem chefe
+            // vigente (regra checada no servico).
+            Operacoes::ESCALA_LER, Operacoes::ESCALA_GERENCIAR,
+            Operacoes::ESCALA_APROVAR, Operacoes::TROCA_DECIDIR,
         ],
-        'coordenadora' => [
-            Operacoes::ORGANIZACAO_LER, Operacoes::USUARIO_LER,
-            Operacoes::PARTICIPANTE_LER, Operacoes::PARTICIPANTE_CADASTRAR,
-            Operacoes::PARTICIPANTE_CORRIGIR, Operacoes::PARTICIPANTE_MESCLAR,
-            Operacoes::VINCULO_GERENCIAR, Operacoes::EXCECAO_LER,
-            Operacoes::EXCECAO_DECIDIR, Operacoes::EVIDENCIA_LER,
-            // E04: gere a agenda/sessoes da EBI e conduz a lista de presenca.
-            Operacoes::AGENDA_GERENCIAR, Operacoes::SESSAO_LER, Operacoes::SESSAO_GERENCIAR,
-            Operacoes::PRESENCA_LER, Operacoes::PRESENCA_REGISTRAR, Operacoes::PRESENCA_ESTORNAR,
-            // E06: relatorio agregado do EBI.
-            Operacoes::RELATORIO_LER,
+        'coordenadora' => self::OPERACOES_COORDENADORA,
+        'coordenadora_chefe' => [
+            ...self::OPERACOES_COORDENADORA,
+            // E07: so a chefe aprova a escala e decide a troca do EBI.
+            Operacoes::ESCALA_APROVAR, Operacoes::TROCA_DECIDIR,
         ],
         'auxiliar' => [
             Operacoes::ORGANIZACAO_LER,
@@ -114,6 +136,8 @@ class AutorizadorOperacao implements AutorizarOperacao
             Operacoes::SESSAO_LER, Operacoes::PRESENCA_LER,
             // E06: relatorio agregado da igreja (numeros reais).
             Operacoes::RELATORIO_LER,
+            // E07: le a escala nominal da EBI da qual e membro.
+            Operacoes::ESCALA_LER,
         ],
         'responsavel' => [
             // Cadastro do dependente (RF-02, FL-01): cria o participante e o
@@ -121,6 +145,15 @@ class AutorizadorOperacao implements AutorizarOperacao
             Operacoes::PARTICIPANTE_CADASTRAR,
         ],
     ];
+
+    /**
+     * A matriz e um `const`: o Opcache reaproveita a copia ja compilada da
+     * classe entre requisicoes/processos. Simplesmente editar este arquivo nao
+     * muda nada ate o Opcache ser reiniciado (`php artisan optimize:clear` ou
+     * restart do container). Antes de cada rodada de teste, rode
+     * `docker exec ebi-dev-app-1 php artisan optimize:clear`.
+     */
+    public function __construct(private readonly ResolverEscopo $escopo) {}
 
     public function permite(
         ContextoAtuacao $contexto,
