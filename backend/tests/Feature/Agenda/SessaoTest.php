@@ -4,7 +4,7 @@ use App\Domain\Auditoria\Models\EventoAuditoria;
 use App\Domain\Sessoes\Models\Presenca;
 use App\Domain\Sessoes\Models\Sessao;
 use App\Domain\Sessoes\Models\SessaoCorrecao;
-use App\Domain\Sessoes\Services\CalculadoraEquipeMinima;
+use App\Support\EquipeMinima\CalculadoraEquipeMinima;
 
 beforeEach(function () {
     ['igreja' => $this->igreja, 'ebi' => $this->ebi] = igrejaComEbi();
