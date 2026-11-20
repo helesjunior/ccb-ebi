@@ -20,7 +20,10 @@ class GerenciadorConvite implements GerirConvite
 {
     private const DIAS_VALIDADE = 7;
 
-    public function __construct(private readonly AutoridadeDePapel $autoridade) {}
+    public function __construct(
+        private readonly AutoridadeDePapel $autoridade,
+        private readonly GuardaChefe $guarda,
+    ) {}
 
     public function criar(
         ContextoAtuacao $contexto,
@@ -37,6 +40,11 @@ class GerenciadorConvite implements GerirConvite
         }
 
         $this->garantirAutoridade($contexto, $papelCodigo, $tipoEscopo, $escopoId);
+
+        // Convite que perde a vaga da chefe continua pendente: a checagem aqui
+        // so evita prometer o que ja esta ocupado.
+        $this->guarda->garantirEscopo($papelCodigo, $tipoEscopo);
+        $this->guarda->garantirVaga($papelCodigo, $escopoId);
 
         $token = Str::random(64);
 

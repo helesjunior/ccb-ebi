@@ -22,6 +22,7 @@ class GerenciadorVinculo implements GerirVinculo
     public function __construct(
         private readonly RegistrarEvento $auditoria,
         private readonly AutoridadeDePapel $autoridade,
+        private readonly GuardaChefe $guarda,
     ) {}
 
     public function conceder(
@@ -42,15 +43,23 @@ class GerenciadorVinculo implements GerirVinculo
             throw new ProblemException('vinculo_fora_autoridade', 'Acesso negado', 403, 'Concessão fora da sua autoridade.');
         }
 
-        $vinculo = DB::transaction(function () use ($usuarioId, $papel, $tipoEscopo, $escopoId): VinculoAcesso {
-            // Encerra o vinculo vigente do mesmo par (preserva historico).
+        $this->guarda->garantirEscopo($papelCodigo, $tipoEscopo);
+        $this->guarda->garantirVaga($papelCodigo, $escopoId, $usuarioId);
+
+        $vinculo = $this->guarda->traduzir(fn (): VinculoAcesso => DB::transaction(function () use ($usuarioId, $papel, $tipoEscopo, $escopoId): VinculoAcesso {
+            // Encerra o vinculo vigente do mesmo par (preserva historico). Uma a
+            // uma: o `saving` do model libera a vaga da chefe.
             VinculoAcesso::query()
                 ->where('usuario_id', $usuarioId)
                 ->where('papel_id', $papel->id)
                 ->where('tipo_escopo', $tipoEscopo)
                 ->where('escopo_id', $escopoId)
                 ->whereNull('fim')
-                ->update(['fim' => now()->toDateString()]);
+                ->get()
+                ->each(fn (VinculoAcesso $v) => $v->forceFill([
+                    'fim' => now()->toDateString(),
+                    'status' => 'encerrado',
+                ])->save());
 
             return VinculoAcesso::query()->create([
                 'usuario_id' => $usuarioId,
@@ -61,7 +70,7 @@ class GerenciadorVinculo implements GerirVinculo
                 'fim' => null,
                 'status' => 'ativo',
             ]);
-        });
+        }));
 
         $this->auditoria->registrar([
             'acao' => 'acesso.concedido',
