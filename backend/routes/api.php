@@ -28,6 +28,7 @@ use App\Http\Controllers\Api\V1\PrivacyRequestController;
 use App\Http\Controllers\Api\V1\PrivacyTermController;
 use App\Http\Controllers\Api\V1\RegionController;
 use App\Http\Controllers\Api\V1\RegisterController;
+use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\SectorController;
 use App\Http\Controllers\Api\V1\SessaoController;
 use App\Http\Controllers\Api\V1\SessionController;
@@ -247,5 +248,9 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         // curta duracao, apos autorizacao (`evidencia.ler`).
         Route::get('arquivos/{id}', [ArquivoController::class, 'show'])
             ->middleware('can:evidencia.ler')->name('arquivos.show');
+
+        // Relatorio de presenca agregado (E06, RF-14): sem nomes de pessoas.
+        Route::get('reports/attendance', [ReportController::class, 'attendance'])
+            ->middleware('can:relatorio.ler')->name('reports.attendance');
     });
 });

@@ -11,6 +11,7 @@ use App\Http\Resources\ParticipanteResource;
 use App\Support\Arquivo\Contracts\ArmazenarArquivo;
 use App\Support\Participantes\AutorizacaoParticipante;
 use App\Support\ProblemException;
+use App\Support\Relatorios\VisibilidadeIgreja;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -73,14 +74,28 @@ class ParticipantController
             fn ($p): bool => $this->autorizacao->pode($contexto, $usuarioId, $p, 'participante.ler'),
         ));
 
+        // Decisao 11 da spec: acima da igreja, um grupo de 1 a 4 ativos por
+        // igreja de referencia ja deduz o cadastro. O corte roda sobre os
+        // candidatos JA autorizados: senao um grupo fora do territorio
+        // revelaria pela sinalizacao `suprimido` que ele existe.
+        [$candidatos, $suprimido] = $this->participantes->cortarVisiveis(
+            $candidatos,
+            VisibilidadeIgreja::suprimeLista($contexto),
+        );
+
         $this->auditarLeitura($request, $finalidade, array_map(
             fn ($p): string => (string) $p->id,
             $candidatos,
         ));
 
-        return response()->json([
-            'data' => ParticipanteResource::collection($candidatos)->resolve($request),
-        ]);
+        $corpo = ['data' => ParticipanteResource::collection($candidatos)->resolve($request)];
+
+        if ($suprimido) {
+            $corpo['suprimido'] = true;
+            $corpo['motivo'] = 'limiar';
+        }
+
+        return response()->json($corpo);
     }
 
     public function show(Request $request, string $id): JsonResponse

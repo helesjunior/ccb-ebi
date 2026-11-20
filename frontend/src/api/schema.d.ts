@@ -2915,7 +2915,7 @@ export interface paths {
         };
         /**
          * Buscar participantes por nome/data (dedup, CA-27)
-         * @description Busca candidatos por nome normalizado (sem acento, minúsculas) e, se informado, data de nascimento. Exige a operação `participante.ler` e a finalidade declarada (`finalidade`), registrada na auditoria.
+         * @description Busca candidatos por nome normalizado (sem acento, minúsculas) e, se informado, data de nascimento. Exige a operação `participante.ler` e a finalidade declarada (`finalidade`), registrada na auditoria. Para quem atua acima da igreja, o resultado é cortado por igreja de referência: grupos com 1 a 4 participantes ativos, ou sem nenhum ativo, saem da resposta inteiros (ADR-0020, decisão 11). Só papéis locais (coordenadora, administração da igreja, ministério local) e o auxiliar, em escopo de igreja ou EBI, veem a lista completa; os demais recebem o corte mesmo com contexto de igreja.
          */
         get: {
             parameters: {
@@ -2943,6 +2943,13 @@ export interface paths {
                     content: {
                         "application/json": {
                             data?: components["schemas"]["Participante"][];
+                            /** @description Presente e `true` quando algum grupo de 1 a 4 candidatos já autorizados foi retirado da resposta (ADR-0020); ausente quando nada foi escondido. O corte roda depois da autorização, para não sinalizar cadastros fora do território do ator. */
+                            suprimido?: boolean;
+                            /**
+                             * @description Presente junto de `suprimido`.
+                             * @enum {string}
+                             */
+                            motivo?: "limiar";
                         };
                     };
                 };
@@ -3352,7 +3359,7 @@ export interface paths {
         head?: never;
         /**
          * Decidir pedido de vínculo (RF-03)
-         * @description A coordenadora aprova, recusa, pede documento, revoga ou contesta um vínculo. Exige a operação `vinculo.gerenciar`.
+         * @description A coordenadora aprova, recusa, pede documento, revoga ou contesta um vínculo. Exige `vinculo.gerenciar` sobre o território do participante; fora dele responde 404 (ser responsável pela criança não basta). Dentro do território autorizado, o autor do pedido não pode decidir o próprio vínculo: nesse caso responde 403 `acesso_negado`, e a decisão deve ficar com outro operador do mesmo território. O gate territorial precede a recusa de autoria: o autor fora do território recebe 404, como qualquer outro.
          */
         patch: {
             parameters: {
@@ -3642,6 +3649,68 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/reports/attendance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Relatório agregado de presença (RF-14)
+         * @description Totais de presença do nó pedido e dos filhos diretos, sem nomes de pessoas (ADR-0029). O nó é `nivel` + `id`; sem eles, usa o nó do contexto de atuação. A supressão segue o ADR-0020: valores de 1 a 4 são escondidos para quem atua acima da igreja, e um filho suprimido suprime os indicadores de pessoas e a média do pai (`filho_suprimido`). Zero aparece. Ficam isentos só papéis locais (coordenadora, administração da igreja, ministério local) em escopo de igreja ou EBI; papel administrativo em escopo de igreja continua suprimido. M-02 e M-03 contam pelas presenças nas igrejas da unidade; M-01, participantes ativos e M-09 contam pela igreja de referência, com janela até a data de geração; a presença que torna alguém ativo vale em qualquer igreja. O nó do EBI mede por `ebiIds` e marca M-01, ativos e M-09 como `nao_se_aplica`. Contagens de sessões (M-05) e de igrejas com EBI ativo (M-09) nunca são suprimidas nem entram na cascata. O fuso é o único da unidade ou, se variar, `fuso de cada igreja`. Exige `relatorio.ler`; nó inexistente ou fora do território responde 404.
+         */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Tipo do nó pedido. Sem ele, usa o contexto de atuação. */
+                    nivel?: "central" | "regional" | "setor" | "igreja" | "ebi";
+                    /** @description ID do nó pedido. Obrigatório junto de `nivel`. */
+                    id?: string;
+                    /** @description Primeiro dia do período (fuso da igreja do nó). */
+                    inicio: string;
+                    /** @description Último dia do período, no máximo 366 dias após `inicio`. */
+                    fim: string;
+                    /** @description `json` (padrão) devolve o relatório em JSON; `csv` devolve o mesmo cálculo em arquivo, com uma linha para o nó e uma por filho. */
+                    formato?: "json" | "csv";
+                };
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Relatório do nó e dos filhos diretos. O CSV sai quando `formato=csv`; o JSON nos demais casos. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RelatorioPresenca"];
+                        /**
+                         * @example nivel,id,nome,participantes_distintos,presencas,sessoes_realizadas,media_por_sessao,participantes_cadastrados,participantes_ativos,igrejas_com_ebi_ativo,periodo_inicio,periodo_fim,fuso,gerado_em,criterios
+                         *     igreja,01H...,Igreja,42,120,8,15.0,60,58,1,2026-10-20,2026-11-19,America/Sao_Paulo,2026-11-19T12:00:00+00:00,"Participantes sem igreja de referencia..."
+                         */
+                        "text/csv": string;
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -3661,6 +3730,54 @@ export interface components {
              * @description Instante de expiração da URL.
              */
             expira_em: string;
+        };
+        RelatorioIndicador: {
+            /** @description Número do indicador. `null` quando suprimido ou quando o indicador não existe no nível (`nao_se_aplica`). */
+            valor: number | null;
+            suprimido: boolean;
+            /**
+             * @description `limiar`: valor de 1 a 4 escondido para quem atua acima da igreja; `filho_suprimido`: um nó abaixo tem valor suprimido; `nao_se_aplica`: o indicador não existe neste nível (ex.: M-01 no EBI).
+             * @enum {string|null}
+             */
+            motivo: "limiar" | "filho_suprimido" | "nao_se_aplica" | null;
+        };
+        RelatorioPresenca: {
+            no: {
+                /** @enum {string} */
+                nivel: "central" | "regional" | "setor" | "igreja" | "ebi";
+                id: string;
+                nome: string;
+            };
+            periodo: {
+                /** Format: date */
+                inicio: string;
+                /** Format: date */
+                fim: string;
+            };
+            /** @description Fuso usado para decidir a data de cada sessão: o único das igrejas da unidade, ou `fuso de cada igreja` quando ela abrange mais de um. */
+            fuso: string;
+            /** Format: date-time */
+            gerado_em: string;
+            /** @description Explicação em texto das regras de cálculo e supressão. */
+            criterios: string;
+            totais: components["schemas"]["TotaisRelatorio"];
+            /** @description Totais de cada filho direto do nó. */
+            filhos: {
+                /** @enum {string} */
+                nivel: "central" | "regional" | "setor" | "igreja" | "ebi";
+                id: string;
+                nome: string;
+                totais: components["schemas"]["TotaisRelatorio"];
+            }[];
+        };
+        TotaisRelatorio: {
+            participantes_distintos: components["schemas"]["RelatorioIndicador"];
+            presencas: components["schemas"]["RelatorioIndicador"];
+            sessoes_realizadas: components["schemas"]["RelatorioIndicador"];
+            media_por_sessao: components["schemas"]["RelatorioIndicador"];
+            participantes_cadastrados: components["schemas"]["RelatorioIndicador"];
+            participantes_ativos: components["schemas"]["RelatorioIndicador"];
+            igrejas_com_ebi_ativo: components["schemas"]["RelatorioIndicador"];
         };
         Usuario: {
             id?: string;

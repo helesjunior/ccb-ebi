@@ -2,7 +2,7 @@ import path from 'node:path'
 
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 
 // https://vite.dev/config/
 // O destino do build é configurável por VITE_OUT_DIR: localmente o portal é
@@ -26,5 +26,12 @@ export default defineConfig({
   build: {
     outDir,
     emptyOutDir: true,
+  },
+  // Testes de componente (Vitest + jsdom); `setup.ts` liga os matchers do
+  // jest-dom e limpa o DOM entre os testes.
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./src/teste/setup.ts'],
   },
 })

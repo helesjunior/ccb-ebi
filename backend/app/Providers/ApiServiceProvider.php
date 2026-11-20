@@ -11,6 +11,7 @@ use App\Policies\ConvitePolicy;
 use App\Policies\OrganizacaoPolicy;
 use App\Policies\ParticipantePolicy;
 use App\Policies\PresencaPolicy;
+use App\Policies\RelatorioPolicy;
 use App\Policies\SessaoPolicy;
 use App\Policies\UsuarioPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -53,5 +54,8 @@ class ApiServiceProvider extends ServiceProvider
         Gate::define(Operacoes::PRESENCA_LER, [PresencaPolicy::class, 'ler']);
         Gate::define(Operacoes::PRESENCA_REGISTRAR, [PresencaPolicy::class, 'registrar']);
         Gate::define(Operacoes::PRESENCA_ESTORNAR, [PresencaPolicy::class, 'estornar']);
+
+        // E06 - Relatorios agregados (RF-14).
+        Gate::define(Operacoes::RELATORIO_LER, [RelatorioPolicy::class, 'ler']);
     }
 }

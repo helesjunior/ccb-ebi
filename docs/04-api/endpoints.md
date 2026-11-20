@@ -111,8 +111,7 @@ Proposta inicial, prefixo `/api/v1`. Rotas marcadas *novo* não existiam na vers
 ## Relatórios, privacidade e auditoria
 | Método | Rota | Finalidade | RF |
 |---|---|---|---|
-| GET | `/reports/attendance` | Indicadores de presença | RF-14 |
-| GET | `/reports/participants` | Indicadores de participantes *novo* | RF-14 |
+| GET | `/reports/attendance` | Relatório de presença do nó e dos filhos diretos, com a supressão acima da igreja; `formato=csv` exporta *novo (Etapa 7)* (`no OpenAPI`) | RF-14 |
 | GET/POST | `/privacy/consents` | Consultar e registrar manifestações do próprio titular (`no OpenAPI`) | RF-04 |
 | GET | `/privacy/consents/{id}` | Recuperar manifestação com a versão do termo (`no OpenAPI`) | RF-04, CA-16 |
 | GET | `/privacy/terms` | Consultar termo vigente por finalidade, com o texto integral para leitura antes do aceite (`no OpenAPI`) | RF-04, CA-16 |
