@@ -81,6 +81,9 @@ Proposta inicial, prefixo `/api/v1`. Rotas marcadas *novo* não existiam na vers
 | GET | `/ebis/{id}/team` | Equipe do EBI para a escala *novo (E07)* | RF-07 |
 | GET | `/ebis/{id}/schedules` | Consultar escala (era `/roster`) | RF-07 |
 | POST | `/sessions/{id}/schedules` | Criar escala *novo* | RF-07 |
+| GET/PATCH | `/schedules/{id}` | Detalhe e estimativa da escala *novo (E07)* | RF-07 |
+| POST | `/schedules/{id}/members` | Incluir membro na escala *novo (E07)* | RF-07 |
+| PATCH/DELETE | `/schedule-members/{id}` | Mudar funcao e retirar membro *novo (E07)* | RF-07 |
 | POST | `/schedules/{id}/approve` | Aprovação pela coordenadora chefe *novo (2.2)* | RF-07 |
 | POST/PATCH | `/schedule-swaps` | Pedir e aprovar troca *novo* | RF-07 |
 | POST | `/sessions/{id}/feedback` | Registrar feedback | RF-09 |

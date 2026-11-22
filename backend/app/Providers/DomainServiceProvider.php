@@ -16,6 +16,10 @@ use App\Domain\DadosSensiveis\Contracts\LerDadoSensivel;
 use App\Domain\DadosSensiveis\Services\ArmazenadorDadoSensivel;
 use App\Domain\DadosSensiveis\Services\ExpurgadorRetencao;
 use App\Domain\DadosSensiveis\Services\LeitorDadoSensivel;
+use App\Domain\Escalas\Contracts\ConsultarEscala;
+use App\Domain\Escalas\Contracts\GerirEscala;
+use App\Domain\Escalas\Services\ConsultaEscala;
+use App\Domain\Escalas\Services\GerenciadorEscala;
 use App\Domain\Identidade\Contracts\AceitarConvite;
 use App\Domain\Identidade\Contracts\Autenticar;
 use App\Domain\Identidade\Contracts\AutorizarOperacao;
@@ -158,5 +162,7 @@ class DomainServiceProvider extends ServiceProvider
         $this->app->bind(EstornarPresenca::class, EstornadorPresenca::class);
         $this->app->bind(RegistrarPresenca::class, RegistradorPresenca::class);
         $this->app->bind(GerirSessaoEbi::class, GerenciadorSessaoEbi::class);
+        $this->app->bind(GerirEscala::class, GerenciadorEscala::class);
+        $this->app->bind(ConsultarEscala::class, ConsultaEscala::class);
     }
 }

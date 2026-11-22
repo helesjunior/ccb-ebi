@@ -995,6 +995,210 @@ paths:
         '401': { $ref: '#/components/responses/Problem' }
         '403': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
+  /ebis/{id}/schedules:
+    get:
+      tags: [escalas]
+      summary: Sessoes do EBI com a situacao da escala
+      description: >-
+        Sessoes do periodo, cada uma com a escala (quando houver) e a situacao:
+        `sem_escala`, `cancelada`, `abaixo_do_minimo`, `aguardando_aprovacao` ou
+        `aprovada`. Exige `escala.ler`; EBI fora do alcance responde 404.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/EbiId'
+        - name: inicio
+          in: query
+          required: true
+          description: Inicio do periodo (inclusive).
+          schema: { type: string, format: date }
+        - name: fim
+          in: query
+          required: true
+          description: Fim do periodo (inclusive).
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: Sessoes do periodo com a situacao da escala
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/EscalaResumo' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /sessions/{id}/schedules:
+    post:
+      tags: [escalas]
+      summary: Criar a escala de uma sessao
+      description: >-
+        A sessao precisa estar `prevista` ou `aberta` (409
+        `sessao_em_estado_invalido`). Uma escala por sessao: a segunda responde
+        409 `escala_existente`. O divisor de auxiliares e copiado do EBI no
+        momento da criacao. Membro fora da equipe, sem vinculo vigente na data
+        ou com papel incompativel responde 422 `membro_inelegivel`; a mesma
+        pessoa duas vezes, 422 `membro_ja_escalado`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/SessaoId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EscalaCriacaoInput' }
+      responses:
+        '201':
+          description: Escala criada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EscalaEnvelope' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /schedules/{id}:
+    get:
+      tags: [escalas]
+      summary: Detalhe da escala
+      description: >-
+        Sessao, equipe minima calculada e membros com nome, vigencia e
+        conflitos. Exige `escala.ler`; escala inexistente ou fora do alcance
+        responde 404.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/SessaoId'
+      responses:
+        '200':
+          description: Escala
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EscalaEnvelope' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    patch:
+      tags: [escalas]
+      summary: Alterar a estimativa da escala
+      description: >-
+        Toda alteracao desfaz a aprovacao: a escala volta a `prevista`,
+        `aprovado_por`/`aprovado_em` sao limpos, o divisor atual do EBI e
+        copiado, a confirmacao e mantida e as trocas pendentes sao canceladas
+        (`escala.troca_cancelada`).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/SessaoId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EscalaEstimativaInput' }
+      responses:
+        '200':
+          description: Escala alterada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EscalaEnvelope' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /schedules/{id}/members:
+    post:
+      tags: [escalas]
+      summary: Incluir membro na escala
+      description: >-
+        Quem foi substituido pode ser reincluido (linha nova). Quem ja ocupa
+        vaga responde 422 `membro_ja_escalado`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/SessaoId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EscalaMembroInput' }
+      responses:
+        '200':
+          description: Escala com o novo membro
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EscalaEnvelope' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /schedule-members/{id}:
+    patch:
+      tags: [escalas]
+      summary: Mudar a funcao de um membro
+      description: >-
+        A funcao nova precisa ser permitida pelo papel vigente (422
+        `membro_inelegivel`); membro ja substituido responde 409
+        `membro_em_estado_invalido`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/SessaoId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EscalaFuncaoInput' }
+      responses:
+        '200':
+          description: Escala atualizada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EscalaEnvelope' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+    delete:
+      tags: [escalas]
+      summary: Retirar membro da escala
+      description: >-
+        O membro sai da escala e a escala volta a `prevista`. Membro ja
+        substituido responde 409 `membro_em_estado_invalido`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/SessaoId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Escala sem o membro
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EscalaEnvelope' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
   /ebis/{id}/sessions:
     get:
       tags: [sessions]
@@ -2614,6 +2818,90 @@ components:
           type: array
           description: Papeis de equipe vigentes agrupados (coordenadora, coordenadora_chefe, auxiliar).
           items: { type: string }
+
+    EscalaEquipeMembro:
+      $ref: '#/components/schemas/EscalaMembro'
+
+    EscalaCriacaoInput:
+      type: object
+      required: [estimativa_participantes]
+      properties:
+        estimativa_participantes: { type: integer, minimum: 0, maximum: 65535 }
+        membros:
+          type: array
+          items: { $ref: '#/components/schemas/EscalaMembroInput' }
+    EscalaEstimativaInput:
+      type: object
+      required: [estimativa_participantes]
+      properties:
+        estimativa_participantes: { type: integer, minimum: 0, maximum: 65535 }
+    EscalaMembroInput:
+      type: object
+      required: [usuario_id, funcao]
+      properties:
+        usuario_id: { type: string }
+        funcao: { type: string, enum: [coordenadora, auxiliar] }
+    EscalaFuncaoInput:
+      type: object
+      required: [funcao]
+      properties:
+        funcao: { type: string, enum: [coordenadora, auxiliar] }
+    EscalaEnvelope:
+      type: object
+      properties:
+        escala: { $ref: '#/components/schemas/Escala' }
+    EscalaResumo:
+      type: object
+      properties:
+        sessao_id: { type: string }
+        inicio_previsto: { type: string, format: date-time }
+        fim_previsto: { type: string, format: date-time }
+        sessao_status: { type: string }
+        escala_id: { type: [string, 'null'] }
+        situacao:
+          type: string
+          enum: [sem_escala, cancelada, abaixo_do_minimo, aguardando_aprovacao, aprovada]
+        confirmados: { type: integer }
+        membros: { type: integer }
+    Escala:
+      type: object
+      properties:
+        id: { type: string }
+        sessao_id: { type: string }
+        ebi_id: { type: string }
+        igreja_id: { type: string }
+        status: { type: string, enum: [prevista, aprovada] }
+        situacao:
+          type: string
+          enum: [cancelada, abaixo_do_minimo, aguardando_aprovacao, aprovada]
+        estimativa_participantes: { type: integer }
+        participantes_por_auxiliar: { type: integer }
+        aprovado_por: { type: [string, 'null'] }
+        aprovado_em: { type: [string, 'null'], format: date-time }
+        sessao:
+          type: object
+          properties:
+            inicio_previsto: { type: string, format: date-time }
+            fim_previsto: { type: string, format: date-time }
+            status: { type: string }
+        equipe_minima: { type: object, description: Calculo da equipe minima (ver CalculadoraEquipeMinima). }
+        membros:
+          type: array
+          items: { $ref: '#/components/schemas/EscalaMembro' }
+        presenca_equipe_pendente: { type: boolean }
+    EscalaMembro:
+      type: object
+      properties:
+        id: { type: string }
+        usuario_id: { type: string }
+        nome: { type: string }
+        funcao: { type: string, enum: [coordenadora, auxiliar] }
+        status: { type: string, enum: [escalado, confirmado, troca_solicitada, substituido] }
+        confirmado_em: { type: [string, 'null'], format: date-time }
+        presente: { type: [boolean, 'null'] }
+        substitui_membro_id: { type: [string, 'null'] }
+        sem_vinculo: { type: boolean }
+        conflitos: { type: array, items: { type: object } }
     Sessao:
       type: object
       properties:

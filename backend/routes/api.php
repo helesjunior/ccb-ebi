@@ -12,6 +12,8 @@ use App\Http\Controllers\Api\V1\CentralController;
 use App\Http\Controllers\Api\V1\ChurchController;
 use App\Http\Controllers\Api\V1\EbiController;
 use App\Http\Controllers\Api\V1\EquipeEbiController;
+use App\Http\Controllers\Api\V1\EscalaController;
+use App\Http\Controllers\Api\V1\EscalaMembroController;
 use App\Http\Controllers\Api\V1\GuardianController;
 use App\Http\Controllers\Api\V1\GuardianRequestController;
 use App\Http\Controllers\Api\V1\HealthController;
@@ -208,6 +210,24 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         // Equipe do EBI para montar a escala (E07): quem pode ser escalado.
         Route::get('ebis/{id}/team', [EquipeEbiController::class, 'index'])
             ->name('ebis.team');
+
+        // Escalas (E07, RF-07): a autorizacao e feita no controller
+        // (`AutorizacaoEscala`), que distingue 403 de 404 por territorio.
+        Route::get('ebis/{id}/schedules', [EscalaController::class, 'index'])
+            ->name('schedules.index');
+        Route::middleware(IdempotenciaMiddleware::class)->group(function (): void {
+            Route::post('sessions/{id}/schedules', [EscalaController::class, 'store'])
+                ->name('schedules.store');
+            Route::patch('schedules/{id}', [EscalaController::class, 'update'])
+                ->name('schedules.update');
+            Route::post('schedules/{id}/members', [EscalaMembroController::class, 'store'])
+                ->name('schedules.members.store');
+            Route::patch('schedule-members/{id}', [EscalaMembroController::class, 'update'])
+                ->name('schedule-members.update');
+            Route::delete('schedule-members/{id}', [EscalaMembroController::class, 'destroy'])
+                ->name('schedule-members.destroy');
+        });
+        Route::get('schedules/{id}', [EscalaController::class, 'show'])->name('schedules.show');
 
         Route::get('ebis/{id}/agenda', [AgendaController::class, 'index'])->name('agenda.index');
         Route::post('ebis/{id}/agenda', [AgendaController::class, 'store'])
