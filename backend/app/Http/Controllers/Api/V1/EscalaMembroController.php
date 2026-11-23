@@ -30,7 +30,7 @@ class EscalaMembroController
     {
         $this->autorizarPelaEscala($request, $escalaId);
 
-        return $this->resposta($this->consulta->referencia((string) $this->gerir->incluirMembro(
+        return $this->resposta($request, $this->consulta->referencia((string) $this->gerir->incluirMembro(
             $escalaId,
             (string) $request->validated('usuario_id'),
             (string) $request->validated('funcao'),
@@ -42,14 +42,14 @@ class EscalaMembroController
     {
         $this->autorizarPeloMembro($request, $id);
 
-        return $this->resposta($this->consulta->referencia((string) $this->gerir->mudarFuncao($id, (string) $request->validated('funcao'), $this->autorId($request))->id));
+        return $this->resposta($request, $this->consulta->referencia((string) $this->gerir->mudarFuncao($id, (string) $request->validated('funcao'), $this->autorId($request))->id));
     }
 
     public function destroy(Request $request, string $id): JsonResponse
     {
         $this->autorizarPeloMembro($request, $id);
 
-        return $this->resposta($this->consulta->referencia((string) $this->gerir->retirarMembro($id, $this->autorId($request))->id));
+        return $this->resposta($request, $this->consulta->referencia((string) $this->gerir->retirarMembro($id, $this->autorId($request))->id));
     }
 
     /**
@@ -76,9 +76,14 @@ class EscalaMembroController
         return $referencia;
     }
 
-    private function resposta(?EscalaRef $referencia): JsonResponse
+    private function resposta(Request $request, ?EscalaRef $referencia): JsonResponse
     {
-        $detalhe = $referencia === null ? null : $this->consulta->detalhe($referencia->id, null);
+        if ($referencia === null) {
+            throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Escala não encontrada.');
+        }
+
+        $visao = $this->autorizacao->visao($request, $this->consulta->ebisEmConflito($referencia->id));
+        $detalhe = $this->consulta->detalhe($referencia->id, $visao);
         if ($detalhe === null) {
             throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Escala não encontrada.');
         }

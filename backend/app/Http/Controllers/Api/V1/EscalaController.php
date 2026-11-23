@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Escalas\Contracts\ConsultarEscala;
 use App\Domain\Escalas\Contracts\EscalaRef;
+use App\Domain\Escalas\Contracts\EscalaVisao;
 use App\Domain\Escalas\Contracts\GerirEscala;
 use App\Domain\Identidade\Support\Operacoes;
 use App\Domain\Sessoes\Contracts\ConsultarSessao;
@@ -54,7 +55,7 @@ class EscalaController
             $this->autorId($request),
         );
 
-        return new JsonResponse(['escala' => $this->consulta->detalheDaEscala($escala, $this->autorId($request))], 201);
+        return new JsonResponse(['escala' => $this->consulta->detalheDaEscala($escala, EscalaVisao::interna($this->autorId($request)))], 201);
     }
 
     public function show(Request $request, string $id): JsonResponse
@@ -65,7 +66,7 @@ class EscalaController
         }
         $this->autorizacao->garantir($request, Operacoes::ESCALA_LER, $referencia->ebiId);
 
-        return $this->resposta($referencia);
+        return $this->resposta($request, $referencia);
     }
 
     public function update(AlterarEscalaRequest $request, string $id): JsonResponse
@@ -73,7 +74,7 @@ class EscalaController
         $referencia = $this->autorizarGerenciar($request, $id);
         $this->gerir->alterarEstimativa($id, (int) $request->validated('estimativa_participantes'), $this->autorId($request));
 
-        return $this->resposta($referencia);
+        return $this->resposta($request, $referencia);
     }
 
     private function autorizarGerenciar(Request $request, string $escalaId): EscalaRef
@@ -85,9 +86,14 @@ class EscalaController
         return $referencia;
     }
 
-    private function resposta(?EscalaRef $referencia, int $status = 200): JsonResponse
+    private function resposta(Request $request, ?EscalaRef $referencia, int $status = 200): JsonResponse
     {
-        $detalhe = $referencia === null ? null : $this->consulta->detalhe($referencia->id, null);
+        if ($referencia === null) {
+            throw $this->naoEncontrada();
+        }
+
+        $visao = $this->autorizacao->visao($request, $this->consulta->ebisEmConflito($referencia->id));
+        $detalhe = $this->consulta->detalhe($referencia->id, $visao);
         if ($detalhe === null) {
             throw $this->naoEncontrada();
         }

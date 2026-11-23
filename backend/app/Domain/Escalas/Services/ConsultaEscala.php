@@ -4,6 +4,7 @@ namespace App\Domain\Escalas\Services;
 
 use App\Domain\Escalas\Contracts\ConsultarEscala;
 use App\Domain\Escalas\Contracts\EscalaRef;
+use App\Domain\Escalas\Contracts\EscalaVisao;
 use App\Domain\Escalas\Models\Escala;
 use App\Domain\Escalas\Models\EscalaMembro;
 use App\Domain\Identidade\Contracts\ConsultarEquipeEbi;
@@ -32,13 +33,14 @@ class ConsultaEscala implements ConsultarEscala
         private readonly ConsultarSessao $sessoes,
         private readonly ConsultarEquipeEbi $equipe,
         private readonly AvaliadorEquipe $avaliador,
+        private readonly DetectorConflito $conflitos,
     ) {}
 
-    public function detalhe(string $escalaId, ?string $leitorId): ?array
+    public function detalhe(string $escalaId, EscalaVisao $visao): ?array
     {
         $escala = Escala::query()->find($escalaId);
 
-        return $escala === null ? null : $this->detalheDaEscala($escala, $leitorId);
+        return $escala === null ? null : $this->detalheDaEscala($escala, $visao);
     }
 
     public function referencia(string $escalaId): ?EscalaRef
@@ -55,13 +57,38 @@ class ConsultaEscala implements ConsultarEscala
         return $escala === null ? null : $this->ref($escala);
     }
 
+    public function ebisEmConflito(string $escalaId): array
+    {
+        $escala = Escala::query()->find($escalaId);
+
+        return $escala === null ? [] : $this->conflitos->ebisDosConflitos($this->mapaDeConflitos($escala));
+    }
+
+    /**
+     * Conflitos por usuario dos membros ativos da escala.
+     *
+     * @return array<string, array<int, IntervaloSessao>>
+     */
+    private function mapaDeConflitos(Escala $escala): array
+    {
+        $usuarioIds = $escala->membros()
+            ->where('status', '!=', EscalaMembro::STATUS_SUBSTITUIDO)
+            ->pluck('usuario_id')
+            ->map(fn ($id): string => (string) $id)
+            ->unique()->values()->all();
+
+        return $this->conflitos->conflitos($usuarioIds, $this->sessao($escala), (string) $escala->id);
+    }
+
     /** @return array<string, mixed> */
-    public function detalheDaEscala(Escala $escala, ?string $leitorId): array
+    public function detalheDaEscala(Escala $escala, EscalaVisao $visao): array
     {
         $sessao = $this->sessao($escala);
         $membros = $escala->membros()->orderBy('created_at')->orderBy('id')->get();
         $semVinculo = $this->avaliador->semVinculo($escala, $sessao);
-        $nomes = $this->equipe->nomes($membros->pluck('usuario_id')->map(fn ($id): string => (string) $id)->unique()->values()->all());
+        $usuarioIds = $membros->pluck('usuario_id')->map(fn ($id): string => (string) $id)->unique()->values()->all();
+        $nomes = $this->equipe->nomes($usuarioIds);
+        $conflitos = $this->conflitos->conflitos($usuarioIds, $sessao, (string) $escala->id);
 
         return [
             'id' => (string) $escala->id,
@@ -90,11 +117,35 @@ class ConsultaEscala implements ConsultarEscala
                 'presente' => $membro->presente,
                 'substitui_membro_id' => $membro->substitui_membro_id === null ? null : (string) $membro->substitui_membro_id,
                 'sem_vinculo' => isset($semVinculo[(string) $membro->id]),
-                'conflitos' => [],
+                'conflitos' => $this->conflitos->apresentar(
+                    $conflitos[(string) $membro->usuario_id] ?? [],
+                    $this->nomesDosConflitosLivres($conflitos[(string) $membro->usuario_id] ?? [], $membro, $visao),
+                ),
             ])->all(),
             // Preenchido pela Task 12 (presenca da equipe).
             'presenca_equipe_pendente' => false,
         ];
+    }
+
+    /**
+     * Nomes do conflito aparecem quando a leitura e interna, quando o conflito
+     * e da propria pessoa ou quando o leitor alcanca o EBI da outra sessao.
+     *
+     * @param  array<int, IntervaloSessao>  $doUsuario
+     */
+    private function nomesDosConflitosLivres(array $doUsuario, EscalaMembro $membro, EscalaVisao $visao): bool
+    {
+        if ($visao->visaoAmpla || (string) $membro->usuario_id === $visao->leitorId) {
+            return true;
+        }
+
+        foreach ($doUsuario as $outra) {
+            if (in_array($outra->ebiId, $visao->ebisVisiveis, true)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function situacao(Escala $escala, IntervaloSessao $sessao): string

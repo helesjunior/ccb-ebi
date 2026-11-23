@@ -2901,7 +2901,21 @@ components:
         presente: { type: [boolean, 'null'] }
         substitui_membro_id: { type: [string, 'null'] }
         sem_vinculo: { type: boolean }
-        conflitos: { type: array, items: { type: object } }
+        conflitos:
+          type: array
+          description: >-
+            CA-12: outras sessoes da pessoa que se sobrepoem a esta. So aviso,
+            nunca bloqueia. O horario aparece para qualquer leitor; os nomes so
+            para quem alcanca o outro EBI ou para a propria pessoa.
+          items: { $ref: '#/components/schemas/ConflitoEscala' }
+    ConflitoEscala:
+      type: object
+      properties:
+        sessao_id: { type: [string, 'null'], description: 'Nulo quando o leitor não alcança o outro EBI.' }
+        inicio: { type: string, format: date-time }
+        fim: { type: string, format: date-time }
+        igreja_nome: { type: [string, 'null'] }
+        ebi_nome: { type: [string, 'null'] }
     Sessao:
       type: object
       properties:

@@ -4660,7 +4660,18 @@ export interface components {
             presente?: boolean | null;
             substitui_membro_id?: string | null;
             sem_vinculo?: boolean;
-            conflitos?: Record<string, never>[];
+            /** @description CA-12: outras sessoes da pessoa que se sobrepoem a esta. So aviso, nunca bloqueia. O horario aparece para qualquer leitor; os nomes so para quem alcanca o outro EBI ou para a propria pessoa. */
+            conflitos?: components["schemas"]["ConflitoEscala"][];
+        };
+        ConflitoEscala: {
+            /** @description Nulo quando o leitor não alcança o outro EBI. */
+            sessao_id?: string | null;
+            /** Format: date-time */
+            inicio?: string;
+            /** Format: date-time */
+            fim?: string;
+            igreja_nome?: string | null;
+            ebi_nome?: string | null;
         };
         Sessao: {
             id?: string;

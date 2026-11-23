@@ -2,8 +2,10 @@
 
 namespace App\Http\Support;
 
+use App\Domain\Escalas\Contracts\EscalaVisao;
 use App\Domain\Identidade\Contracts\AutorizarOperacao;
 use App\Domain\Identidade\Services\ContextoAtuacao;
+use App\Domain\Identidade\Support\Operacoes;
 use App\Support\ProblemException;
 use Illuminate\Http\Request;
 
@@ -29,5 +31,30 @@ class AutorizacaoEscala
         }
 
         return $contexto;
+    }
+
+    /**
+     * Visao de leitura do conflito (CA-12): alem do EBI dono da escala, quais
+     * outros EBIs o leitor alcanca com `escala.ler`. A propria pessoa ve o
+     * proprio conflito mesmo fora deles.
+     *
+     * @param  array<int, string>  $outrosEbis  EBIs de sessoes em conflito
+     */
+    public function visao(Request $request, array $outrosEbis): EscalaVisao
+    {
+        $contexto = $request->attributes->get('contexto_atuacao');
+
+        if (! $contexto instanceof ContextoAtuacao) {
+            return new EscalaVisao;
+        }
+
+        $visiveis = [];
+        foreach (array_unique($outrosEbis) as $ebiId) {
+            if ($this->autorizar->permite($contexto, Operacoes::ESCALA_LER, 'ebi', $ebiId)) {
+                $visiveis[] = $ebiId;
+            }
+        }
+
+        return new EscalaVisao($contexto->usuarioId, $visiveis);
     }
 }
