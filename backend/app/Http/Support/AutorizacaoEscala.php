@@ -4,6 +4,7 @@ namespace App\Http\Support;
 
 use App\Domain\Escalas\Contracts\EscalaVisao;
 use App\Domain\Identidade\Contracts\AutorizarOperacao;
+use App\Domain\Identidade\Contracts\ContextoDecisao;
 use App\Domain\Identidade\Services\ContextoAtuacao;
 use App\Domain\Identidade\Support\Operacoes;
 use App\Support\ProblemException;
@@ -56,5 +57,26 @@ class AutorizacaoEscala
         }
 
         return new EscalaVisao($contexto->usuarioId, $visiveis);
+    }
+
+    /**
+     * Contexto de atuacao da requisicao em primitivos, para o dominio. Sem
+     * contexto resolvido devolve um vazio, que nunca satisfaz nenhuma regra de
+     * papel (a autorizacao ja recusou antes).
+     */
+    public function contexto(Request $request): ContextoDecisao
+    {
+        $contexto = $request->attributes->get('contexto_atuacao');
+
+        if (! $contexto instanceof ContextoAtuacao) {
+            return new ContextoDecisao('', '', '', '');
+        }
+
+        return new ContextoDecisao(
+            (string) $contexto->usuarioId,
+            $contexto->papelCodigo,
+            $contexto->tipoEscopo,
+            $contexto->escopoId,
+        );
     }
 }

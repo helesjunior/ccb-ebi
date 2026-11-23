@@ -8,6 +8,7 @@ use App\Domain\Escalas\Models\Escala;
 use App\Domain\Escalas\Models\EscalaMembro;
 use App\Domain\Escalas\Models\SolicitacaoTrocaEscala;
 use App\Domain\Identidade\Contracts\ConsultarEquipeEbi;
+use App\Domain\Identidade\Contracts\ContextoDecisao;
 use App\Domain\Organizacao\Contracts\ConsultarEbi;
 use App\Domain\Organizacao\Contracts\EbiDados;
 use App\Domain\Sessoes\Contracts\ConsultarSessao;
@@ -43,6 +44,8 @@ class GerenciadorEscala implements GerirEscala
         private readonly ConsultarEquipeEbi $equipe,
         private readonly TravaEscala $trava,
         private readonly RegistrarEvento $auditoria,
+        private readonly QuemAprova $quemAprova,
+        private readonly AvaliadorEquipe $avaliador,
     ) {}
 
     public function criar(string $sessaoId, int $estimativa, array $membros, ?string $autorId): Escala
@@ -94,7 +97,7 @@ class GerenciadorEscala implements GerirEscala
                 throw $e;
             }
 
-            throw new ProblemException('escala_existente', 'Escala jÃ¡ existe', 409, 'Esta sessÃ£o jÃ¡ possui uma escala.');
+            throw new ProblemException('escala_existente', 'Escala já existe', 409, 'Esta sessão já possui uma escala.');
         }
     }
 
@@ -132,10 +135,10 @@ class GerenciadorEscala implements GerirEscala
         return $this->trava->executar($escalaId, function (Escala $escala) use ($membroId, $autorId): Escala {
             $sessao = $this->sessaoEditavel((string) $escala->sessao_id);
             $membro = $escala->membros()->whereKey($membroId)->first()
-                ?? throw new ProblemException('not_found', 'Recurso nÃ£o encontrado', 404, 'Membro nÃ£o encontrado.');
+                ?? throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Membro não encontrado.');
 
             if ($membro->status === EscalaMembro::STATUS_SUBSTITUIDO) {
-                throw new ProblemException('membro_em_estado_invalido', 'Membro em estado invÃ¡lido', 409, 'Este membro jÃ¡ foi substituÃ­do.');
+                throw new ProblemException('membro_em_estado_invalido', 'Membro em estado inválido', 409, 'Este membro já foi substituído.');
             }
 
             $membro->delete();
@@ -151,10 +154,10 @@ class GerenciadorEscala implements GerirEscala
         return $this->trava->executar($escalaId, function (Escala $escala) use ($membroId, $funcao, $autorId): Escala {
             $sessao = $this->sessaoEditavel((string) $escala->sessao_id);
             $membro = $escala->membros()->whereKey($membroId)->first()
-                ?? throw new ProblemException('not_found', 'Recurso nÃ£o encontrado', 404, 'Membro nÃ£o encontrado.');
+                ?? throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Membro não encontrado.');
 
             if ($membro->status === EscalaMembro::STATUS_SUBSTITUIDO) {
-                throw new ProblemException('membro_em_estado_invalido', 'Membro em estado invÃ¡lido', 409, 'Este membro jÃ¡ foi substituÃ­do.');
+                throw new ProblemException('membro_em_estado_invalido', 'Membro em estado inválido', 409, 'Este membro já foi substituído.');
             }
 
             $this->validarMembros(
@@ -168,6 +171,59 @@ class GerenciadorEscala implements GerirEscala
             }
 
             return $this->salvarAlteracao($escala, $sessao, $autorId);
+        });
+    }
+
+    /**
+     * Aprova a escala, na ordem: quem aprova, estado da escala, estado da
+     * sessao, vinculos dos membros e equipe minima. A primeira guarda que
+     * recusa deixa a escala como estava.
+     */
+    public function aprovar(string $escalaId, ContextoDecisao $contexto, ?string $autorId): Escala
+    {
+        return $this->trava->executar($escalaId, function (Escala $escala) use ($contexto, $autorId): Escala {
+            $sessao = $this->sessao((string) $escala->sessao_id);
+
+            if (! $this->quemAprova->podeAprovarEscala($contexto, $sessao->ebiId, $sessao->igrejaId)) {
+                throw new ProblemException('aprovador_invalido', 'Aprovador inválido', 403, 'Você não pode aprovar a escala deste EBI.');
+            }
+
+            if ($escala->status === Escala::STATUS_APROVADA) {
+                throw new ProblemException('escala_em_estado_invalido', 'Escala em estado inválido', 409, 'Esta escala já está aprovada.');
+            }
+
+            if (! in_array($sessao->status, self::STATUS_SESSAO_ACEITOS, true)) {
+                throw new ProblemException('sessao_em_estado_invalido', 'Sessão em estado inválido', 409, 'Só é possível aprovar a escala de uma sessão prevista ou aberta.');
+            }
+
+            if ($this->avaliador->semVinculo($escala, $sessao) !== []) {
+                throw new ProblemException('membro_sem_vinculo', 'Membro sem vínculo', 422, 'Há membro escalado sem vínculo vigente na data da sessão.');
+            }
+
+            if (! $this->avaliador->equipeMinima($escala, $sessao)['atingida']) {
+                throw new ProblemException('equipe_minima_nao_atingida', 'Equipe mínima não atingida', 422, 'A escala ainda não atinge a equipe mínima desta sessão.');
+            }
+
+            $escala->forceFill([
+                'status' => Escala::STATUS_APROVADA,
+                'aprovado_por' => $autorId,
+                'aprovado_em' => now(),
+            ])->save();
+
+            $this->auditoria->registrar([
+                'acao' => 'escala.aprovada',
+                'recurso' => 'escala',
+                'ator_id' => $autorId,
+                'origem' => 'api',
+                'escopo' => 'ebi:'.$sessao->ebiId,
+                'metadados_minimizados' => [
+                    'escala_id' => (string) $escala->id,
+                    'sessao_id' => $sessao->id,
+                    'status' => Escala::STATUS_APROVADA,
+                ],
+            ]);
+
+            return $escala->refresh();
         });
     }
 
@@ -238,20 +294,28 @@ class GerenciadorEscala implements GerirEscala
     }
 
     /**
+     * Intervalo da sessao pelo id; inexistente e 404 (sem olhar o status).
+     */
+    private function sessao(string $sessaoId): IntervaloSessao
+    {
+        return $this->sessoes->intervalos([$sessaoId])[$sessaoId]
+            ?? throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Sessão não encontrada.');
+    }
+
+    /**
      * Sessao que aceita escala: `prevista` ou `aberta`. Inexistente e 404;
      * cancelada/encerrada e 409.
      */
     private function sessaoEditavel(string $sessaoId): IntervaloSessao
     {
-        $sessao = $this->sessoes->intervalos([$sessaoId])[$sessaoId]
-            ?? throw new ProblemException('not_found', 'Recurso nÃ£o encontrado', 404, 'SessÃ£o nÃ£o encontrada.');
+        $sessao = $this->sessao($sessaoId);
 
         if (! in_array($sessao->status, self::STATUS_SESSAO_ACEITOS, true)) {
             throw new ProblemException(
                 'sessao_em_estado_invalido',
-                'SessÃ£o em estado invÃ¡lido',
+                'Sessão em estado inválido',
                 409,
-                'SÃ³ Ã© possÃ­vel montar a escala de uma sessÃ£o prevista ou aberta.',
+                'SÃ³ Ã© possÃ­vel montar a escala de uma sessão prevista ou aberta.',
             );
         }
 
@@ -261,7 +325,7 @@ class GerenciadorEscala implements GerirEscala
     private function ebi(string $ebiId): EbiDados
     {
         return $this->ebis->dados($ebiId)
-            ?? throw new ProblemException('not_found', 'Recurso nÃ£o encontrado', 404, 'EBI nÃ£o encontrada.');
+            ?? throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'EBI não encontrada.');
     }
 
     /**
@@ -281,7 +345,7 @@ class GerenciadorEscala implements GerirEscala
             $funcao = $this->funcaoValida($membro['funcao']);
 
             if (isset($vistos[$membro['usuario_id']])) {
-                throw new ProblemException('membro_ja_escalado', 'Membro jÃ¡ escalado', 422, 'Esta pessoa jÃ¡ estÃ¡ na escala desta sessÃ£o.');
+                throw new ProblemException('membro_ja_escalado', 'Membro já escalado', 422, 'Esta pessoa já está na escala desta sessão.');
             }
             $vistos[$membro['usuario_id']] = true;
 
@@ -306,18 +370,18 @@ class GerenciadorEscala implements GerirEscala
         if ($papeis === null || array_intersect($papeis, self::PAPEIS_POR_FUNCAO[$funcao]) === []) {
             throw new ProblemException(
                 'membro_inelegivel',
-                'Membro inelegÃ­vel',
+                'Membro inelegível',
                 422,
                 $papeis === null
-                    ? 'Esta pessoa nÃ£o pertence Ã  equipe deste EBI.'
-                    : 'O papel desta pessoa nÃ£o permite esta funÃ§Ã£o na escala.',
+                    ? 'Esta pessoa não pertence Ã  equipe deste EBI.'
+                    : 'O papel desta pessoa não permite esta funÃ§Ã£o na escala.',
             );
         }
 
         $vigencias = $this->equipe->vigencias([$usuarioId], $sessao->ebiId, $sessao->igrejaId)[$usuarioId] ?? [];
 
         if (! $this->vigenteNaData($vigencias, $sessao->dataLocal, $funcao)) {
-            throw new ProblemException('membro_inelegivel', 'Membro inelegÃ­vel', 422, 'O vÃ­nculo desta pessoa nÃ£o estÃ¡ vigente na data da sessÃ£o.');
+            throw new ProblemException('membro_inelegivel', 'Membro inelegível', 422, 'O vínculo desta pessoa não está vigente na data da sessão.');
         }
     }
 
@@ -347,7 +411,7 @@ class GerenciadorEscala implements GerirEscala
     private function funcaoValida(string $funcao): string
     {
         if (! array_key_exists($funcao, self::PAPEIS_POR_FUNCAO)) {
-            throw new ProblemException('membro_invalido', 'Membro invÃ¡lido', 422, 'FunÃ§Ã£o invÃ¡lida na escala.');
+            throw new ProblemException('membro_invalido', 'Membro inválido', 422, 'Função inválida na escala.');
         }
 
         return $funcao;

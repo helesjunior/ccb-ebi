@@ -3,6 +3,7 @@
 namespace App\Domain\Escalas\Contracts;
 
 use App\Domain\Escalas\Models\Escala;
+use App\Domain\Identidade\Contracts\ContextoDecisao;
 
 interface GerirEscala
 {
@@ -20,4 +21,11 @@ interface GerirEscala
     public function retirarMembro(string $membroId, ?string $autorId): Escala;
 
     public function mudarFuncao(string $membroId, string $funcao, ?string $autorId): Escala;
+
+    /**
+     * Aprova a escala. Quem pode aprovar e decidido pelo `QuemAprova`; as
+     * demais guardas (estado da escala e da sessao, vinculos e equipe minima)
+     * rodam na ordem do plano.
+     */
+    public function aprovar(string $escalaId, ContextoDecisao $contexto, ?string $autorId): Escala;
 }

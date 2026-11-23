@@ -77,22 +77,43 @@ class EscalaController
         return $this->resposta($request, $referencia);
     }
 
+    /**
+     * Aprovacao (RF-07): o territorio exige `escala.aprovar`; quem aprova de
+     * fato (chefe vigente, ou `adm_igreja` sem chefe) e decidido no dominio.
+     */
+    public function aprovar(Request $request, string $id): JsonResponse
+    {
+        $referencia = $this->autorizarPelaOperacao($request, $id, Operacoes::ESCALA_APROVAR);
+
+        $this->gerir->aprovar($id, $this->autorizacao->contexto($request), $this->autorId($request));
+
+        // Quem aprova decide sobre a escala: ve os conflitos com nomes.
+        return $this->resposta($request, $referencia, visaoAmpla: true);
+    }
+
     private function autorizarGerenciar(Request $request, string $escalaId): EscalaRef
+    {
+        return $this->autorizarPelaOperacao($request, $escalaId, Operacoes::ESCALA_GERENCIAR);
+    }
+
+    private function autorizarPelaOperacao(Request $request, string $escalaId, string $operacao): EscalaRef
     {
         $referencia = $this->consulta->referencia($escalaId)
             ?? throw $this->naoEncontrada();
-        $this->autorizacao->garantir($request, Operacoes::ESCALA_GERENCIAR, $referencia->ebiId);
+        $this->autorizacao->garantir($request, $operacao, $referencia->ebiId);
 
         return $referencia;
     }
 
-    private function resposta(Request $request, ?EscalaRef $referencia, int $status = 200): JsonResponse
+    private function resposta(Request $request, ?EscalaRef $referencia, int $status = 200, bool $visaoAmpla = false): JsonResponse
     {
         if ($referencia === null) {
             throw $this->naoEncontrada();
         }
 
-        $visao = $this->autorizacao->visao($request, $this->consulta->ebisEmConflito($referencia->id));
+        $visao = $visaoAmpla
+            ? EscalaVisao::interna($this->autorId($request))
+            : $this->autorizacao->visao($request, $this->consulta->ebisEmConflito($referencia->id));
         $detalhe = $this->consulta->detalhe($referencia->id, $visao);
         if ($detalhe === null) {
             throw $this->naoEncontrada();

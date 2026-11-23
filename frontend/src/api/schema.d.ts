@@ -2347,6 +2347,56 @@ export interface paths {
         };
         trace?: never;
     };
+    "/schedules/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Aprovar a escala
+         * @description Exige `escala.aprovar`. Quem aprova de fato e a coordenadora chefe vigente do EBI; sem chefe vigente, o `adm_igreja` da igreja. Outro papel responde 403 `aprovador_invalido`. Guardas, nesta ordem: escala ja `aprovada` (409 `escala_em_estado_invalido`), sessao cancelada ou encerrada (409 `sessao_em_estado_invalido`), membro sem vinculo vigente na data (422 `membro_sem_vinculo`) e equipe minima nao atingida (422 `equipe_minima_nao_atingida`). Nenhuma recusa altera a escala. Sucesso grava `aprovado_por`/`aprovado_em` e registra `escala.aprovada`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: components["parameters"]["SessaoId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Escala aprovada */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EscalaEnvelope"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                409: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/schedules/{id}/members": {
         parameters: {
             query?: never;

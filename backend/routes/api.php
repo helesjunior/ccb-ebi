@@ -226,6 +226,8 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
                 ->name('schedule-members.update');
             Route::delete('schedule-members/{id}', [EscalaMembroController::class, 'destroy'])
                 ->name('schedule-members.destroy');
+            Route::post('schedules/{id}/approve', [EscalaController::class, 'aprovar'])
+                ->name('schedules.approve');
         });
         Route::get('schedules/{id}', [EscalaController::class, 'show'])->name('schedules.show');
 
