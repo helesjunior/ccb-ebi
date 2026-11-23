@@ -2538,6 +2538,106 @@ export interface paths {
         };
         trace?: never;
     };
+    "/schedule-members/{id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirmar a própria vaga na escala
+         * @description Nao exige `escala.gerenciar`: a vaga tem de ser da propria pessoa (vaga de outra ou inexistente responde 404). Guardas, nesta ordem: escala fora de `aprovada` (409 `escala_em_estado_invalido`), sessao cancelada ou encerrada (409 `sessao_em_estado_invalido`), vinculo nao vigente na data (422 `membro_sem_vinculo`) e membro em `troca_solicitada` ou `substituido` (409 `membro_em_estado_invalido`). `escalado` passa a `confirmado` com `confirmado_em` e registra `escala.membro_confirmado`; quem ja confirmou recebe 200 sem novo evento.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: components["parameters"]["SessaoId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Vaga confirmada */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EscalaConfirmacao"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                409: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/schedules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Minhas escalas
+         * @description Vagas da propria pessoa no periodo (datas ISO, no maximo 92 dias), ordenadas por `inicio_previsto`. Nao exige `escala.ler`: o recorte e sempre o do usuario autenticado. Os conflitos (CA-12) sao da propria pessoa, entao vem sempre com os nomes.
+         */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Início do intervalo (inclusive). */
+                    inicio: string;
+                    /** @description Fim do intervalo (inclusive). */
+                    fim: string;
+                };
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Vagas da pessoa no periodo */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["MinhaEscala"][];
+                        };
+                    };
+                };
+                401: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/ebis/{id}/sessions": {
         parameters: {
             query?: never;
@@ -4722,6 +4822,40 @@ export interface components {
             fim?: string;
             igreja_nome?: string | null;
             ebi_nome?: string | null;
+        };
+        EscalaConfirmacao: {
+            membro?: {
+                id?: string;
+                escala_id?: string;
+                usuario_id?: string;
+                /** @enum {string} */
+                funcao?: "coordenadora" | "auxiliar";
+                /** @enum {string} */
+                status?: "escalado" | "confirmado" | "troca_solicitada" | "substituido";
+                /** Format: date-time */
+                confirmado_em?: string | null;
+                presente?: boolean | null;
+            };
+            /** @description CA-12, da propria pessoa. */
+            conflitos?: components["schemas"]["ConflitoEscala"][];
+        };
+        MinhaEscala: {
+            escala_id?: string;
+            membro_id?: string;
+            sessao_id?: string;
+            /** Format: date-time */
+            inicio_previsto?: string;
+            /** Format: date-time */
+            fim_previsto?: string;
+            sessao_status?: string;
+            /** @enum {string} */
+            escala_status?: "prevista" | "aprovada" | "cancelada";
+            /** @enum {string} */
+            funcao?: "coordenadora" | "auxiliar";
+            /** @enum {string} */
+            status?: "escalado" | "confirmado" | "troca_solicitada";
+            presente?: boolean | null;
+            conflitos?: components["schemas"]["ConflitoEscala"][];
         };
         Sessao: {
             id?: string;

@@ -11,6 +11,7 @@ use App\Domain\Identidade\Contracts\ConsultarEquipeEbi;
 use App\Domain\Sessoes\Contracts\ConsultarSessao;
 use App\Domain\Sessoes\Contracts\IntervaloSessao;
 use App\Support\ProblemException;
+use Carbon\CarbonImmutable;
 
 /**
  * Leitura da escala (RF-07): detalhe para a tela e lista das sessoes do EBI
@@ -141,6 +142,97 @@ class ConsultaEscala implements ConsultarEscala
 
         foreach ($doUsuario as $outra) {
             if (in_array($outra->ebiId, $visao->ebisVisiveis, true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function minhas(string $usuarioId, string $inicio, string $fim): array
+    {
+        $vagas = EscalaMembro::query()
+            ->where('usuario_id', $usuarioId)
+            ->where('status', '!=', EscalaMembro::STATUS_SUBSTITUIDO)
+            ->with('escala')
+            ->get();
+
+        /** @var array<int, string> $sessaoIds */
+        $sessaoIds = [];
+        /** @var array<int, EscalaMembro> $noPeriodo */
+        $noPeriodo = [];
+
+        foreach ($vagas as $vaga) {
+            $escala = $vaga->escala;
+            if ($escala instanceof Escala) {
+                $sessaoIds[] = (string) $escala->sessao_id;
+                $noPeriodo[] = $vaga;
+            }
+        }
+
+        $intervalos = $this->sessoes->intervalos(array_values(array_unique($sessaoIds)));
+
+        // O periodo e comparado com o horario previsto da sessao (util, em UTC).
+        $de = CarbonImmutable::parse($inicio, 'UTC');
+        $ate = CarbonImmutable::parse($fim, 'UTC');
+
+        $linhas = [];
+
+        foreach ($noPeriodo as $vaga) {
+            $escala = $vaga->escala;
+            if (! $escala instanceof Escala) {
+                continue;
+            }
+
+            $sessao = $intervalos[(string) $escala->sessao_id] ?? null;
+
+            if ($sessao === null
+                || $sessao->inicioPrevisto->lessThan($de)
+                || ! $sessao->inicioPrevisto->lessThan($ate)) {
+                continue;
+            }
+
+            // Vaga da propria pessoa: o conflito aparece sempre com os nomes.
+            $conflitos = $this->conflitos->conflitos([$usuarioId], $sessao, (string) $escala->id)[$usuarioId] ?? [];
+
+            $linhas[] = [
+                'escala_id' => (string) $escala->id,
+                'membro_id' => (string) $vaga->id,
+                'sessao_id' => $sessao->id,
+                'inicio_previsto' => $sessao->inicioPrevisto->toIso8601String(),
+                'fim_previsto' => $sessao->fimPrevisto->toIso8601String(),
+                'sessao_status' => $sessao->status,
+                'escala_status' => $this->statusDaEscala($escala, $sessao),
+                'funcao' => (string) $vaga->funcao,
+                'status' => (string) $vaga->status,
+                'presente' => $vaga->presente,
+                'conflitos' => $this->conflitos->apresentar($conflitos, true),
+                '_ordem' => $sessao->inicioPrevisto->getTimestamp(),
+            ];
+        }
+
+        usort($linhas, fn (array $a, array $b): int => $a['_ordem'] <=> $b['_ordem']);
+
+        return array_map(function (array $linha): array {
+            unset($linha['_ordem']);
+
+            return $linha;
+        }, $linhas);
+    }
+
+    public function ehMembroVigente(string $escalaId, string $usuarioId): bool
+    {
+        $escala = Escala::query()->find($escalaId);
+
+        if ($escala === null) {
+            return false;
+        }
+
+        $semVinculo = $this->avaliador->semVinculo($escala, $this->sessao($escala));
+        $vagas = $escala->membros()->ativos()->where('usuario_id', $usuarioId)->get(['id']);
+
+        foreach ($vagas as $vaga) {
+            if (! isset($semVinculo[(string) $vaga->id])) {
                 return true;
             }
         }

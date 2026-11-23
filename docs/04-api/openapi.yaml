@@ -1230,6 +1230,72 @@ paths:
         '403': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
         '409': { $ref: '#/components/responses/Problem' }
+  /schedule-members/{id}/confirm:
+    post:
+      tags: [escalas]
+      summary: Confirmar a própria vaga na escala
+      description: >-
+        Nao exige `escala.gerenciar`: a vaga tem de ser da propria pessoa
+        (vaga de outra ou inexistente responde 404). Guardas, nesta ordem:
+        escala fora de `aprovada` (409 `escala_em_estado_invalido`), sessao
+        cancelada ou encerrada (409 `sessao_em_estado_invalido`), vinculo nao
+        vigente na data (422 `membro_sem_vinculo`) e membro em
+        `troca_solicitada` ou `substituido` (409 `membro_em_estado_invalido`).
+        `escalado` passa a `confirmado` com `confirmado_em` e registra
+        `escala.membro_confirmado`; quem ja confirmou recebe 200 sem novo
+        evento.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/SessaoId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Vaga confirmada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EscalaConfirmacao' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /me/schedules:
+    get:
+      tags: [escalas]
+      summary: Minhas escalas
+      description: >-
+        Vagas da propria pessoa no periodo (datas ISO, no maximo 92 dias),
+        ordenadas por `inicio_previsto`. Nao exige `escala.ler`: o recorte e
+        sempre o do usuario autenticado. Os conflitos (CA-12) sao da propria
+        pessoa, entao vem sempre com os nomes.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - name: inicio
+          in: query
+          required: true
+          description: Início do intervalo (inclusive).
+          schema: { type: string, format: date }
+        - name: fim
+          in: query
+          required: true
+          description: Fim do intervalo (inclusive).
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: Vagas da pessoa no periodo
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/MinhaEscala' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
   /ebis/{id}/sessions:
     get:
       tags: [sessions]
@@ -2947,6 +3013,39 @@ components:
         fim: { type: string, format: date-time }
         igreja_nome: { type: [string, 'null'] }
         ebi_nome: { type: [string, 'null'] }
+    EscalaConfirmacao:
+      type: object
+      properties:
+        membro:
+          type: object
+          properties:
+            id: { type: string }
+            escala_id: { type: string }
+            usuario_id: { type: string }
+            funcao: { type: string, enum: [coordenadora, auxiliar] }
+            status: { type: string, enum: [escalado, confirmado, troca_solicitada, substituido] }
+            confirmado_em: { type: [string, 'null'], format: date-time }
+            presente: { type: [boolean, 'null'] }
+        conflitos:
+          type: array
+          description: CA-12, da propria pessoa.
+          items: { $ref: '#/components/schemas/ConflitoEscala' }
+    MinhaEscala:
+      type: object
+      properties:
+        escala_id: { type: string }
+        membro_id: { type: string }
+        sessao_id: { type: string }
+        inicio_previsto: { type: string, format: date-time }
+        fim_previsto: { type: string, format: date-time }
+        sessao_status: { type: string }
+        escala_status: { type: string, enum: [prevista, aprovada, cancelada] }
+        funcao: { type: string, enum: [coordenadora, auxiliar] }
+        status: { type: string, enum: [escalado, confirmado, troca_solicitada] }
+        presente: { type: [boolean, 'null'] }
+        conflitos:
+          type: array
+          items: { $ref: '#/components/schemas/ConflitoEscala' }
     Sessao:
       type: object
       properties:

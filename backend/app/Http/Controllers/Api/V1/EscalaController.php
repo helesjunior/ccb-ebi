@@ -64,7 +64,11 @@ class EscalaController
         if ($referencia === null) {
             throw $this->naoEncontrada();
         }
-        $this->autorizacao->garantir($request, Operacoes::ESCALA_LER, $referencia->ebiId);
+
+        // Quem esta escalado le a propria escala mesmo sem `escala.ler`.
+        if (! $this->consulta->ehMembroVigente($id, $this->autorId($request))) {
+            $this->autorizacao->garantir($request, Operacoes::ESCALA_LER, $referencia->ebiId);
+        }
 
         return $this->resposta($request, $referencia);
     }

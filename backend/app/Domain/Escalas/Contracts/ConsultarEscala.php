@@ -46,4 +46,18 @@ interface ConsultarEscala
      * @return array<string, mixed>
      */
     public function detalheDaEscala(Escala $escala, EscalaVisao $visao): array;
+
+    /**
+     * Vagas ativas da pessoa no periodo (RF-07, "minhas escalas"), em ordem de
+     * inicio. O conflito e da propria pessoa: vem sempre com os nomes.
+     *
+     * @return array<int, array{escala_id: string, membro_id: string, sessao_id: string, inicio_previsto: string, fim_previsto: string, sessao_status: string, escala_status: string, funcao: string, status: string, presente: ?bool, conflitos: array<int, array{sessao_id: ?string, inicio: string, fim: string, igreja_nome: ?string, ebi_nome: ?string}>}>
+     */
+    public function minhas(string $usuarioId, string $inicio, string $fim): array;
+
+    /**
+     * A pessoa ocupa vaga vigente na escala (ativa e com papel vigente na data
+     * da sessao), o que lhe da direito de ler o detalhe.
+     */
+    public function ehMembroVigente(string $escalaId, string $usuarioId): bool;
 }

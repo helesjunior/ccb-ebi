@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\V1\InvitationAcceptController;
 use App\Http\Controllers\Api\V1\InvitationController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MfaController;
+use App\Http\Controllers\Api\V1\MinhasEscalasController;
 use App\Http\Controllers\Api\V1\ParticipantController;
 use App\Http\Controllers\Api\V1\ParticipantMergeController;
 use App\Http\Controllers\Api\V1\PasswordController;
@@ -226,10 +227,15 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
                 ->name('schedule-members.update');
             Route::delete('schedule-members/{id}', [EscalaMembroController::class, 'destroy'])
                 ->name('schedule-members.destroy');
+            Route::post('schedule-members/{id}/confirm', [EscalaMembroController::class, 'confirmar'])
+                ->name('schedule-members.confirm');
             Route::post('schedules/{id}/approve', [EscalaController::class, 'aprovar'])
                 ->name('schedules.approve');
         });
         Route::get('schedules/{id}', [EscalaController::class, 'show'])->name('schedules.show');
+
+        // "Minhas escalas" (E07): as vagas da propria pessoa no periodo.
+        Route::get('me/schedules', [MinhasEscalasController::class, 'index'])->name('me.schedules');
 
         Route::get('ebis/{id}/agenda', [AgendaController::class, 'index'])->name('agenda.index');
         Route::post('ebis/{id}/agenda', [AgendaController::class, 'store'])

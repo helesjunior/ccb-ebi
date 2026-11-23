@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Domain\Escalas\Contracts\ConsultarEscala;
 use App\Domain\Escalas\Contracts\EscalaRef;
 use App\Domain\Escalas\Contracts\GerirEscala;
+use App\Domain\Escalas\Contracts\ParticiparEscala;
 use App\Domain\Identidade\Support\Operacoes;
 use App\Http\Requests\Escalas\IncluirMembroRequest;
 use App\Http\Requests\Escalas\MudarFuncaoRequest;
@@ -24,7 +25,36 @@ class EscalaMembroController
         private readonly AutorizacaoEscala $autorizacao,
         private readonly GerirEscala $gerir,
         private readonly ConsultarEscala $consulta,
+        private readonly ParticiparEscala $participar,
     ) {}
+
+    /**
+     * Confirmacao do proprio membro (RF-07): sem `escala.gerenciar`; a
+     * autorizacao e o dono da vaga, decidido no dominio (vaga de outro e 404).
+     */
+    public function confirmar(Request $request, string $id): JsonResponse
+    {
+        $usuarioId = $this->autorId($request);
+        $referencia = $this->consulta->referenciaDoMembro($id);
+        $membro = $this->participar->confirmar($id, $usuarioId);
+
+        $conflitos = $referencia === null
+            ? []
+            : $this->conflitoDoMembro($request, $referencia, (string) $membro->id);
+
+        return new JsonResponse([
+            'membro' => [
+                'id' => (string) $membro->id,
+                'escala_id' => (string) $membro->escala_id,
+                'usuario_id' => (string) $membro->usuario_id,
+                'funcao' => (string) $membro->funcao,
+                'status' => (string) $membro->status,
+                'confirmado_em' => $membro->confirmado_em?->toIso8601String(),
+                'presente' => $membro->presente,
+            ],
+            'conflitos' => $conflitos,
+        ]);
+    }
 
     public function store(IncluirMembroRequest $request, string $escalaId): JsonResponse
     {
@@ -94,5 +124,25 @@ class EscalaMembroController
     private function autorId(Request $request): string
     {
         return (string) $request->user()?->getAuthIdentifier();
+    }
+
+    /**
+     * Conflitos da propria pessoa na escala (CA-12), com os nomes que ela
+     * alcanca. A pessoa ve o proprio conflito mesmo sem `escala.ler`.
+     *
+     * @return array<int, array{sessao_id: ?string, inicio: string, fim: string, igreja_nome: ?string, ebi_nome: ?string}>
+     */
+    private function conflitoDoMembro(Request $request, EscalaRef $referencia, string $membroId): array
+    {
+        $visao = $this->autorizacao->visao($request, $this->consulta->ebisEmConflito($referencia->id));
+        $detalhe = $this->consulta->detalhe($referencia->id, $visao);
+
+        foreach ($detalhe['membros'] ?? [] as $membro) {
+            if ($membro['id'] === $membroId) {
+                return $membro['conflitos'];
+            }
+        }
+
+        return [];
     }
 }

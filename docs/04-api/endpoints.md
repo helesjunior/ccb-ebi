@@ -85,6 +85,8 @@ Proposta inicial, prefixo `/api/v1`. Rotas marcadas *novo* não existiam na vers
 | POST | `/schedules/{id}/members` | Incluir membro na escala *novo (E07)* | RF-07 |
 | PATCH/DELETE | `/schedule-members/{id}` | Mudar funcao e retirar membro *novo (E07)* | RF-07 |
 | POST | `/schedules/{id}/approve` | Aprovação pela coordenadora chefe (sem chefe, `adm_igreja`) *novo (E07)* | RF-07 |
+| POST | `/schedule-members/{id}/confirm` | Confirmação da própria vaga pelo membro *novo (E07)* | RF-07 |
+| GET | `/me/schedules` | Minhas escalas no período (máx. 92 dias) *novo (E07)* | RF-07 |
 | POST/PATCH | `/schedule-swaps` | Pedir e aprovar troca *novo* | RF-07 |
 | POST | `/sessions/{id}/feedback` | Registrar feedback | RF-09 |
 | POST | `/feedback/{id}/moderation` | Ministério Local libera ou devolve *novo* | RF-09 |
