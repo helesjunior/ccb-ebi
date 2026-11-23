@@ -2397,6 +2397,60 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/schedules/{id}/team-attendance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Presença da equipe (planejado × cumprido)
+         * @description Exige `escala.gerenciar` e território. Só com a sessão `encerrada` (409 `sessao_em_estado_invalido`). O envio pode ser parcial: grava só as vagas informadas, e só o que muda, com quem e quando registrou. Id de outra escala ou de vaga `substituido` inteiro o lote sem gravar nada (422 `membro_invalido`). Reenviar o mesmo corpo não gera evento; uma correção registra `escala.presenca_equipe` com `antes`/`depois` por `membro_id` (sem nomes). Responde com o detalhe da escala.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: components["parameters"]["SessaoId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PresencaEquipeInput"];
+                };
+            };
+            responses: {
+                /** @description Presença registrada */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EscalaEnvelope"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                409: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/schedules/{id}/members": {
         parameters: {
             query?: never;
@@ -4954,6 +5008,13 @@ export interface components {
         };
         EscalaEnvelope: {
             escala?: components["schemas"]["Escala"];
+        };
+        PresencaEquipeInput: {
+            membros: {
+                /** @description Id da vaga (`EscalaMembro`). */
+                id: string;
+                presente: boolean;
+            }[];
         };
         EscalaResumo: {
             sessao_id?: string;

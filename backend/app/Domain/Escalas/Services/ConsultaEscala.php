@@ -131,8 +131,9 @@ class ConsultaEscala implements ConsultarEscala
                     $this->nomesDosConflitosLivres($conflitos[(string) $membro->usuario_id] ?? [], $membro, $visao),
                 ),
             ])->all(),
-            // Preenchido pela Task 12 (presenca da equipe).
-            'presenca_equipe_pendente' => false,
+            // Presenca da equipe pendente: sessao encerrada e vaga ativa sem resposta.
+            'presenca_equipe_pendente' => $sessao->status === 'encerrada'
+                && $membros->contains(fn (EscalaMembro $membro): bool => $membro->status !== EscalaMembro::STATUS_SUBSTITUIDO && $membro->presente === null),
         ];
     }
 

@@ -28,4 +28,13 @@ interface GerirEscala
      * rodam na ordem do plano.
      */
     public function aprovar(string $escalaId, ContextoDecisao $contexto, ?string $autorId): Escala;
+
+    /**
+     * Presenca da equipe (planejado x cumprido). `$membros` e
+     * `array<int, array{id: string, presente: bool}>`; grava so o que muda e
+     * audita uma vez quando algo mudou.
+     *
+     * @param  array<int, array{id: string, presente: bool}>  $membros
+     */
+    public function registrarPresencaEquipe(string $escalaId, array $membros, ?string $autorId): Escala;
 }

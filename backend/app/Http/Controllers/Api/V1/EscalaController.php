@@ -10,6 +10,7 @@ use App\Domain\Identidade\Support\Operacoes;
 use App\Domain\Sessoes\Contracts\ConsultarSessao;
 use App\Http\Requests\Escalas\AlterarEscalaRequest;
 use App\Http\Requests\Escalas\CriarEscalaRequest;
+use App\Http\Requests\Escalas\PresencaEquipeRequest;
 use App\Http\Support\AutorizacaoEscala;
 use App\Support\ProblemException;
 use Illuminate\Http\JsonResponse;
@@ -93,6 +94,18 @@ class EscalaController
 
         // Quem aprova decide sobre a escala: ve os conflitos com nomes.
         return $this->resposta($request, $referencia, visaoAmpla: true);
+    }
+
+    /**
+     * Presenca da equipe (RF-07): planejado x cumprido, so com a sessao
+     * encerrada. A resposta e o detalhe da escala.
+     */
+    public function presenca(PresencaEquipeRequest $request, string $id): JsonResponse
+    {
+        $referencia = $this->autorizarGerenciar($request, $id);
+        $this->gerir->registrarPresencaEquipe($id, $request->membros(), $this->autorId($request));
+
+        return $this->resposta($request, $referencia);
     }
 
     private function autorizarGerenciar(Request $request, string $escalaId): EscalaRef

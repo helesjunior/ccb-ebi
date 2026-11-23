@@ -85,6 +85,7 @@ Proposta inicial, prefixo `/api/v1`. Rotas marcadas *novo* não existiam na vers
 | POST | `/schedules/{id}/members` | Incluir membro na escala *novo (E07)* | RF-07 |
 | PATCH/DELETE | `/schedule-members/{id}` | Mudar funcao e retirar membro *novo (E07)* | RF-07 |
 | POST | `/schedules/{id}/approve` | Aprovação pela coordenadora chefe (sem chefe, `adm_igreja`) *novo (E07)* | RF-07 |
+| PUT | `/schedules/{id}/team-attendance` | Presença da equipe planejado × cumprido, com a sessão encerrada *novo (E07)* | RF-07 |
 | POST | `/schedule-members/{id}/confirm` | Confirmação da própria vaga pelo membro *novo (E07)* | RF-07 |
 | GET | `/me/schedules` | Minhas escalas no período (máx. 92 dias) *novo (E07)* | RF-07 |
 | POST/PATCH | `/schedule-swaps` | Pedir e decidir troca: POST pede, PATCH `/schedule-swaps/{id}` decide *novo (E07)* | RF-07 |

@@ -228,6 +228,70 @@ class GerenciadorEscala implements GerirEscala
     }
 
     /**
+     * Presenca da equipe: so com a sessao encerrada. Valida todas as vagas
+     * antes de gravar qualquer coisa; grava so o que muda e audita uma vez
+     * quando algo mudou (reenviar o mesmo corpo nao gera evento).
+     *
+     * @param  array<int, array{id: string, presente: bool}>  $membros
+     */
+    public function registrarPresencaEquipe(string $escalaId, array $membros, ?string $autorId): Escala
+    {
+        return $this->trava->executar($escalaId, function (Escala $escala) use ($membros, $autorId): Escala {
+            $sessao = $this->sessao((string) $escala->sessao_id);
+
+            if ($sessao->status !== 'encerrada') {
+                throw new ProblemException('sessao_em_estado_invalido', 'Sessão em estado inválido', 409, 'Só é possível registrar a presença da equipe depois de encerrar a sessão.');
+            }
+
+            /** @var array<string, EscalaMembro> $vagas */
+            $vagas = $escala->membros()->ativos()->get()
+                ->keyBy(fn (EscalaMembro $membro): string => (string) $membro->id)
+                ->all();
+
+            $antes = [];
+            $depois = [];
+
+            foreach ($membros as $item) {
+                $membro = $vagas[(string) $item['id']] ?? null;
+
+                if ($membro === null) {
+                    throw new ProblemException('membro_invalido', 'Membro inválido', 422, 'Há membro informado que não pertence a esta escala.');
+                }
+
+                $valor = (bool) $item['presente'];
+
+                if ($membro->presente !== $valor) {
+                    $antes[(string) $membro->id] = $membro->presente;
+                    $depois[(string) $membro->id] = $valor;
+                    $membro->forceFill([
+                        'presente' => $valor,
+                        'presenca_registrada_por' => $autorId,
+                        'presenca_registrada_em' => now(),
+                    ])->save();
+                }
+            }
+
+            if ($depois !== []) {
+                $this->auditoria->registrar([
+                    'acao' => 'escala.presenca_equipe',
+                    'recurso' => 'escala',
+                    'ator_id' => $autorId,
+                    'origem' => 'api',
+                    'escopo' => 'ebi:'.$sessao->ebiId,
+                    'metadados_minimizados' => [
+                        'escala_id' => (string) $escala->id,
+                        'sessao_id' => $sessao->id,
+                        'antes' => $antes,
+                        'depois' => $depois,
+                    ],
+                ]);
+            }
+
+            return $escala->refresh();
+        });
+    }
+
+    /**
      * Persiste a alteracao e desfaz a aprovacao: volta a prevista, copia o
      * divisor atual do EBI, mantem a confirmacao e cancela as trocas pendentes.
      */

@@ -232,6 +232,8 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
                 ->name('schedule-members.confirm');
             Route::post('schedules/{id}/approve', [EscalaController::class, 'aprovar'])
                 ->name('schedules.approve');
+            Route::put('schedules/{id}/team-attendance', [EscalaController::class, 'presenca'])
+                ->name('schedules.team-attendance');
         });
         Route::get('schedules/{id}', [EscalaController::class, 'show'])->name('schedules.show');
 
