@@ -1566,7 +1566,9 @@ paths:
       description: >-
         Corrige dados da sessão (`tema`, `passagem_biblica`, `inicio_real`,
         `fim_real`, `realizada`, `auxiliares_escalados`). `motivo` é
-        obrigatório quando a sessão está `encerrada`.
+        obrigatório quando a sessão está `encerrada`. Com escala aprovada,
+        `auxiliares_escalados` responde 422 `escala_aprovada_define_equipe`:
+        quem conta são os auxiliares da escala.
       security:
         - bearerAuth: []
       parameters:
@@ -3295,6 +3297,12 @@ components:
         auxiliares_necessarios: { type: integer }
         auxiliares_informados: { type: [integer, 'null'] }
         alerta: { type: boolean }
+        origem:
+          type: string
+          enum: [escala, informado]
+          description: >-
+            `escala` quando há escala aprovada (conta auxiliares confirmados e
+            vigentes na data); `informado` quando vem do campo antigo da sessão.
     SessaoDetalhe:
       allOf:
         - $ref: '#/components/schemas/Sessao'

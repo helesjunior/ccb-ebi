@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Escalas\Contracts\ConsultarEquipeEscalada;
 use App\Domain\Identidade\Support\Operacoes;
 use App\Domain\Organizacao\Contracts\ConsultarEbi;
 use App\Domain\Sessoes\Contracts\ConsultarSessao;
@@ -30,6 +31,7 @@ class SessaoController
         private readonly GerirSessaoEbi $gerir,
         private readonly ConsultarEbi $ebis,
         private readonly CalculadoraEquipeMinima $calculadora,
+        private readonly ConsultarEquipeEscalada $escala,
     ) {}
 
     public function index(Request $request, string $id): Response
@@ -51,9 +53,24 @@ class SessaoController
     {
         $sessao = $this->autorizar($id, Operacoes::SESSAO_LER);
         $ebi = $this->ebis->dados($sessao->ebiId) ?? throw new ProblemException('not_found', 'Recurso não encontrado', 404);
-        $equipe = $this->calculadora->calcular($sessao->presentes, $ebi->participantesPorAuxiliar, $sessao->auxiliaresEscalados);
+        $equipe = $this->equipeMinima($sessao, $ebi->participantesPorAuxiliar);
 
         return (new SessaoResource($sessao, $equipe))->response();
+    }
+
+    /**
+     * Com escala aprovada, quem conta sao os auxiliares da escala (confirmados
+     * e vigentes na data); sem ela, o campo antigo da sessao.
+     *
+     * @return array<string, mixed>
+     */
+    private function equipeMinima(SessaoEbi $sessao, int $porAuxiliar): array
+    {
+        $daEscala = $this->escala->auxiliaresDaEscalaAprovada($sessao->id);
+        $informados = $daEscala ?? $sessao->auxiliaresEscalados;
+        $equipe = $this->calculadora->calcular($sessao->presentes, $porAuxiliar, $informados);
+
+        return $equipe + ['origem' => $daEscala === null ? 'informado' : 'escala'];
     }
 
     public function open(Request $request, string $id): Response
@@ -80,7 +97,12 @@ class SessaoController
 
     public function update(CorrigirSessaoRequest $request, string $id): Response
     {
-        $this->autorizar($id, Operacoes::SESSAO_GERENCIAR);
+        $sessao = $this->autorizar($id, Operacoes::SESSAO_GERENCIAR);
+
+        // Com escala aprovada, o campo antigo de auxiliares deixa de valer.
+        if ($request->has('auxiliares_escalados') && $this->escala->auxiliaresDaEscalaAprovada($id) !== null) {
+            throw new ProblemException('escala_aprovada_define_equipe', 'Escala define a equipe', 422, 'Há escala aprovada para esta sessão; os auxiliares vêm da escala.');
+        }
 
         return (new SessaoResource($this->gerir->corrigir($id, $request->validated(), (string) $request->user()?->getAuthIdentifier())))->response();
     }

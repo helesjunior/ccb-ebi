@@ -3045,7 +3045,7 @@ export interface paths {
         head?: never;
         /**
          * Correção da sessão
-         * @description Corrige dados da sessão (`tema`, `passagem_biblica`, `inicio_real`, `fim_real`, `realizada`, `auxiliares_escalados`). `motivo` é obrigatório quando a sessão está `encerrada`.
+         * @description Corrige dados da sessão (`tema`, `passagem_biblica`, `inicio_real`, `fim_real`, `realizada`, `auxiliares_escalados`). `motivo` é obrigatório quando a sessão está `encerrada`. Com escala aprovada, `auxiliares_escalados` responde 422 `escala_aprovada_define_equipe`: quem conta são os auxiliares da escala.
          */
         patch: {
             parameters: {
@@ -5176,6 +5176,11 @@ export interface components {
             auxiliares_necessarios?: number;
             auxiliares_informados?: number | null;
             alerta?: boolean;
+            /**
+             * @description `escala` quando há escala aprovada (conta auxiliares confirmados e vigentes na data); `informado` quando vem do campo antigo da sessão.
+             * @enum {string}
+             */
+            origem?: "escala" | "informado";
         };
         SessaoDetalhe: components["schemas"]["Sessao"] & {
             equipe_minima?: components["schemas"]["EquipeMinima"];
