@@ -1296,6 +1296,149 @@ paths:
                     items: { $ref: '#/components/schemas/MinhaEscala' }
         '401': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/Problem' }
+  /schedule-swaps:
+    get:
+      tags: [escalas]
+      summary: Trocas de vaga do EBI
+      description: >-
+        Exige `troca.decidir` no escopo `ebi:<ebi_id>`. Lista as trocas das
+        vagas do EBI, opcionalmente filtradas por `status`. `situacao` e
+        `expirada` quando o pedido continua `pendente` e a sessao deixou de
+        estar `prevista`; a troca ja decidida nunca expira.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - name: ebi_id
+          in: query
+          required: true
+          schema: { type: string }
+        - name: status
+          in: query
+          required: false
+          schema: { type: string, enum: [pendente, aprovada, recusada, cancelada] }
+      responses:
+        '200':
+          description: Trocas do EBI
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/TrocaEscala' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+    post:
+      tags: [escalas]
+      summary: Pedir troca de vaga
+      description: >-
+        So o proprio membro pede pela vaga dele; vaga de outra pessoa ou
+        inexistente responde 404 sem revelar. Guardas, nesta ordem: escala
+        `aprovada` (409 `escala_em_estado_invalido`), sessao `prevista` (409
+        `sessao_em_estado_invalido`), vaga `escalado`/`confirmado` sem troca
+        pendente (409 `membro_em_estado_invalido`). Sucesso grava a solicitacao
+        `pendente`, marca a vaga `troca_solicitada` e registra
+        `escala.troca_solicitada`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [escala_membro_id]
+              properties:
+                escala_membro_id: { type: string }
+                motivo: { type: string, maxLength: 500, nullable: true }
+      responses:
+        '201':
+          description: Pedido registrado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TrocaEscalaEnvelope' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /schedule-swaps/{id}/cancel:
+    post:
+      tags: [escalas]
+      summary: Cancelar o proprio pedido de troca
+      description: >-
+        So o solicitante cancela; outro usuario recebe 404. Pedido ja decidido
+        responde 409 `troca_ja_decidida`. Sucesso devolve a vaga ao estado
+        anterior (`escalado` ou `confirmado`) e registra
+        `escala.troca_cancelada`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/TrocaId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Troca cancelada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TrocaEscalaEnvelope' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /schedule-swaps/{id}:
+    patch:
+      tags: [escalas]
+      summary: Decidir a troca
+      description: >-
+        Exige `troca.decidir` no EBI da escala; troca fora do alcance responde
+        404. Guardas, nesta ordem: o solicitante nunca decide o proprio pedido
+        (403 `sem_permissao`), quem decide de fato e a coordenadora chefe
+        vigente ou, quando o pedido e da chefe ou nao ha chefe vigente, o
+        `adm_igreja` da igreja (403 `aprovador_invalido`), troca ja decidida
+        (409 `troca_ja_decidida`), escala `aprovada` e sessao `prevista` (409).
+        Aprovar exige substituto da equipe, vigente na data e fora da escala
+        (422 `membro_inelegivel`, 422 `membro_ja_escalado`): o original fica
+        `substituido` e nasce o novo membro na mesma funcao, sem derrubar a
+        aprovacao. Recusar devolve a vaga ao estado anterior. Registra
+        `escala.troca_decidida`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/TrocaId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decisao]
+              properties:
+                decisao: { type: string, enum: [aprovar, recusar] }
+                substituto_usuario_id:
+                  type: string
+                  nullable: true
+                  description: Obrigatorio junto de `aprovar`.
+                motivo: { type: string, maxLength: 500, nullable: true }
+      responses:
+        '200':
+          description: Troca decidida
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TrocaEscalaEnvelope' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
   /ebis/{id}/sessions:
     get:
       tags: [sessions]
@@ -2353,6 +2496,11 @@ components:
       in: path
       required: true
       schema: { type: string }
+    TrocaId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
     FinalidadeLeitura:
       name: finalidade
       in: query
@@ -3046,6 +3194,32 @@ components:
         conflitos:
           type: array
           items: { $ref: '#/components/schemas/ConflitoEscala' }
+    TrocaEscalaEnvelope:
+      type: object
+      properties:
+        troca: { $ref: '#/components/schemas/TrocaEscala' }
+    TrocaEscala:
+      type: object
+      properties:
+        id: { type: string }
+        escala_id: { type: string, description: 'So na listagem.' }
+        sessao_id: { type: string, description: 'So na listagem.' }
+        escala_membro_id: { type: string, description: 'Vaga original do pedido.' }
+        membro_id: { type: string, description: 'So na listagem (mesmo valor de escala_membro_id).' }
+        solicitante_id: { type: string }
+        solicitante_nome: { type: string, description: 'So na listagem.' }
+        motivo: { type: [string, 'null'] }
+        status: { type: string, enum: [pendente, aprovada, recusada, cancelada] }
+        situacao:
+          type: string
+          enum: [pendente, aprovada, recusada, cancelada, expirada]
+        substituto_membro_id:
+          type: [string, 'null']
+          description: 'Vaga criada pela aprovacao.'
+        decidido_por: { type: [string, 'null'] }
+        decidido_em: { type: [string, 'null'], format: date-time }
+        motivo_decisao: { type: [string, 'null'] }
+        criado_em: { type: string, format: date-time }
     Sessao:
       type: object
       properties:

@@ -53,6 +53,14 @@ class EscalaMembro extends Model
         return $this->belongsTo(Escala::class);
     }
 
+    public function sessaoId(): string
+    {
+        /** @var Escala $escala */
+        $escala = $this->escala;
+
+        return (string) $escala->sessao_id;
+    }
+
     /** @return HasMany<SolicitacaoTrocaEscala, $this> */
     public function trocas(): HasMany
     {

@@ -87,7 +87,9 @@ Proposta inicial, prefixo `/api/v1`. Rotas marcadas *novo* não existiam na vers
 | POST | `/schedules/{id}/approve` | Aprovação pela coordenadora chefe (sem chefe, `adm_igreja`) *novo (E07)* | RF-07 |
 | POST | `/schedule-members/{id}/confirm` | Confirmação da própria vaga pelo membro *novo (E07)* | RF-07 |
 | GET | `/me/schedules` | Minhas escalas no período (máx. 92 dias) *novo (E07)* | RF-07 |
-| POST/PATCH | `/schedule-swaps` | Pedir e aprovar troca *novo* | RF-07 |
+| POST/PATCH | `/schedule-swaps` | Pedir e decidir troca: POST pede, PATCH `/schedule-swaps/{id}` decide *novo (E07)* | RF-07 |
+| GET | `/schedule-swaps` | Trocas do EBI, por `ebi_id` e opcional `status` *novo (E07)* | RF-07 |
+| POST | `/schedule-swaps/{id}/cancel` | Cancelar o próprio pedido de troca *novo (E07)* | RF-07 |
 | POST | `/sessions/{id}/feedback` | Registrar feedback | RF-09 |
 | POST | `/feedback/{id}/moderation` | Ministério Local libera ou devolve *novo* | RF-09 |
 | GET | `/me/ebis` | EBIs que o usuário pode operar *novo* (`no OpenAPI`) | RF-06 |

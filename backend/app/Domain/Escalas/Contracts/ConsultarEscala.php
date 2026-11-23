@@ -32,6 +32,9 @@ interface ConsultarEscala
     /** Referencia da escala dona do membro, ou `null` quando o membro nao existe. */
     public function referenciaDoMembro(string $membroId): ?EscalaRef;
 
+    /** Referencia da escala dona da troca, ou `null` quando a troca nao existe. */
+    public function referenciaDaTroca(string $trocaId): ?EscalaRef;
+
     /**
      * EBIs das sessoes que conflitam com a escala (CA-12), para a HTTP decidir
      * a visao dos nomes.

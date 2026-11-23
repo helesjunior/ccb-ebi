@@ -7,6 +7,7 @@ use App\Domain\Escalas\Contracts\EscalaRef;
 use App\Domain\Escalas\Contracts\EscalaVisao;
 use App\Domain\Escalas\Models\Escala;
 use App\Domain\Escalas\Models\EscalaMembro;
+use App\Domain\Escalas\Models\SolicitacaoTrocaEscala;
 use App\Domain\Identidade\Contracts\ConsultarEquipeEbi;
 use App\Domain\Sessoes\Contracts\ConsultarSessao;
 use App\Domain\Sessoes\Contracts\IntervaloSessao;
@@ -56,6 +57,13 @@ class ConsultaEscala implements ConsultarEscala
         $escala = EscalaMembro::query()->whereKey($membroId)->first()?->escala;
 
         return $escala === null ? null : $this->ref($escala);
+    }
+
+    public function referenciaDaTroca(string $trocaId): ?EscalaRef
+    {
+        $membroId = (string) SolicitacaoTrocaEscala::query()->whereKey($trocaId)->value('escala_membro_id');
+
+        return $membroId === '' ? null : $this->referenciaDoMembro($membroId);
     }
 
     public function ebisEmConflito(string $escalaId): array
@@ -301,6 +309,6 @@ class ConsultaEscala implements ConsultarEscala
 
     private function ref(Escala $escala): EscalaRef
     {
-        return new EscalaRef((string) $escala->id, (string) $escala->ebi_id, (string) $escala->sessao_id);
+        return new EscalaRef((string) $escala->id, (string) $escala->ebi_id, (string) $escala->sessao_id, (string) $escala->igreja_id);
     }
 }

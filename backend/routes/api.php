@@ -36,6 +36,7 @@ use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\SectorController;
 use App\Http\Controllers\Api\V1\SessaoController;
 use App\Http\Controllers\Api\V1\SessionController;
+use App\Http\Controllers\Api\V1\TrocaEscalaController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Middleware\IdempotenciaMiddleware;
 use Illuminate\Support\Facades\Route;
@@ -236,6 +237,18 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
 
         // "Minhas escalas" (E07): as vagas da propria pessoa no periodo.
         Route::get('me/schedules', [MinhasEscalasController::class, 'index'])->name('me.schedules');
+
+        // Trocas de vaga (E07, RF-07): o membro pede e cancela; a lista e a
+        // decisao passam por `troca.decidir` (matriz + territorio).
+        Route::get('schedule-swaps', [TrocaEscalaController::class, 'index'])->name('schedule-swaps.index');
+        Route::middleware(IdempotenciaMiddleware::class)->group(function (): void {
+            Route::post('schedule-swaps', [TrocaEscalaController::class, 'store'])
+                ->name('schedule-swaps.store');
+            Route::post('schedule-swaps/{id}/cancel', [TrocaEscalaController::class, 'cancel'])
+                ->name('schedule-swaps.cancel');
+            Route::patch('schedule-swaps/{id}', [TrocaEscalaController::class, 'update'])
+                ->name('schedule-swaps.update');
+        });
 
         Route::get('ebis/{id}/agenda', [AgendaController::class, 'index'])->name('agenda.index');
         Route::post('ebis/{id}/agenda', [AgendaController::class, 'store'])
