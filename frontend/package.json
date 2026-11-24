@@ -16,13 +16,13 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cn": "^0.5.2",
-    "lucide-react": "^1.72.0",
+    "lucide-react": "^1.76.0",
     "openapi-fetch": "^0.17.0",
     "radix-ui": "^1.8.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "sonner": "^2.0.8",
-    "tailwind-merge": "^3.7.0"
+    "tailwind-merge": "^3.7.1"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.5",
@@ -36,7 +36,7 @@
     "@vitejs/plugin-react": "^6.3.0",
     "jsdom": "^31.0.1",
     "openapi-typescript": "^7.13.0",
-    "oxlint": "^1.93.0",
+    "oxlint": "^1.94.0",
     "tailwindcss": "^4.3.5",
     "typescript": "~7.0.2",
     "typescript5": "npm:typescript@^5.9.0",
