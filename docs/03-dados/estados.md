@@ -87,13 +87,42 @@ A moderação é obrigatória e feita pelo Ministério Local ([ADR-0008](../06-a
 stateDiagram-v2
   [*] --> prevista: criada pela coordenadora
   prevista --> aprovada: coordenadora chefe aprova (equipe mínima atingida)
+  aprovada --> prevista: equipe, estimativa ou participantes alterados
   aprovada --> confirmada: membro confirma
   confirmada --> substituida: troca aprovada pela coordenadora chefe
   confirmada --> ausencia: não compareceu
   confirmada --> cumprida: compareceu
 ```
 
-Ver [ADR-0010](../06-arquitetura/decisoes/ADR-0010-equipe-minima-e-aprovacao-de-escala.md).
+A aprovação é da **coordenadora chefe vigente do EBI**; sem chefe vigente, o `adm_igreja` aprova no lugar. Voltar a `prevista` por alteração **cancela as trocas abertas e aceitas** da escala ([ADR-0033](../06-arquitetura/decisoes/ADR-0033-coordenadora-chefe-e-regras-da-escala.md); [ADR-0010](../06-arquitetura/decisoes/ADR-0010-equipe-minima-e-aprovacao-de-escala.md)).
+
+## Membro da escala
+
+```mermaid
+stateDiagram-v2
+  [*] --> escalado: entra na escala
+  escalado --> troca_solicitada: o membro pede a troca
+  troca_solicitada --> escalado: pedido recusado ou cancelado
+  troca_solicitada --> substituido: troca aprovada
+  escalado --> confirmado: o próprio membro confirma
+  confirmado --> substituido: troca aprovada
+```
+
+`escalado` e `confirmado` são os membros que contam; `substituido` sai da equipe efetiva. A presença (`presente` sim/não) é registrada na sessão `encerrada`, depois da equipe — não muda o `status`.
+
+## Troca
+
+```mermaid
+stateDiagram-v2
+  [*] --> pendente: o membro pede a troca
+  pendente --> aprovada: aprovador aceita e outro membro assume
+  pendente --> recusada: aprovador recusa
+  pendente --> cancelada: pedido retirado ou escala alterada
+  aprovada --> recusada: aprovador recusa após aceite
+  aprovada --> cancelada: escala alterada
+```
+
+`situacao` guarda o estado atual do pedido; a listagem mostra `expirada` quando a sessão já passou e o pedido ficou em aberto sem decisão ([ADR-0033](../06-arquitetura/decisoes/ADR-0033-coordenadora-chefe-e-regras-da-escala.md)).
 
 ## Atividade
 

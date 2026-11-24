@@ -10,7 +10,7 @@ Liga cada requisito funcional às regras, fluxos, critérios de aceite e épico.
 | RF-04 | RN-10, RN-12 | FL-01 | CA-16 | E05 | | |
 | RF-05 | RN-11 | — | CA-03 | E01 | | |
 | RF-06 | RN-02, RN-09 | — | CA-23 | E04 | | |
-| RF-07 | — | FL-04 | CA-12, CA-20 | E07 | | |
+| RF-07 | RN-09 | FL-04 | CA-12, CA-20 | E07 | | `EscalaGestaoTest`, `AprovacaoEscalaTest`, `ConfirmacaoEscalaTest`, `TrocaEscalaTest`, `ConflitoEscalaTest`, `PresencaEquipeTest`, `AvisoEquipeSessaoTest`, `CoberturaEscalaTest`, `CoordenadoraChefeMatrizTest`, `CoordenadoraChefeUnicidadeTest` |
 | RF-08 | RN-02, RN-03, RN-04, RN-10, RN-13 a RN-16 | FL-02 | CA-02, CA-05, CA-07, CA-13, CA-17, CA-19 | E04, E12 | | |
 | RF-09 | RN-10 | FL-05 | CA-11 | E10 | | |
 | RF-10 | RN-12 | FL-03 | CA-08 | E08 | | |

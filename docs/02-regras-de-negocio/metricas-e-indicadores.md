@@ -9,7 +9,7 @@ Definições únicas para todos os relatórios. A regra mais importante: **parti
 | M-03 | Total de presenças | Presenças com status `valida` no período |
 | M-04 | Média por sessão | M-03 ÷ M-05 |
 | M-05 | Sessões realizadas | Sessões `encerrada` com `realizada = sim` no período |
-| M-06 | Cobertura da escala | Sessões com equipe mínima confirmada ÷ sessões previstas. Equipe mínima conforme a fórmula e o parâmetro do [ADR-0010](../06-arquitetura/decisoes/ADR-0010-equipe-minima-e-aprovacao-de-escala.md), com o valor do parâmetro vigente na data da sessão |
+| M-06 | Cobertura da escala | Percentual de sessões cobertas. Sessão coberta = escala `aprovada` cuja equipe **já confirmada** (e com vínculo vigente na data da sessão) atinge o mínimo `1 coordenadora + ⌈estimativa ÷ divisor⌉ auxiliares`, com o divisor e a estimativa registrados **na própria escala** (mudar o divisor do EBI depois não muda a cobertura). Denominador: sessões previstas até a data de geração. Publicado como percentual com 1 decimal; `null` ("—") quando o denominador é zero. Não entra na supressão — é contagem de sessões, não de crianças ([ADR-0033](../06-arquitetura/decisoes/ADR-0033-coordenadora-chefe-e-regras-da-escala.md)) |
 | M-07 | Utilizações de atividade | Pares únicos (sessão, versão da atividade) confirmados |
 | M-08 | Avaliação média | Soma de estrelas válidas ÷ quantidade de avaliações válidas |
 | M-09 | Igrejas com EBI ativo | Igrejas da abrangência com ao menos um EBI com sessão realizada nos últimos 90 dias ([ADR-0020](../06-arquitetura/decisoes/ADR-0020-supressao-e-definicao-de-ativo.md)) |
@@ -20,7 +20,7 @@ Definições únicas para todos os relatórios. A regra mais importante: **parti
 - M-02 de uma unidade superior é recalculado sobre as presenças, nunca somado a partir das unidades inferiores ([CA-14](../01-requisitos/criterios-de-aceite.md#ca-14)).
 - Sessões são atribuídas à igreja da sessão e ao setor e à regional vigentes dessa igreja ([RN-09](regras-de-negocio.md#rn-09)).
 - **Data das sessões:** a sessão conta no período pela data no fuso da igreja. Cadastrados (M-01), participantes ativos e igrejas com EBI ativo (M-09) contam pela igreja de referência, e a janela deles tem limite superior na data de geração: sessão futura já encerrada não torna ninguém ativo. Esses três são da data de geração do relatório, não do período, e aparecem à parte na tela.
-- **Nó do EBI:** o EBI mede as sessões dele (M-02, M-03, M-05 e M-04). M-01, participantes ativos e M-09 não existem nele: aparecem como `nao_se_aplica` ("—").
+- **Nó do EBI:** o EBI mede as sessões dele (M-02, M-03, M-05, M-04 e M-06). M-01, participantes ativos e M-09 não existem nele: aparecem como `nao_se_aplica` ("—").
 - **Status considerados:** presença `valida`, sessão `encerrada` com `realizada` e participante `ativo`. Sessão realizada sem nenhuma presença continua contando em M-05.
 - **Supressão:** ver a seção abaixo.
 
@@ -39,7 +39,7 @@ A fronteira da supressão é a igreja: **quem atua acima da igreja** (Central, r
 
 **Fuso declarado:** o relatório mostra o fuso único quando todas as igrejas da unidade compartilham o mesmo; se houver mais de um, declara "fuso de cada igreja". O nó do EBI usa o fuso da igreja dele e mostra o nome do EBI.
 
-**Indicadores nunca suprimidos:** a quantidade de sessões realizadas (M-05) e as igrejas com EBI ativo (M-09) não identificam pessoa e aparecem em todos os níveis, sem entrar na cascata. Os indicadores que entram no limiar e na cascata são participantes distintos (M-02), presenças (M-03), média por sessão (M-04, que herda a supressão de M-03), participantes cadastrados (M-01) e participantes ativos.
+**Indicadores nunca suprimidos:** a quantidade de sessões realizadas (M-05), a cobertura da escala (M-06, percentual de sessões) e as igrejas com EBI ativo (M-09) não identificam pessoa e aparecem em todos os níveis, sem entrar na cascata. Os indicadores que entram no limiar e na cascata são participantes distintos (M-02), presenças (M-03), média por sessão (M-04, que herda a supressão de M-03), participantes cadastrados (M-01) e participantes ativos.
 
 **Busca de participantes acima da igreja:** um grupo de 1 a 4 candidatos por igreja de referência sai da resposta e a tela avisa que a lista não é divulgada, em vez de dizer "ninguém encontrado". O corte roda sobre os candidatos já autorizados pelo território do ator, para não sinalizar cadastros de fora do escopo.
 

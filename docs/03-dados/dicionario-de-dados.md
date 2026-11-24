@@ -27,6 +27,9 @@ Classificação de sensibilidade e retenção por entidade. Os prazos são o pad
 | `fator_mfa`, `codigo_recuperacao`, `sessao_login` | Segredo | Até revogação | |
 | `evento_auditoria` | Pessoal | 5 anos; não apagável antes do prazo (logs de acesso: 6 meses) | Metadados minimizados |
 | `atividade`, `atividade_versao`, `arquivo` | Pública interna | Enquanto publicada + histórico | Nunca contém dados de participantes (RN-12) |
+| `escala`, `escala_membro` | Pessoal | Junto com a sessão | Quem foi escalado e quem esteve presente; não é dado de criança |
+| `solicitacao_troca_escala` | Pessoal | Junto com a sessão | `motivo` pode conter dado pessoal livre: limita a 500 caracteres e não entra em relatório |
+| `vinculo_acesso` (`chefe_de_ebi_id`) | Pessoal | Vigência + prazo legal | Diz quem é a coordenadora chefe do EBI ([ADR-0033](../06-arquitetura/decisoes/ADR-0033-coordenadora-chefe-e-regras-da-escala.md)) |
 | Demais | Pública interna ou Pessoal | A definir | |
 
 ## Modelo de detalhamento por campo
@@ -42,3 +45,12 @@ Classificação de sensibilidade e retenção por entidade. Os prazos são o pad
 | `arquivo.status_antivirus` | enum | sim | Metadado | `pendente`, `limpo`, `infectado`, `invalido` | sistema | decide a promoção ao bucket cifrado ([ADR-0005](../06-arquitetura/decisoes/ADR-0005-armazenamento-e-antivirus.md)) |
 | `arquivo.cifrado` | booleano | sim | Metadado | verdadeiro só no bucket `laudos` (SSE) | sistema | quarentena sem cifra |
 | `arquivo.sha256` | texto | não | Metadado | sha-256 do conteúdo promovido | sistema | integridade |
+| `vinculo_acesso.chefe_de_ebi_id` | FK `ebi` | não | Pessoal | único; só com papel `coordenadora_chefe` e escopo `ebi`; preenchido enquanto vigente e zerado ao encerrar ([ADR-0033](../06-arquitetura/decisoes/ADR-0033-coordenadora-chefe-e-regras-da-escala.md)) | sistema | a unicidade também é conferida no serviço, nos três caminhos de vínculo/convite; a violação do índice vira `422 chefe_ja_definida` |
+| `escala.estimativa_participantes` | inteiro | sim | Pessoal | ≥ 0, digitado pela coordenadora | coordenadora | não é calculado; 0 → 0 auxiliares |
+| `escala.participantes_por_auxiliar` | inteiro | sim | Metadado | ≥ 1, copiado do EBI na criação | sistema | muda o divisor do EBI não reescreve escalas existentes |
+| `escala.status` | enum | sim | Metadado | `prevista`, `aprovada` | sistema | alteração depois de aprovada volta a `prevista` |
+| `escala_membro.funcao` | enum | sim | Pessoal | `coordenadora`, `auxiliar` | coordenadora | |
+| `escala_membro.status` | enum | sim | Pessoal | `escalado`, `confirmado`, `troca_solicitada`, `substituido` | sistema | unicidade de membro ativo por escala e horário é do serviço |
+| `escala_membro.presente` | booleano | não | Pessoal | registrado na sessão `encerrada` | quem registra presença | `null` = ainda não conferido |
+| `solicitacao_troca_escala.status` | enum | sim | Metadado | `pendente`, `aprovada`, `recusada`, `cancelada` | sistema | `expirada` é derivado na listagem, não gravado |
+

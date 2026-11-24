@@ -79,8 +79,8 @@ Proposta inicial, prefixo `/api/v1`. Rotas marcadas *novo* não existiam na vers
 | GET | `/sessions/{id}/attendance` | Presenças da sessão *novo* (`no OpenAPI`) | RF-08 |
 | POST | `/attendance/{id}/reversal` | Estornar presença *novo* (`no OpenAPI`) | RF-08 |
 | GET | `/ebis/{id}/team` | Equipe do EBI para a escala *novo (E07)* | RF-07 |
-| GET | `/ebis/{id}/schedules` | Consultar escala (era `/roster`) | RF-07 |
-| POST | `/sessions/{id}/schedules` | Criar escala *novo* | RF-07 |
+| GET | `/ebis/{id}/schedules` | Consultar escala (era `/roster`) *novo (E07)* | RF-07 |
+| POST | `/sessions/{id}/schedules` | Criar escala *novo (E07)* | RF-07 |
 | GET/PATCH | `/schedules/{id}` | Detalhe e estimativa da escala *novo (E07)* | RF-07 |
 | POST | `/schedules/{id}/members` | Incluir membro na escala *novo (E07)* | RF-07 |
 | PATCH/DELETE | `/schedule-members/{id}` | Mudar funcao e retirar membro *novo (E07)* | RF-07 |

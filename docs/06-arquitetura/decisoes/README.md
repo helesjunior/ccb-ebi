@@ -64,5 +64,7 @@ Duas listas: **decisões em aberto** (D-nn), que precisam de aprovação da CCB,
 | [ADR-0029](ADR-0029-dados-identificaveis-acima-da-igreja.md) | Dados identificáveis acima da igreja | proposto pelo produto; aguarda CCB e DPO |
 | [ADR-0030](ADR-0030-privacidade-e-auditoria.md) | Privacidade e auditoria (Etapa 4, A1): escopo e dívidas | aceito |
 | [ADR-0031](ADR-0031-dados-sensiveis-e-retencao.md) | Dados sensíveis e retenção (Etapa 4, A2): escopo e dívidas | aceito |
+| [ADR-0032](ADR-0032-vinculos-responsavel-e-participante.md) | Vínculos responsável↔participante e cadastro do participante (Etapa 5, E03) | aceito |
+| [ADR-0033](ADR-0033-coordenadora-chefe-e-regras-da-escala.md) | Coordenadora chefe e regras da escala (Etapa 7, E07) | aceito |
 
 Para criar um ADR, copie o [modelo](ADR-0001-registro-de-decisoes.md#modelo) e use o próximo número.
