@@ -17,12 +17,14 @@ import { Auditoria } from './pages/Auditoria'
 import { CadastroAssistido } from './pages/CadastroAssistido'
 import { Dependentes } from './pages/Dependentes'
 import { Dispositivos } from './pages/Dispositivos'
+import { Escalas } from './pages/Escalas'
 import { Equipe } from './pages/Equipe'
 import { Inicio } from './pages/Inicio'
 import { ExcecaoInclusiva } from './pages/ExcecaoInclusiva'
 import { Login } from './pages/Login'
 import { Mesclagem } from './pages/Mesclagem'
 import { MeuPerfil } from './pages/MeuPerfil'
+import { MinhasEscalas } from './pages/MinhasEscalas'
 import { Participantes } from './pages/Participantes'
 import { Presenca } from './pages/Presenca'
 import { Privacidade } from './pages/Privacidade'
@@ -45,6 +47,8 @@ const ROTULOS: Record<Tela, string> = {
   dependentes: 'Meus dependentes',
   sessoes: 'Sessões',
   presenca: 'Presença',
+  escalas: 'Escalas',
+  'minhas-escalas': 'Minhas escalas',
   'cadastro-assistido': 'Cadastro assistido',
   vinculos: 'Vínculos',
   excecao: 'Exceção inclusiva',
@@ -161,6 +165,8 @@ function App() {
         />
       )}
       {tela === 'cadastro-assistido' && <CadastroAssistido />}
+      {tela === 'escalas' && <Escalas contexto={escopo} papeis={usuario.papeis ?? []} />}
+      {tela === 'minhas-escalas' && <MinhasEscalas />}
       {tela === 'vinculos' && <Vinculos escopos={escopos} usuarioId={usuario.id ?? null} />}
       {tela === 'excecao' && <ExcecaoInclusiva />}
       {tela === 'mesclagem' && <Mesclagem />}

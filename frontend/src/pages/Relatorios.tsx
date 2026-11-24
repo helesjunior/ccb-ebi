@@ -52,6 +52,13 @@ const HOJE: ItemIndicador[] = [
   { chave: 'igrejas_com_ebi_ativo', rotulo: 'Igrejas com EBI ativo' },
 ]
 
+/** Indicadores da cobertura da escala (M-06), com a data de geração como corte. */
+const ESCALAS: ItemIndicador[] = [
+  { chave: 'sessoes_previstas', rotulo: 'Sessões previstas' },
+  { chave: 'sessoes_com_equipe_minima', rotulo: 'Sessões com equipe mínima' },
+  { chave: 'cobertura_escala', rotulo: 'Cobertura da escala (%)' },
+]
+
 interface Trilha {
   no: NoRelatorio
   filhos: NoRelatorio[]
@@ -87,6 +94,8 @@ export function Relatorios({ contexto }: { contexto: ContextoAtuacao | null }) {
   const [trilha, setTrilha] = useState<Trilha[]>([])
   const [relatorio, setRelatorio] = useState<RelatorioPresenca | null>(null)
   const [carregando, setCarregando] = useState(true)
+  // A tela já abre carregando: o primeiro pedido não marca o estado no efeito.
+  const primeiroPedido = useRef(true)
   const [exportando, setExportando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
 
@@ -103,9 +112,14 @@ export function Relatorios({ contexto }: { contexto: ContextoAtuacao | null }) {
 
   // Nó, período e contexto mudam a consulta: a raiz do novo contexto é
   // recarregada e o nó aberto também, quando só a janela muda.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     const pedido = ++sequencia.current
-    setCarregando(true)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (primeiroPedido.current) primeiroPedido.current = false
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    else setCarregando(true)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setErro(null)
     void (async () => {
       const { data, error } = await api.GET('/reports/attendance', {
@@ -125,10 +139,15 @@ export function Relatorios({ contexto }: { contexto: ContextoAtuacao | null }) {
   }, [alvo, periodo, chaveContexto])
 
   // Troca de escopo: some com a tela anterior antes de pedir a raiz nova.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setAlvo(null)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setRelatorio(null)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setErro(null)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTrilha([])
   }, [chaveContexto])
 
@@ -289,9 +308,10 @@ export function Relatorios({ contexto }: { contexto: ContextoAtuacao | null }) {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-6">
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-3">
               <Indicadores titulo="No período" itens={PERIODO} totais={relatorio.totais} />
               <Indicadores titulo="Na data de hoje" itens={HOJE} totais={relatorio.totais} />
+              <Indicadores titulo="Cobertura da escala" itens={ESCALAS} totais={relatorio.totais} />
             </div>
 
             <div className="overflow-x-auto">
@@ -305,12 +325,15 @@ export function Relatorios({ contexto }: { contexto: ContextoAtuacao | null }) {
                     {HOJE.map((i) => (
                       <TableHead key={i.chave}>{i.rotulo}</TableHead>
                     ))}
+                    {ESCALAS.map((i) => (
+                      <TableHead key={i.chave}>{i.rotulo}</TableHead>
+                    ))}
                     <TableHead className="sr-only">Abrir</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   <EstadoTabela
-                    colunas={2 + PERIODO.length + HOJE.length}
+                    colunas={2 + PERIODO.length + HOJE.length + ESCALAS.length}
                     carregando={carregando}
                     vazio={(relatorio.filhos ?? []).length === 0}
                     mensagemVazio="Esta unidade não tem subdivisões no relatório."
@@ -331,6 +354,9 @@ export function Relatorios({ contexto }: { contexto: ContextoAtuacao | null }) {
                         <CelulaIndicador key={i.chave} totais={filho.totais} chave={i.chave} />
                       ))}
                       {HOJE.map((i) => (
+                        <CelulaIndicador key={i.chave} totais={filho.totais} chave={i.chave} />
+                      ))}
+                      {ESCALAS.map((i) => (
                         <CelulaIndicador key={i.chave} totais={filho.totais} chave={i.chave} />
                       ))}
                       <TableCell className="text-right">

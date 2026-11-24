@@ -15,7 +15,7 @@ use App\Domain\Identidade\Services\ContextoAtuacao;
 final class VisibilidadeIgreja
 {
     /** Papeis que veem a igreja no relatorio. */
-    public const PAPEIS = ['coordenadora', 'adm_igreja', 'ministerio_local'];
+    public const PAPEIS = ['coordenadora', 'coordenadora_chefe', 'adm_igreja', 'ministerio_local'];
 
     /**
      * Papeis que veem a lista de participantes na propria igreja. O auxiliar

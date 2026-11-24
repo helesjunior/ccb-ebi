@@ -5,7 +5,7 @@ export type RelatorioPresenca = components['schemas']['RelatorioPresenca']
 export type NoRelatorio = RelatorioPresenca['no']
 export type TotaisRelatorio = RelatorioPresenca['totais']
 
-/** Chaves dos sete indicadores, como aparecem em `totais`. */
+/** Chaves dos indicadores, como aparecem em `totais` (M-01 a M-06). */
 export type ChaveIndicador =
   | 'participantes_distintos'
   | 'presencas'
@@ -14,6 +14,9 @@ export type ChaveIndicador =
   | 'participantes_cadastrados'
   | 'participantes_ativos'
   | 'igrejas_com_ebi_ativo'
+  | 'sessoes_previstas'
+  | 'sessoes_com_equipe_minima'
+  | 'cobertura_escala'
 
 /** Item de exibição: chave do indicador e rótulo humano. */
 export interface ItemIndicador {

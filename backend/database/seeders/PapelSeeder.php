@@ -23,6 +23,7 @@ class PapelSeeder extends Seeder
         'ministerio_setorial' => 'Ministerio (nivel setorial)',
         'ministerio_local' => 'Ministerio (nivel local)',
         'coordenadora' => 'Coordenadora',
+        'coordenadora_chefe' => 'Coordenadora chefe',
         'auxiliar' => 'Auxiliar',
         'responsavel' => 'Responsavel',
     ];

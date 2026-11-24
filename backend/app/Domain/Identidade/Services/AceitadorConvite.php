@@ -14,13 +14,16 @@ use Illuminate\Support\Facades\Hash;
  * Aceita um convite sem login: o token secreto (hash em `convite.token_hash`)
  * é a credencial. Em transação cria a conta verificada (posse do token comprova
  * o e-mail) e o vínculo vigente, e marca `aceito_em` (uso único). Replay => 410.
+ * O aceite da chefe tambem disputa a vaga unica da EBI (E07).
  */
 class AceitadorConvite implements AceitarConvite
 {
+    public function __construct(private readonly GuardaChefe $guarda) {}
+
     public function aceitar(string $conviteId, string $token, string $nome, string $senha): ContaCriada
     {
-        return DB::transaction(function () use ($conviteId, $token, $nome, $senha): ContaCriada {
-            $convite = Convite::query()->lockForUpdate()->find($conviteId);
+        return $this->guarda->traduzir(fn (): ContaCriada => DB::transaction(function () use ($conviteId, $token, $nome, $senha): ContaCriada {
+            $convite = Convite::query()->with('papel')->lockForUpdate()->find($conviteId);
 
             if ($convite === null || ! $convite->pendente()) {
                 throw new ProblemException('convite_ja_aceito', 'Convite indisponível', 410, 'O convite não está mais disponível.');
@@ -29,6 +32,9 @@ class AceitadorConvite implements AceitarConvite
             if (! hash_equals((string) $convite->token_hash, hash('sha256', $token))) {
                 throw new ProblemException('convite_ja_aceito', 'Convite indisponível', 410, 'O token do convite é inválido.');
             }
+
+            $this->guarda->garantirEscopo((string) $convite->papel?->codigo, (string) $convite->tipo_escopo);
+            $this->guarda->garantirVaga((string) $convite->papel?->codigo, (string) $convite->escopo_id);
 
             $usuario = Usuario::query()->create([
                 'nome' => $nome,
@@ -55,6 +61,6 @@ class AceitadorConvite implements AceitarConvite
                 emailNormalizado: (string) $usuario->email_normalizado,
                 nome: (string) $usuario->nome,
             );
-        });
+        }));
     }
 }

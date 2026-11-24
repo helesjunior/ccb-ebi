@@ -2,6 +2,7 @@
 
 namespace App\Domain\Relatorios\Services;
 
+use App\Domain\Escalas\Contracts\ConsultarCoberturaEscala;
 use App\Domain\Organizacao\Contracts\ConsultarHierarquia;
 use App\Domain\Organizacao\Contracts\ConsultarOrganizacao;
 use App\Domain\Participantes\Contracts\ConsultarIndicadoresParticipante;
@@ -36,11 +37,19 @@ class RelatorioPresenca implements ConsultarRelatorio
         'participantes_ativos',
     ];
 
+    /** Indicadores de cobertura que voltam sempre, sem passar pela supressao. */
+    private const SEMPRE_VISIVEIS = [
+        'sessoes_previstas',
+        'sessoes_com_equipe_minima',
+        'cobertura_escala',
+    ];
+
     public function __construct(
         private readonly ConsultarHierarquia $hierarquia,
         private readonly ConsultarOrganizacao $organizacao,
         private readonly ConsultarIndicadoresPresenca $presenca,
         private readonly ConsultarIndicadoresParticipante $participantes,
+        private readonly ConsultarCoberturaEscala $cobertura,
     ) {}
 
     public function presenca(string $tipo, string $id, string $inicio, string $fim, bool $suprimir): array
@@ -154,6 +163,22 @@ class RelatorioPresenca implements ConsultarRelatorio
             'media_por_sessao' => $sessoes > 0 ? round($presencas / $sessoes, 1) : null,
         ];
 
+        // M-06: sessoes ja ocorridas no periodo contra as que tem escala
+        // aprovada com a equipe minima confirmada (nunca suprimido).
+        $previstas = $this->presenca->sessoesPrevistas($igrejas, $ebis, $inicio, $fim, $geracao);
+        $idsPrevistas = array_values(array_unique(array_map(
+            fn (array $sessao): string => (string) $sessao['id'],
+            $previstas,
+        )));
+        $cobertas = $this->cobertura->cobertas($idsPrevistas);
+        $totalCobertas = count(array_intersect_key(array_flip($idsPrevistas), $cobertas));
+
+        $crus['sessoes_previstas'] = count($idsPrevistas);
+        $crus['sessoes_com_equipe_minima'] = $totalCobertas;
+        $crus['cobertura_escala'] = count($idsPrevistas) > 0
+            ? round($totalCobertas / count($idsPrevistas) * 100, 1)
+            : null;
+
         // M-01 e ativos: so por igreja de referencia; no EBI nao se aplica.
         $crus['participantes_cadastrados'] = null;
         $crus['participantes_ativos'] = null;
@@ -212,8 +237,16 @@ class RelatorioPresenca implements ConsultarRelatorio
     {
         $totais = [];
         foreach ($crus as $indicador => $valor) {
-            // M-09 conta igrejas, nao pessoas, e fica fora da supressao em todos
-            // os niveis: nao passa pelo limiar nem pela cascata (decisao 5).
+            // M-09 conta igrejas e M-06 conta sessoes, nao pessoas: ficam fora
+            // da supressao em todos os niveis (nao passam pelo limiar nem pela
+            // cascata). O M-06 volta sempre, inclusive com valor null; no M-09
+            // o null continua sendo "nao se aplica" (so vale para igreja).
+            if (in_array($indicador, self::SEMPRE_VISIVEIS, true)) {
+                $totais[$indicador] = ['valor' => $valor, 'suprimido' => false, 'motivo' => null];
+
+                continue;
+            }
+
             if ($indicador === 'igrejas_com_ebi_ativo' && $valor !== null) {
                 $totais[$indicador] = ['valor' => $valor, 'suprimido' => false, 'motivo' => null];
 
@@ -369,6 +402,8 @@ class RelatorioPresenca implements ConsultarRelatorio
             'No EBI, cadastrados, ativos e igrejas com EBI ativo nao se aplicam: o EBI e medido por participantes, presencas, sessoes e media.',
             'Valores entre 1 e 4 sao suprimidos para quem atua acima da igreja; um filho suprimido suprime os indicadores de pessoas e a media do pai.',
             'Sessoes realizadas e igrejas com EBI ativo nunca sao suprimidas.',
+            'M-06: sessoes nao canceladas ate a data de geracao; cobertas = escala aprovada com equipe minima confirmada e vinculo vigente; divisor registrado na escala.',
+            'Sessoes previstas, sessoes com equipe minima e cobertura da escala nunca sao suprimidas.',
             'A data de cada sessao usa o fuso da igreja dele.',
         ]), 2000, '');
     }

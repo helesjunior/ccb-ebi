@@ -2,6 +2,18 @@
 
 Formato: versão, data, autor e mudanças. Itens mais recentes primeiro.
 
+## 2.19 — 24/11/2026
+
+Etapa 7 — Escalas (E07, RF-07).
+
+- **Coordenadora chefe (ADR-0033):** papel novo `coordenadora_chefe`, superconjunto da coordenadora e só em escopo de EBI; **uma por EBI**, garantida por `vinculo_acesso.chefe_de_ebi_id` (único, zerado ao encerrar) e conferida no serviço nos três caminhos — convite, aceite e concessão respondem `422 chefe_ja_definida` ou `422 escopo_invalido_para_papel`.
+- **Escala por sessão:** uma escala por sessão, com membros por função (coordenadora/auxiliar), estimativa digitada e divisor copiado do EBI na criação; equipe mínima conferida no servidor. Aprovação pela chefe vigente, com o `adm_igreja` no lugar quando não há chefe; alterar a escala aprovada volta a `prevista` e cancela as trocas abertas.
+- **Confirmação e trocas:** o membro confirma a própria vaga; pede a troca, e a chefe decide (o pedido da própria chefe passa pelo `adm_igreja`). Quem não é escalado e não é da chefia responde 404 na vaga alheia.
+- **Conflito e minhas escalas:** conflito de horário entre igrejas é informativo, recortado por território, e `GET /me/schedules` lista as vagas do próprio usuário.
+- **Planejado × cumprido:** presença da equipe registrada na sessão `encerrada` e **M-06** (cobertura da escala) no relatório — percentual de sessões com a equipe confirmada atingindo o mínimo, com o divisor da própria escala, nunca suprimido e "—" quando não há denominador.
+- **Telas:** Escalas, Minhas escalas, bloco "Presença da equipe" na sessão, M-06 nos relatórios e a chefe nos menus e em Sessões/Presença/Vínculos/Equipe.
+- **Dívidas:** notificação da equipe e da chefia (RF-07, item 5), conflito sem bloqueio opcional, sem cancelamento nem cópia de escala e tela de trocas sem botão "Desistir".
+
 ## 2.18 — 17/11/2026
 
 Etapa 6 — Sessões e presença (E04).

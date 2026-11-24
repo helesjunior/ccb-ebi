@@ -1,6 +1,6 @@
 # Perfis e atores
 
-O sistema tem 15 perfis de acesso, todos limitados a uma unidade territorial ou aos dependentes vinculados. A matriz detalhada de permissões está em [matriz de autorização](../05-seguranca-e-privacidade/matriz-de-autorizacao.md).
+O sistema tem 16 perfis de acesso, todos limitados a uma unidade territorial ou aos dependentes vinculados. A matriz detalhada de permissões está em [matriz de autorização](../05-seguranca-e-privacidade/matriz-de-autorizacao.md).
 
 ## Perfis
 
@@ -16,6 +16,7 @@ O sistema tem 15 perfis de acesso, todos limitados a uma unidade territorial ou 
 | Ministério Local | Igreja designada | Moderar e liberar feedbacks dos EBIs da igreja ([ADR-0008](../06-arquitetura/decisoes/ADR-0008-moderacao-de-feedback.md)) | Obrigatório |
 | Coordenadora EBI | EBI(s) autorizados | Planejar sessões, registrar presenças, feedbacks, atividades e escalas locais; cadastro assistido; mesclar e corrigir cadastros ([ADR-0007](../06-arquitetura/decisoes/ADR-0007-cadastro-e-correcao-de-participantes.md)); decidir exceção inclusiva com o responsável ([ADR-0012](../06-arquitetura/decisoes/ADR-0012-excecao-decidida-pela-coordenadora.md)) | Obrigatório |
 | Auxiliar EBI | EBI(s) autorizados | Consultar escalas, registrar presenças, contribuir com atividades e feedbacks conforme autorização | Obrigatório |
+| Coordenadora chefe | EBI (um por EBI) | Tudo da Coordenadora EBI, mais aprovar a escala e decidir as trocas do EBI ([ADR-0033](../06-arquitetura/decisoes/ADR-0033-coordenadora-chefe-e-regras-da-escala.md)) | Obrigatório |
 | Consulta Nacional | Nacional, leitura | Indicadores agregados; dados identificáveis só com autorização específica | Obrigatório |
 | Consulta da Regional | Regional, leitura | Indicadores e consultas autorizadas na regional | Obrigatório |
 | Consulta do Setor | Setor, leitura | Indicadores e consultas autorizadas no setor | Obrigatório |
@@ -32,7 +33,7 @@ Funções que se somam a um perfil existente, com escopo próprio.
 
 | Atribuição | Citada em | Proposta | Status |
 |---|---|---|---|
-| Coordenadora chefe | [RF-07](../01-requisitos/funcionais/RF-07-escalas.md) | Uma por EBI; aprova escalas | Aceito ([ADR-0010](../06-arquitetura/decisoes/ADR-0010-equipe-minima-e-aprovacao-de-escala.md)) |
+| Coordenadora chefe | [RF-07](../01-requisitos/funcionais/RF-07-escalas.md) | Papel `coordenadora_chefe`, superconjunto da coordenadora, só em escopo de EBI; uma por EBI. Aprova a escala e decide as trocas; sem chefe vigente, o `adm_igreja` da igreja decide no lugar | Aceito ([ADR-0033](../06-arquitetura/decisoes/ADR-0033-coordenadora-chefe-e-regras-da-escala.md)) |
 | Avaliador de exceção inclusiva | [RF-02](../01-requisitos/funcionais/RF-02-cadastro-de-participantes.md) | Não é atribuição separada: a coordenadora do dia decide com o responsável | Aceito ([ADR-0012](../06-arquitetura/decisoes/ADR-0012-excecao-decidida-pela-coordenadora.md)) |
 | Moderador editorial | [RF-10](../01-requisitos/funcionais/RF-10-biblioteca-de-atividades.md), [RF-12](../01-requisitos/funcionais/RF-12-avaliacao-de-atividades.md) | Atribuição regional ou nacional; aprova e retira materiais | Moderador regional aprova na Regional; publicação nacional pelo Ministério da Central (proposta em [ADR-0028](../06-arquitetura/decisoes/ADR-0028-politica-editorial-dos-pdfs.md)) |
 | Moderador de feedback | [RF-09](../01-requisitos/funcionais/RF-09-feedback.md) | Perfil Ministério Local da igreja | Aceito ([ADR-0008](../06-arquitetura/decisoes/ADR-0008-moderacao-de-feedback.md)) |

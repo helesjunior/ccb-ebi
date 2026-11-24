@@ -76,6 +76,56 @@ class ConsultaIndicadoresPresenca implements ConsultarIndicadoresPresenca
         return $this->organizacao->fusosDasIgrejas($igrejaIds);
     }
 
+    public function sessoesPrevistas(array $igrejaIds, array $ebiIds, string $inicio, string $fim, CarbonImmutable $geracao): array
+    {
+        if ($igrejaIds === [] && $ebiIds === []) {
+            return [];
+        }
+
+        $igrejasAlvo = array_fill_keys(array_map('strval', $igrejaIds), true);
+        $ebisAlvo = array_fill_keys(array_map('strval', $ebiIds), true);
+
+        $fusos = $this->organizacao->fusosDasIgrejas(array_values(array_unique(
+            Sessao::query()->whereNotNull('igreja_id')->distinct()->pluck('igreja_id')->map(fn ($id): string => (string) $id)->all(),
+        )));
+
+        $sessoes = [];
+
+        Sessao::query()
+            ->select(['sessao.id', 'sessao.igreja_id', 'sessao.ebi_id', 'sessao.inicio_previsto'])
+            // A sessao so conta depois que deveria ter acontecido (M-06).
+            ->whereIn('sessao.status', [Sessao::STATUS_PREVISTA, Sessao::STATUS_ABERTA, Sessao::STATUS_ENCERRADA])
+            ->where('sessao.inicio_previsto', '<=', $geracao->utc())
+            ->orderBy('sessao.inicio_previsto')
+            ->chunkById(self::POR_PAGINA, function ($pagina) use (&$sessoes, $fusos, $igrejasAlvo, $ebisAlvo, $inicio, $fim): void {
+                foreach ($pagina as $sessao) {
+                    $fuso = $fusos[(string) $sessao->igreja_id] ?? null;
+                    if ($fuso === null) {
+                        continue;
+                    }
+
+                    $local = CarbonImmutable::parse($sessao->inicio_previsto, 'UTC')->setTimezone($fuso)->format('Y-m-d');
+                    if ($local < $inicio || $local > $fim) {
+                        continue;
+                    }
+
+                    $chaves = [];
+                    if (isset($igrejasAlvo[(string) $sessao->igreja_id])) {
+                        $chaves[] = 'igreja:'.$sessao->igreja_id;
+                    }
+                    if (isset($ebisAlvo[(string) $sessao->ebi_id])) {
+                        $chaves[] = 'ebi:'.$sessao->ebi_id;
+                    }
+
+                    foreach ($chaves as $chave) {
+                        $sessoes[] = ['id' => (string) $sessao->id, 'chave' => $chave, 'data_local' => $local];
+                    }
+                }
+            });
+
+        return $sessoes;
+    }
+
     public function participantesComPresencaDesde(array $canonico, CarbonImmutable $desde, ?CarbonImmutable $ate = null): array
     {
         $ids = [];

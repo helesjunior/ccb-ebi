@@ -78,10 +78,20 @@ Proposta inicial, prefixo `/api/v1`. Rotas marcadas *novo* não existiam na vers
 | POST | `/sessions/{id}/attendance` | Registrar presença, idempotente (`no OpenAPI`) | RF-08 |
 | GET | `/sessions/{id}/attendance` | Presenças da sessão *novo* (`no OpenAPI`) | RF-08 |
 | POST | `/attendance/{id}/reversal` | Estornar presença *novo* (`no OpenAPI`) | RF-08 |
-| GET | `/ebis/{id}/schedules` | Consultar escala (era `/roster`) | RF-07 |
-| POST | `/sessions/{id}/schedules` | Criar escala *novo* | RF-07 |
-| POST | `/schedules/{id}/approve` | Aprovação pela coordenadora chefe *novo (2.2)* | RF-07 |
-| POST/PATCH | `/schedule-swaps` | Pedir e aprovar troca *novo* | RF-07 |
+| GET | `/ebis/{id}/team` | Equipe do EBI para a escala *novo (E07)* (`no OpenAPI`) | RF-07 |
+| GET | `/ebis/{id}/schedules` | Consultar escala (era `/roster`) *novo (E07)* (`no OpenAPI`) | RF-07 |
+| POST | `/sessions/{id}/schedules` | Criar escala *novo (E07)* (`no OpenAPI`) | RF-07 |
+| GET/PATCH | `/schedules/{id}` | Detalhe e estimativa da escala *novo (E07)* (`no OpenAPI`) | RF-07 |
+| POST | `/schedules/{id}/members` | Incluir membro na escala *novo (E07)* (`no OpenAPI`) | RF-07 |
+| PATCH/DELETE | `/schedule-members/{id}` | Mudar funcao e retirar membro *novo (E07)* (`no OpenAPI`) | RF-07 |
+| POST | `/schedules/{id}/approve` | Aprovação pela coordenadora chefe (sem chefe, `adm_igreja`) *novo (E07)* (`no OpenAPI`) | RF-07 |
+| PUT | `/schedules/{id}/team-attendance` | Presença da equipe planejado × cumprido, com a sessão encerrada *novo (E07)* (`no OpenAPI`) | RF-07 |
+| POST | `/schedule-members/{id}/confirm` | Confirmação da própria vaga pelo membro *novo (E07)* (`no OpenAPI`) | RF-07 |
+| GET | `/me/schedules` | Minhas escalas no período (máx. 92 dias) *novo (E07)* (`no OpenAPI`) | RF-07 |
+| POST | `/schedule-swaps` | Pedir troca de vaga *novo (E07)* (`no OpenAPI`) | RF-07 |
+| GET | `/schedule-swaps` | Trocas do EBI, por `ebi_id` e opcional `status` *novo (E07)* (`no OpenAPI`) | RF-07 |
+| PATCH | `/schedule-swaps/{id}` | Aprovar ou recusar a troca *novo (E07)* (`no OpenAPI`) | RF-07 |
+| POST | `/schedule-swaps/{id}/cancel` | Cancelar o próprio pedido de troca *novo (E07)* (`no OpenAPI`) | RF-07 |
 | POST | `/sessions/{id}/feedback` | Registrar feedback | RF-09 |
 | POST | `/feedback/{id}/moderation` | Ministério Local libera ou devolve *novo* | RF-09 |
 | GET | `/me/ebis` | EBIs que o usuário pode operar *novo* (`no OpenAPI`) | RF-06 |

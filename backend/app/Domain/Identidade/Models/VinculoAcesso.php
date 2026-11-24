@@ -26,6 +26,9 @@ class VinculoAcesso extends Model
 
     public const TIPO_EBI = 'ebi';
 
+    /** Papel da coordenadora chefe: ocupa a vaga unica da EBI (E07). */
+    public const PAPEL_CHEFE = 'coordenadora_chefe';
+
     protected $table = 'vinculo_acesso';
 
     protected $fillable = [
@@ -36,12 +39,33 @@ class VinculoAcesso extends Model
         'inicio',
         'fim',
         'status',
+        'chefe_de_ebi_id',
     ];
 
     protected $casts = [
         'inicio' => 'date',
         'fim' => 'date',
     ];
+
+    protected static function booted(): void
+    {
+        // A vaga da chefe e derivada do proprio vinculo: num ponto so, para
+        // concessao, revogacao e aceite de convite nao divergirem.
+        static::saving(function (VinculoAcesso $vinculo): void {
+            $vinculo->chefe_de_ebi_id = $vinculo->ocupaVagaDeChefe()
+                ? (string) $vinculo->escopo_id
+                : null;
+        });
+    }
+
+    private function ocupaVagaDeChefe(): bool
+    {
+        if ($this->tipo_escopo !== self::TIPO_EBI || $this->fim !== null) {
+            return false;
+        }
+
+        return Papel::query()->whereKey($this->papel_id)->value('codigo') === self::PAPEL_CHEFE;
+    }
 
     /** @return BelongsTo<Usuario, $this> */
     public function usuario(): BelongsTo

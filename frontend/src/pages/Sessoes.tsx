@@ -50,7 +50,9 @@ export function Sessoes({ onAbrirPresenca, papeis }: {
   const [passagem, setPassagem] = useState('')
   const [auxiliares, setAuxiliares] = useState('')
   const consulta = useRef<AbortController | null>(null)
-  const podeGerenciar = papeis.some((p) => ['adm_igreja', 'coordenadora'].includes(p))
+  // A sessão carregada (detalhe) diz se a equipe vem da escala aprovada.
+  const [equipeDaEscala, setEquipeDaEscala] = useState<boolean | null>(null)
+  const podeGerenciar = papeis.some((p) => ['adm_igreja', 'coordenadora', 'coordenadora_chefe'].includes(p))
   const periodoValido = Boolean(de && ate && de <= ate)
   const motivoValido = motivo.trim().length >= 3 && motivo.trim().length <= 500
 
@@ -138,7 +140,17 @@ export function Sessoes({ onAbrirPresenca, papeis }: {
     setTema(sessao.tema ?? '')
     setPassagem(sessao.passagem_biblica ?? '')
     setAuxiliares(sessao.auxiliares_escalados?.toString() ?? '')
+    setEquipeDaEscala(null)
     setDialogo({ acao, sessao })
+    if (acao === 'corrigir' && sessao.id) {
+      // O PATCH não devolve `equipe_minima`; o GET diz se a fonte é a escala.
+      void api.GET('/sessions/{id}', { params: { path: { id: sessao.id } }, headers: cabecalhos() })
+        .then(({ data }) => {
+          const origem = (data?.equipe_minima as { origem?: string } | undefined)?.origem
+          setEquipeDaEscala(origem === 'escala')
+        })
+        .catch(() => setEquipeDaEscala(false))
+    }
   }
 
   async function salvar(acao: Acao | 'abrir', sessao: Sessao, realizada?: boolean) {
@@ -168,7 +180,7 @@ export function Sessoes({ onAbrirPresenca, papeis }: {
             ...options,
             body: {
               tema: tema.trim() || null, passagem_biblica: passagem.trim() || null,
-              auxiliares_escalados: auxiliares === '' ? null : Number(auxiliares),
+              auxiliares_escalados: equipeDaEscala ? undefined : auxiliares === '' ? null : Number(auxiliares),
               motivo: motivo.trim(),
             },
           })
@@ -290,7 +302,13 @@ export function Sessoes({ onAbrirPresenca, papeis }: {
             {dialogo?.acao === 'corrigir' && <>
               <div className="flex flex-col gap-2"><Label htmlFor="sessao-tema">Tema</Label><Input id="sessao-tema" value={tema} onChange={(e) => setTema(e.target.value)} disabled={enviando} /></div>
               <div className="flex flex-col gap-2"><Label htmlFor="sessao-passagem">Passagem bíblica</Label><Input id="sessao-passagem" value={passagem} onChange={(e) => setPassagem(e.target.value)} disabled={enviando} /></div>
-              <div className="flex flex-col gap-2"><Label htmlFor="sessao-auxiliares">Auxiliares escalados</Label><Input id="sessao-auxiliares" type="number" min="0" step="1" value={auxiliares} onChange={(e) => setAuxiliares(e.target.value)} disabled={enviando} /></div>
+              <div className="flex flex-col gap-2"><Label htmlFor="sessao-auxiliares">Auxiliares escalados</Label>
+                {equipeDaEscala === true ? (
+                  <p className="text-xs text-muted-foreground">Definida pela escala aprovada.</p>
+                ) : (
+                  <Input id="sessao-auxiliares" type="number" min="0" step="1" value={auxiliares} onChange={(e) => setAuxiliares(e.target.value)} disabled={enviando} />
+                )}
+              </div>
             </>}
             {dialogo && dialogo.acao !== 'encerrar' && (
               <div className="flex flex-col gap-2"><Label htmlFor="sessao-motivo">Motivo (3 a 500 caracteres)</Label><Input id="sessao-motivo" value={motivo} onChange={(e) => setMotivo(e.target.value)} minLength={3} maxLength={500} required disabled={enviando} /></div>

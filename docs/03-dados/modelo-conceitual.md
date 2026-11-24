@@ -26,7 +26,10 @@ erDiagram
   usuario ||--o{ responsavel_participante : "é responsável"
   usuario ||--o{ vinculo_acesso : "atua em"
   papel ||--o{ vinculo_acesso : define
-  usuario ||--o{ escala : "escalado"
+  ebi ||--o{ vinculo_acesso : "chefe vigente (chefe_de_ebi_id)"
+  escala ||--o{ escala_membro : "designa"
+  usuario ||--o{ escala_membro : "escalado"
+  escala_membro ||--o{ solicitacao_troca_escala : "pede troca"
   termo_versao ||--o{ manifestacao_privacidade : "aceito em"
   atividade ||--o{ atividade_versao : versiona
   arquivo ||--|| atividade_versao : contém
@@ -44,14 +47,14 @@ erDiagram
 | `setor` | id, regional_id, nome, código, status |
 | `igreja` | id, nome, endereço, latitude, longitude, timezone, status |
 | `igreja_vinculacao` | id, igreja_id, setor_id, inicio, fim *(novo: histórico de transferências, RF-01)* |
-| `ebi` | id, igreja_id, nome, status, coordenadora_chefe_id, participantes_por_auxiliar (parâmetro, padrão 4) |
+| `ebi` | id, igreja_id, nome, status, participantes_por_auxiliar (parâmetro, padrão 4) *(sem `coordenadora_chefe_id`: a chefe é o vínculo com `coordenadora_chefe` e `chefe_de_ebi_id`, único por EBI, ADR-0033)* |
 
 ### Identidade e acesso
 | Entidade | Campos-chave |
 |---|---|
 | `usuario` | id, nome, email_normalizado, email_verificado_em, senha_hash ou identidade_federada, status |
 | `papel` | id, código, descrição |
-| `vinculo_acesso` | id, usuario_id, papel_id, tipo_escopo, escopo_id, inicio, fim, status |
+| `vinculo_acesso` | id, usuario_id, papel_id, tipo_escopo, escopo_id, inicio, fim, status, chefe_de_ebi_id (nullable, único — preenchido só para `coordenadora_chefe` vigente, ADR-0033) |
 | `convite` | id, email, papel_id, escopo, criado_por, expira_em, status *(novo)* |
 | `fator_mfa` | id, usuario_id, tipo (totp, passkey, email), segredo_cifrado, criado_em *(novo)* |
 | `codigo_recuperacao` | id, usuario_id, hash, usado_em *(novo)* |
@@ -80,8 +83,9 @@ erDiagram
 | `agenda_excecao` | id, agenda_ebi_id ou ebi_id, data, tipo (feriado, cancelamento, horário especial), motivo *(novo, RF-06)* |
 | `sessao` | id, ebi_id, agenda_ebi_id, igreja_id, inicio_previsto, fim_previsto, inicio_real, fim_real, tema, passagem_biblica, status, realizada, auxiliares_escalados *(setor e regional derivam do vínculo vigente da igreja — a igreja é a âncora e o setor é sempre o atual, RN-09; previsto/real separados; `auxiliares_escalados` alimenta o aviso de equipe mínima, ADR-0010)* |
 | `sessao_correcao` | id, sessao_id, autor_id, antes (json), depois (json), motivo, ocorrido_em *(novo, RF-06)* |
-| `escala` | id, sessao_id, usuario_id, função, horário, status, aprovado_por, aprovado_em, confirmado_em, presente *(aprovação pela coordenadora chefe, ADR-0010)* |
-| `solicitacao_troca_escala` | id, escala_id, solicitante_id, substituto_id, status, aprovado_por *(novo, RF-07)* |
+| `escala` | id, sessao_id (único — uma escala por sessão), ebi_id, igreja_id, estimativa_participantes, participantes_por_auxiliar (divisor copiado na criação), status (prevista, aprovada), aprovado_por, aprovado_em, criado_por *(aprovação pela coordenadora chefe ou pelo `adm_igreja` sem chefe, ADR-0033)* |
+| `escala_membro` | id, escala_id, usuario_id, função (coordenadora, auxiliar), status (escalado, confirmado, troca_solicitada, substituido), confirmado_em, presente, presenca_registrada_por, presenca_registrada_em, substitui_membro_id *(novo, RF-07; unicidade de membro ativo por escala e horário é do serviço)* |
+| `solicitacao_troca_escala` | id, escala_membro_id, solicitante_id, motivo, status (pendente, aprovada, recusada, cancelada), substituto_membro_id, decidido_por, decidido_em, motivo_decisao *(novo, RF-07; `expirada` só na listagem)* |
 | `presenca` | id, sessao_id, participante_id, registrado_por, registrado_em, origem (web, app, contingencia), status, estornado_por, estornado_em, motivo_estorno *(origem e estorno novos, RF-08; `contingencia` na E04)* |
 | `feedback` | id, sessao_id, participante_id, autor_id, conteúdo, participação, visibilidade, status, moderado_por (Ministério Local), moderado_em |
 

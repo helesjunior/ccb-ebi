@@ -2104,6 +2104,791 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/ebis/{id}/team": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Equipe do EBI para a escala
+         * @description Membros vigentes que podem ser escalados: coordenadora, coordenadora chefe e auxiliar com vinculo no EBI ou na igreja dele, agrupados por usuario e ordenados por nome. Exige `escala.gerenciar`; EBI fora do alcance responde 404.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                };
+                path: {
+                    id: components["parameters"]["EbiId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Membros da equipe */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["MembroEquipe"][];
+                        };
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ebis/{id}/schedules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Sessoes do EBI com a situacao da escala
+         * @description Sessoes do periodo, cada uma com a escala (quando houver) e a situacao: `sem_escala`, `cancelada`, `abaixo_do_minimo`, `aguardando_aprovacao` ou `aprovada`. Exige `escala.ler`; EBI fora do alcance responde 404.
+         */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Inicio do periodo (inclusive). */
+                    inicio: string;
+                    /** @description Fim do periodo (inclusive). */
+                    fim: string;
+                };
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                };
+                path: {
+                    id: components["parameters"]["EbiId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Sessoes do periodo com a situacao da escala */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["EscalaResumo"][];
+                        };
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/{id}/schedules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Criar a escala de uma sessao
+         * @description A sessao precisa estar `prevista` ou `aberta` (409 `sessao_em_estado_invalido`). Uma escala por sessao: a segunda responde 409 `escala_existente`. O divisor de auxiliares e copiado do EBI no momento da criacao. Membro fora da equipe, sem vinculo vigente na data ou com papel incompativel responde 422 `membro_inelegivel`; a mesma pessoa duas vezes, 422 `membro_ja_escalado`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: components["parameters"]["SessaoId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["EscalaCriacaoInput"];
+                };
+            };
+            responses: {
+                /** @description Escala criada */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EscalaEnvelope"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                409: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/schedules/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Detalhe da escala
+         * @description Sessao, equipe minima calculada e membros com nome, vigencia e conflitos. Exige `escala.ler`; escala inexistente ou fora do alcance responde 404.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                };
+                path: {
+                    id: components["parameters"]["SessaoId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Escala */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EscalaEnvelope"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Alterar a estimativa da escala
+         * @description Toda alteracao desfaz a aprovacao: a escala volta a `prevista`, `aprovado_por`/`aprovado_em` sao limpos, o divisor atual do EBI e copiado, a confirmacao e mantida e as trocas pendentes sao canceladas (`escala.troca_cancelada`).
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: components["parameters"]["SessaoId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["EscalaEstimativaInput"];
+                };
+            };
+            responses: {
+                /** @description Escala alterada */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EscalaEnvelope"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                409: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        trace?: never;
+    };
+    "/schedules/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Aprovar a escala
+         * @description Exige `escala.aprovar`. Quem aprova de fato e a coordenadora chefe vigente do EBI; sem chefe vigente, o `adm_igreja` da igreja. Outro papel responde 403 `aprovador_invalido`. Guardas, nesta ordem: escala ja `aprovada` (409 `escala_em_estado_invalido`), sessao cancelada ou encerrada (409 `sessao_em_estado_invalido`), membro sem vinculo vigente na data (422 `membro_sem_vinculo`) e equipe minima nao atingida (422 `equipe_minima_nao_atingida`). Nenhuma recusa altera a escala. Sucesso grava `aprovado_por`/`aprovado_em` e registra `escala.aprovada`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: components["parameters"]["SessaoId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Escala aprovada */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EscalaEnvelope"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                409: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/schedules/{id}/team-attendance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Presença da equipe (planejado × cumprido)
+         * @description Exige `escala.gerenciar` e território. Só com a sessão `encerrada` (409 `sessao_em_estado_invalido`). O envio pode ser parcial: grava só as vagas informadas, e só o que muda, com quem e quando registrou. Id de outra escala ou de vaga `substituido` inteiro o lote sem gravar nada (422 `membro_invalido`). Reenviar o mesmo corpo não gera evento; uma correção registra `escala.presenca_equipe` com `antes`/`depois` por `membro_id` (sem nomes). Responde com o detalhe da escala.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: components["parameters"]["SessaoId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PresencaEquipeInput"];
+                };
+            };
+            responses: {
+                /** @description Presença registrada */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EscalaEnvelope"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                409: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/schedules/{id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Incluir membro na escala
+         * @description Quem foi substituido pode ser reincluido (linha nova). Quem ja ocupa vaga responde 422 `membro_ja_escalado`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: components["parameters"]["SessaoId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["EscalaMembroInput"];
+                };
+            };
+            responses: {
+                /** @description Escala com o novo membro */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EscalaEnvelope"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                409: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/schedule-members/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Retirar membro da escala
+         * @description O membro sai da escala e a escala volta a `prevista`. Membro ja substituido responde 409 `membro_em_estado_invalido`.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: components["parameters"]["SessaoId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Escala sem o membro */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EscalaEnvelope"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                409: components["responses"]["Problem"];
+            };
+        };
+        options?: never;
+        head?: never;
+        /**
+         * Mudar a funcao de um membro
+         * @description A funcao nova precisa ser permitida pelo papel vigente (422 `membro_inelegivel`); membro ja substituido responde 409 `membro_em_estado_invalido`.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: components["parameters"]["SessaoId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["EscalaFuncaoInput"];
+                };
+            };
+            responses: {
+                /** @description Escala atualizada */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EscalaEnvelope"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                409: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        trace?: never;
+    };
+    "/schedule-members/{id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirmar a própria vaga na escala
+         * @description Nao exige `escala.gerenciar`: a vaga tem de ser da propria pessoa (vaga de outra ou inexistente responde 404). Guardas, nesta ordem: escala fora de `aprovada` (409 `escala_em_estado_invalido`), sessao cancelada ou encerrada (409 `sessao_em_estado_invalido`), vinculo nao vigente na data (422 `membro_sem_vinculo`) e membro em `troca_solicitada` ou `substituido` (409 `membro_em_estado_invalido`). `escalado` passa a `confirmado` com `confirmado_em` e registra `escala.membro_confirmado`; quem ja confirmou recebe 200 sem novo evento.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: components["parameters"]["SessaoId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Vaga confirmada */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EscalaConfirmacao"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                409: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/schedules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Minhas escalas
+         * @description Vagas da propria pessoa no periodo (datas ISO, no maximo 92 dias), ordenadas por `inicio_previsto`. Nao exige `escala.ler`: o recorte e sempre o do usuario autenticado. Os conflitos (CA-12) sao da propria pessoa, entao vem sempre com os nomes.
+         */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Início do intervalo (inclusive). */
+                    inicio: string;
+                    /** @description Fim do intervalo (inclusive). */
+                    fim: string;
+                };
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Vagas da pessoa no periodo */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["MinhaEscala"][];
+                        };
+                    };
+                };
+                401: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/schedule-swaps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Trocas de vaga do EBI
+         * @description Exige `troca.decidir` no escopo `ebi:<ebi_id>`. Lista as trocas das vagas do EBI, opcionalmente filtradas por `status`. `situacao` e `expirada` quando o pedido continua `pendente` e a sessao deixou de estar `prevista`; a troca ja decidida nunca expira.
+         */
+        get: {
+            parameters: {
+                query: {
+                    ebi_id: string;
+                    status?: "pendente" | "aprovada" | "recusada" | "cancelada";
+                };
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Trocas do EBI */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["TrocaEscala"][];
+                        };
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        /**
+         * Pedir troca de vaga
+         * @description So o proprio membro pede pela vaga dele; vaga de outra pessoa ou inexistente responde 404 sem revelar. Guardas, nesta ordem: escala `aprovada` (409 `escala_em_estado_invalido`), sessao `prevista` (409 `sessao_em_estado_invalido`), vaga `escalado`/`confirmado` sem troca pendente (409 `membro_em_estado_invalido`). Sucesso grava a solicitacao `pendente`, marca a vaga `troca_solicitada` e registra `escala.troca_solicitada`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        escala_membro_id: string;
+                        motivo?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Pedido registrado */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TrocaEscalaEnvelope"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                409: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/schedule-swaps/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancelar o proprio pedido de troca
+         * @description So o solicitante cancela; outro usuario recebe 404. Pedido ja decidido responde 409 `troca_ja_decidida`. Sucesso devolve a vaga ao estado anterior (`escalado` ou `confirmado`) e registra `escala.troca_cancelada`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: components["parameters"]["TrocaId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Troca cancelada */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TrocaEscalaEnvelope"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                409: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/schedule-swaps/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Decidir a troca
+         * @description Exige `troca.decidir` no EBI da escala; troca fora do alcance responde 404. Guardas, nesta ordem: o solicitante nunca decide o proprio pedido (403 `sem_permissao`), quem decide de fato e a coordenadora chefe vigente ou, quando o pedido e da chefe ou nao ha chefe vigente, o `adm_igreja` da igreja (403 `aprovador_invalido`), troca ja decidida (409 `troca_ja_decidida`), escala `aprovada` e sessao `prevista` (409). Aprovar exige substituto da equipe, vigente na data e fora da escala (422 `membro_inelegivel`, 422 `membro_ja_escalado`): o original fica `substituido` e nasce o novo membro na mesma funcao, sem derrubar a aprovacao. Recusar devolve a vaga ao estado anterior. Registra `escala.troca_decidida`.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: components["parameters"]["TrocaId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        decisao: "aprovar" | "recusar";
+                        /** @description Obrigatorio junto de `aprovar`. */
+                        substituto_usuario_id?: string | null;
+                        motivo?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Troca decidida */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TrocaEscalaEnvelope"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                409: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        trace?: never;
+    };
     "/ebis/{id}/sessions": {
         parameters: {
             query?: never;
@@ -2260,7 +3045,7 @@ export interface paths {
         head?: never;
         /**
          * Correção da sessão
-         * @description Corrige dados da sessão (`tema`, `passagem_biblica`, `inicio_real`, `fim_real`, `realizada`, `auxiliares_escalados`). `motivo` é obrigatório quando a sessão está `encerrada`.
+         * @description Corrige dados da sessão (`tema`, `passagem_biblica`, `inicio_real`, `fim_real`, `realizada`, `auxiliares_escalados`). `motivo` é obrigatório quando a sessão está `encerrada`. Com escala aprovada, `auxiliares_escalados` responde 422 `escala_aprovada_define_equipe`: quem conta são os auxiliares da escala.
          */
         patch: {
             parameters: {
@@ -3691,8 +4476,8 @@ export interface paths {
                     content: {
                         "application/json": components["schemas"]["RelatorioPresenca"];
                         /**
-                         * @example nivel,id,nome,participantes_distintos,presencas,sessoes_realizadas,media_por_sessao,participantes_cadastrados,participantes_ativos,igrejas_com_ebi_ativo,periodo_inicio,periodo_fim,fuso,gerado_em,criterios
-                         *     igreja,01H...,Igreja,42,120,8,15.0,60,58,1,2026-10-20,2026-11-19,America/Sao_Paulo,2026-11-19T12:00:00+00:00,"Participantes sem igreja de referencia..."
+                         * @example nivel,id,nome,participantes_distintos,presencas,sessoes_realizadas,media_por_sessao,participantes_cadastrados,participantes_ativos,igrejas_com_ebi_ativo,sessoes_previstas,sessoes_com_equipe_minima,cobertura_escala,periodo_inicio,periodo_fim,fuso,gerado_em,criterios
+                         *     igreja,01H...,Igreja,42,120,8,15.0,60,58,1,8,6,75.0,2026-10-20,2026-11-19,America/Sao_Paulo,2026-11-19T12:00:00+00:00,"Participantes sem igreja de referencia..."
                          */
                         "text/csv": string;
                     };
@@ -3778,6 +4563,9 @@ export interface components {
             participantes_cadastrados: components["schemas"]["RelatorioIndicador"];
             participantes_ativos: components["schemas"]["RelatorioIndicador"];
             igrejas_com_ebi_ativo: components["schemas"]["RelatorioIndicador"];
+            sessoes_previstas: components["schemas"]["RelatorioIndicador"];
+            sessoes_com_equipe_minima: components["schemas"]["RelatorioIndicador"];
+            cobertura_escala: components["schemas"]["RelatorioIndicador"];
         };
         Usuario: {
             id?: string;
@@ -4198,6 +4986,168 @@ export interface components {
             hora_fim?: string | null;
             motivo: string;
         };
+        MembroEquipe: {
+            usuario_id: string;
+            nome: string;
+            /** @description Papeis de equipe vigentes agrupados (coordenadora, coordenadora_chefe, auxiliar). */
+            papeis: string[];
+        };
+        EscalaEquipeMembro: components["schemas"]["EscalaMembro"];
+        EscalaCriacaoInput: {
+            estimativa_participantes: number;
+            membros?: components["schemas"]["EscalaMembroInput"][];
+        };
+        EscalaEstimativaInput: {
+            estimativa_participantes: number;
+        };
+        EscalaMembroInput: {
+            usuario_id: string;
+            /** @enum {string} */
+            funcao: "coordenadora" | "auxiliar";
+        };
+        EscalaFuncaoInput: {
+            /** @enum {string} */
+            funcao: "coordenadora" | "auxiliar";
+        };
+        EscalaEnvelope: {
+            escala?: components["schemas"]["Escala"];
+        };
+        PresencaEquipeInput: {
+            membros: {
+                /** @description Id da vaga (`EscalaMembro`). */
+                id: string;
+                presente: boolean;
+            }[];
+        };
+        EscalaResumo: {
+            sessao_id?: string;
+            /** Format: date-time */
+            inicio_previsto?: string;
+            /** Format: date-time */
+            fim_previsto?: string;
+            sessao_status?: string;
+            escala_id?: string | null;
+            /** @enum {string} */
+            situacao?: "sem_escala" | "cancelada" | "abaixo_do_minimo" | "aguardando_aprovacao" | "aprovada";
+            confirmados?: number;
+            membros?: number;
+        };
+        Escala: {
+            id?: string;
+            sessao_id?: string;
+            ebi_id?: string;
+            igreja_id?: string;
+            /** @enum {string} */
+            status?: "prevista" | "aprovada";
+            /** @enum {string} */
+            situacao?: "cancelada" | "abaixo_do_minimo" | "aguardando_aprovacao" | "aprovada";
+            estimativa_participantes?: number;
+            participantes_por_auxiliar?: number;
+            aprovado_por?: string | null;
+            /** Format: date-time */
+            aprovado_em?: string | null;
+            sessao?: {
+                /** Format: date-time */
+                inicio_previsto?: string;
+                /** Format: date-time */
+                fim_previsto?: string;
+                status?: string;
+            };
+            /** @description Calculo da equipe minima (ver CalculadoraEquipeMinima). */
+            equipe_minima?: Record<string, never>;
+            membros?: components["schemas"]["EscalaMembro"][];
+            presenca_equipe_pendente?: boolean;
+        };
+        EscalaMembro: {
+            id?: string;
+            usuario_id?: string;
+            nome?: string;
+            /** @enum {string} */
+            funcao?: "coordenadora" | "auxiliar";
+            /** @enum {string} */
+            status?: "escalado" | "confirmado" | "troca_solicitada" | "substituido";
+            /** Format: date-time */
+            confirmado_em?: string | null;
+            presente?: boolean | null;
+            substitui_membro_id?: string | null;
+            sem_vinculo?: boolean;
+            /** @description CA-12: outras sessoes da pessoa que se sobrepoem a esta. So aviso, nunca bloqueia. O horario aparece para qualquer leitor; os nomes so para quem alcanca o outro EBI ou para a propria pessoa. */
+            conflitos?: components["schemas"]["ConflitoEscala"][];
+        };
+        ConflitoEscala: {
+            /** @description Nulo quando o leitor não alcança o outro EBI. */
+            sessao_id?: string | null;
+            /** Format: date-time */
+            inicio?: string;
+            /** Format: date-time */
+            fim?: string;
+            igreja_nome?: string | null;
+            ebi_nome?: string | null;
+        };
+        EscalaConfirmacao: {
+            membro?: {
+                id?: string;
+                escala_id?: string;
+                usuario_id?: string;
+                /** @enum {string} */
+                funcao?: "coordenadora" | "auxiliar";
+                /** @enum {string} */
+                status?: "escalado" | "confirmado" | "troca_solicitada" | "substituido";
+                /** Format: date-time */
+                confirmado_em?: string | null;
+                presente?: boolean | null;
+            };
+            /** @description CA-12, da propria pessoa. */
+            conflitos?: components["schemas"]["ConflitoEscala"][];
+        };
+        MinhaEscala: {
+            escala_id?: string;
+            membro_id?: string;
+            sessao_id?: string;
+            /** Format: date-time */
+            inicio_previsto?: string;
+            /** Format: date-time */
+            fim_previsto?: string;
+            sessao_status?: string;
+            /** @enum {string} */
+            escala_status?: "prevista" | "aprovada" | "cancelada";
+            /** @enum {string} */
+            funcao?: "coordenadora" | "auxiliar";
+            /** @enum {string} */
+            status?: "escalado" | "confirmado" | "troca_solicitada";
+            presente?: boolean | null;
+            conflitos?: components["schemas"]["ConflitoEscala"][];
+        };
+        TrocaEscalaEnvelope: {
+            troca?: components["schemas"]["TrocaEscala"];
+        };
+        TrocaEscala: {
+            id?: string;
+            /** @description So na listagem. */
+            escala_id?: string;
+            /** @description So na listagem. */
+            sessao_id?: string;
+            /** @description Vaga original do pedido. */
+            escala_membro_id?: string;
+            /** @description So na listagem (mesmo valor de escala_membro_id). */
+            membro_id?: string;
+            solicitante_id?: string;
+            /** @description So na listagem. */
+            solicitante_nome?: string;
+            motivo?: string | null;
+            /** @enum {string} */
+            status?: "pendente" | "aprovada" | "recusada" | "cancelada";
+            /** @enum {string} */
+            situacao?: "pendente" | "aprovada" | "recusada" | "cancelada" | "expirada";
+            /** @description Vaga criada pela aprovacao. */
+            substituto_membro_id?: string | null;
+            decidido_por?: string | null;
+            /** Format: date-time */
+            decidido_em?: string | null;
+            motivo_decisao?: string | null;
+            /** Format: date-time */
+            criado_em?: string;
+        };
         Sessao: {
             id?: string;
             ebi_id?: string;
@@ -4229,6 +5179,11 @@ export interface components {
             auxiliares_necessarios?: number;
             auxiliares_informados?: number | null;
             alerta?: boolean;
+            /**
+             * @description `escala` quando há escala aprovada (conta auxiliares confirmados e vigentes na data); `informado` quando vem do campo antigo da sessão.
+             * @enum {string}
+             */
+            origem?: "escala" | "informado";
         };
         SessaoDetalhe: components["schemas"]["Sessao"] & {
             equipe_minima?: components["schemas"]["EquipeMinima"];
@@ -4354,6 +5309,7 @@ export interface components {
         VinculoResponsavelId: string;
         ExcecaoEtariaId: string;
         ArquivoId: string;
+        TrocaId: string;
         /** @description Finalidade declarada da leitura identificável (matriz `*` da leitura), registrada na auditoria. Não reusa a finalidade do termo de consentimento. */
         FinalidadeLeitura: string;
     };

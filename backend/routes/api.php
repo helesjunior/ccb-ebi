@@ -11,6 +11,9 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CentralController;
 use App\Http\Controllers\Api\V1\ChurchController;
 use App\Http\Controllers\Api\V1\EbiController;
+use App\Http\Controllers\Api\V1\EquipeEbiController;
+use App\Http\Controllers\Api\V1\EscalaController;
+use App\Http\Controllers\Api\V1\EscalaMembroController;
 use App\Http\Controllers\Api\V1\GuardianController;
 use App\Http\Controllers\Api\V1\GuardianRequestController;
 use App\Http\Controllers\Api\V1\HealthController;
@@ -19,6 +22,7 @@ use App\Http\Controllers\Api\V1\InvitationAcceptController;
 use App\Http\Controllers\Api\V1\InvitationController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MfaController;
+use App\Http\Controllers\Api\V1\MinhasEscalasController;
 use App\Http\Controllers\Api\V1\ParticipantController;
 use App\Http\Controllers\Api\V1\ParticipantMergeController;
 use App\Http\Controllers\Api\V1\PasswordController;
@@ -32,6 +36,7 @@ use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\SectorController;
 use App\Http\Controllers\Api\V1\SessaoController;
 use App\Http\Controllers\Api\V1\SessionController;
+use App\Http\Controllers\Api\V1\TrocaEscalaController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Middleware\IdempotenciaMiddleware;
 use Illuminate\Support\Facades\Route;
@@ -203,6 +208,49 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         });
         Route::patch('age-exceptions/{id}', [AgeExceptionController::class, 'update'])
             ->middleware('can:excecao.decidir')->name('age-exceptions.update');
+
+        // Equipe do EBI para montar a escala (E07): quem pode ser escalado.
+        Route::get('ebis/{id}/team', [EquipeEbiController::class, 'index'])
+            ->name('ebis.team');
+
+        // Escalas (E07, RF-07): a autorizacao e feita no controller
+        // (`AutorizacaoEscala`), que distingue 403 de 404 por territorio.
+        Route::get('ebis/{id}/schedules', [EscalaController::class, 'index'])
+            ->name('schedules.index');
+        Route::middleware(IdempotenciaMiddleware::class)->group(function (): void {
+            Route::post('sessions/{id}/schedules', [EscalaController::class, 'store'])
+                ->name('schedules.store');
+            Route::patch('schedules/{id}', [EscalaController::class, 'update'])
+                ->name('schedules.update');
+            Route::post('schedules/{id}/members', [EscalaMembroController::class, 'store'])
+                ->name('schedules.members.store');
+            Route::patch('schedule-members/{id}', [EscalaMembroController::class, 'update'])
+                ->name('schedule-members.update');
+            Route::delete('schedule-members/{id}', [EscalaMembroController::class, 'destroy'])
+                ->name('schedule-members.destroy');
+            Route::post('schedule-members/{id}/confirm', [EscalaMembroController::class, 'confirmar'])
+                ->name('schedule-members.confirm');
+            Route::post('schedules/{id}/approve', [EscalaController::class, 'aprovar'])
+                ->name('schedules.approve');
+            Route::put('schedules/{id}/team-attendance', [EscalaController::class, 'presenca'])
+                ->name('schedules.team-attendance');
+        });
+        Route::get('schedules/{id}', [EscalaController::class, 'show'])->name('schedules.show');
+
+        // "Minhas escalas" (E07): as vagas da propria pessoa no periodo.
+        Route::get('me/schedules', [MinhasEscalasController::class, 'index'])->name('me.schedules');
+
+        // Trocas de vaga (E07, RF-07): o membro pede e cancela; a lista e a
+        // decisao passam por `troca.decidir` (matriz + territorio).
+        Route::get('schedule-swaps', [TrocaEscalaController::class, 'index'])->name('schedule-swaps.index');
+        Route::middleware(IdempotenciaMiddleware::class)->group(function (): void {
+            Route::post('schedule-swaps', [TrocaEscalaController::class, 'store'])
+                ->name('schedule-swaps.store');
+            Route::post('schedule-swaps/{id}/cancel', [TrocaEscalaController::class, 'cancel'])
+                ->name('schedule-swaps.cancel');
+            Route::patch('schedule-swaps/{id}', [TrocaEscalaController::class, 'update'])
+                ->name('schedule-swaps.update');
+        });
 
         Route::get('ebis/{id}/agenda', [AgendaController::class, 'index'])->name('agenda.index');
         Route::post('ebis/{id}/agenda', [AgendaController::class, 'store'])

@@ -5,6 +5,7 @@ namespace App\Domain\Sessoes\Services;
 use App\Domain\Organizacao\Contracts\ConsultarEbi;
 use App\Domain\Organizacao\Contracts\EbiDados;
 use App\Domain\Sessoes\Contracts\ConsultarSessao;
+use App\Domain\Sessoes\Contracts\IntervaloSessao;
 use App\Domain\Sessoes\Contracts\SessaoEbi;
 use App\Domain\Sessoes\Models\Sessao;
 use App\Support\ProblemException;
@@ -49,6 +50,37 @@ class ConsultaSessao implements ConsultarSessao
         $ebi = $this->ebis->dados($sessao->ebi_id) ?? throw new ProblemException('not_found', 'Recurso não encontrado', 404);
 
         return $this->dto($sessao, $ebi);
+    }
+
+    public function intervalos(array $sessaoIds): array
+    {
+        if ($sessaoIds === []) {
+            return [];
+        }
+
+        $mapa = [];
+
+        foreach (Sessao::query()->whereIn('id', $sessaoIds)->get() as $sessao) {
+            $ebi = $this->ebis->dados($sessao->ebi_id);
+            if ($ebi === null) {
+                continue;
+            }
+
+            $inicio = CarbonImmutable::parse($sessao->inicio_previsto)->utc();
+
+            $mapa[(string) $sessao->id] = new IntervaloSessao(
+                (string) $sessao->id,
+                (string) $sessao->ebi_id,
+                (string) $sessao->igreja_id,
+                $inicio,
+                CarbonImmutable::parse($sessao->fim_previsto)->utc(),
+                (string) $sessao->status,
+                $ebi->timezone,
+                $inicio->setTimezone($ebi->timezone)->toDateString(),
+            );
+        }
+
+        return $mapa;
     }
 
     private function dto(Sessao $sessao, EbiDados $ebi): SessaoEbi
