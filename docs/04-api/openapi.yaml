@@ -2416,8 +2416,8 @@ paths:
             text/csv:
               schema: { type: string }
               example: |
-                nivel,id,nome,participantes_distintos,presencas,sessoes_realizadas,media_por_sessao,participantes_cadastrados,participantes_ativos,igrejas_com_ebi_ativo,periodo_inicio,periodo_fim,fuso,gerado_em,criterios
-                igreja,01H...,Igreja,42,120,8,15.0,60,58,1,2026-10-20,2026-11-19,America/Sao_Paulo,2026-11-19T12:00:00+00:00,"Participantes sem igreja de referencia..."
+                nivel,id,nome,participantes_distintos,presencas,sessoes_realizadas,media_por_sessao,participantes_cadastrados,participantes_ativos,igrejas_com_ebi_ativo,sessoes_previstas,sessoes_com_equipe_minima,cobertura_escala,periodo_inicio,periodo_fim,fuso,gerado_em,criterios
+                igreja,01H...,Igreja,42,120,8,15.0,60,58,1,8,6,75.0,2026-10-20,2026-11-19,America/Sao_Paulo,2026-11-19T12:00:00+00:00,"Participantes sem igreja de referencia..."
         '401': { $ref: '#/components/responses/Problem' }
         '403': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
@@ -2641,6 +2641,9 @@ components:
         - participantes_cadastrados
         - participantes_ativos
         - igrejas_com_ebi_ativo
+        - sessoes_previstas
+        - sessoes_com_equipe_minima
+        - cobertura_escala
       properties:
         participantes_distintos: { $ref: '#/components/schemas/RelatorioIndicador' }
         presencas: { $ref: '#/components/schemas/RelatorioIndicador' }
@@ -2649,6 +2652,12 @@ components:
         participantes_cadastrados: { $ref: '#/components/schemas/RelatorioIndicador' }
         participantes_ativos: { $ref: '#/components/schemas/RelatorioIndicador' }
         igrejas_com_ebi_ativo: { $ref: '#/components/schemas/RelatorioIndicador' }
+        # M-06 (E07): sessoes ja ocorridas no periodo, as que tem escala
+        # aprovada com a equipe minima confirmada e vigente, e o percentual.
+        # Nao passam pela supressao por limiar (contam sessoes, nao pessoas).
+        sessoes_previstas: { $ref: '#/components/schemas/RelatorioIndicador' }
+        sessoes_com_equipe_minima: { $ref: '#/components/schemas/RelatorioIndicador' }
+        cobertura_escala: { $ref: '#/components/schemas/RelatorioIndicador' }
     Usuario:
       type: object
       properties:

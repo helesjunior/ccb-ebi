@@ -16,11 +16,13 @@ use App\Domain\DadosSensiveis\Contracts\LerDadoSensivel;
 use App\Domain\DadosSensiveis\Services\ArmazenadorDadoSensivel;
 use App\Domain\DadosSensiveis\Services\ExpurgadorRetencao;
 use App\Domain\DadosSensiveis\Services\LeitorDadoSensivel;
+use App\Domain\Escalas\Contracts\ConsultarCoberturaEscala;
 use App\Domain\Escalas\Contracts\ConsultarEquipeEscalada;
 use App\Domain\Escalas\Contracts\ConsultarEscala;
 use App\Domain\Escalas\Contracts\GerirEscala;
 use App\Domain\Escalas\Contracts\GerirTrocaEscala;
 use App\Domain\Escalas\Contracts\ParticiparEscala;
+use App\Domain\Escalas\Services\ConsultaCoberturaEscala;
 use App\Domain\Escalas\Services\ConsultaEquipeEscalada;
 use App\Domain\Escalas\Services\ConsultaEscala;
 use App\Domain\Escalas\Services\GerenciadorEscala;
@@ -173,5 +175,6 @@ class DomainServiceProvider extends ServiceProvider
         $this->app->bind(ParticiparEscala::class, ParticipacaoEscala::class);
         $this->app->bind(GerirTrocaEscala::class, GerenciadorTrocaEscala::class);
         $this->app->bind(ConsultarEquipeEscalada::class, ConsultaEquipeEscalada::class);
+        $this->app->bind(ConsultarCoberturaEscala::class, ConsultaCoberturaEscala::class);
     }
 }

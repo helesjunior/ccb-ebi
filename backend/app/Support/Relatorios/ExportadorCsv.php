@@ -17,6 +17,9 @@ class ExportadorCsv
         'participantes_cadastrados',
         'participantes_ativos',
         'igrejas_com_ebi_ativo',
+        'sessoes_previstas',
+        'sessoes_com_equipe_minima',
+        'cobertura_escala',
     ];
 
     /** Prefixos que uma planilha executaria como formula. */

@@ -4476,8 +4476,8 @@ export interface paths {
                     content: {
                         "application/json": components["schemas"]["RelatorioPresenca"];
                         /**
-                         * @example nivel,id,nome,participantes_distintos,presencas,sessoes_realizadas,media_por_sessao,participantes_cadastrados,participantes_ativos,igrejas_com_ebi_ativo,periodo_inicio,periodo_fim,fuso,gerado_em,criterios
-                         *     igreja,01H...,Igreja,42,120,8,15.0,60,58,1,2026-10-20,2026-11-19,America/Sao_Paulo,2026-11-19T12:00:00+00:00,"Participantes sem igreja de referencia..."
+                         * @example nivel,id,nome,participantes_distintos,presencas,sessoes_realizadas,media_por_sessao,participantes_cadastrados,participantes_ativos,igrejas_com_ebi_ativo,sessoes_previstas,sessoes_com_equipe_minima,cobertura_escala,periodo_inicio,periodo_fim,fuso,gerado_em,criterios
+                         *     igreja,01H...,Igreja,42,120,8,15.0,60,58,1,8,6,75.0,2026-10-20,2026-11-19,America/Sao_Paulo,2026-11-19T12:00:00+00:00,"Participantes sem igreja de referencia..."
                          */
                         "text/csv": string;
                     };
@@ -4563,6 +4563,9 @@ export interface components {
             participantes_cadastrados: components["schemas"]["RelatorioIndicador"];
             participantes_ativos: components["schemas"]["RelatorioIndicador"];
             igrejas_com_ebi_ativo: components["schemas"]["RelatorioIndicador"];
+            sessoes_previstas: components["schemas"]["RelatorioIndicador"];
+            sessoes_com_equipe_minima: components["schemas"]["RelatorioIndicador"];
+            cobertura_escala: components["schemas"]["RelatorioIndicador"];
         };
         Usuario: {
             id?: string;
