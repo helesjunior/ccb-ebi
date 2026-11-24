@@ -32,7 +32,12 @@ export function AceitarConvite({ conviteId, token }: AceitarConviteProps) {
     setEnviando(false)
 
     if (error) {
-      setErro(lerErro(error, 'Não foi possível aceitar o convite.').detail)
+      const problema = lerErro(error, 'Não foi possível aceitar o convite.')
+      setErro(
+        problema.code === 'chefe_ja_definida'
+          ? 'Este EBI já tem uma coordenação chefe vigente. Peça um novo convite ao administrador.'
+          : problema.detail,
+      )
       return
     }
 

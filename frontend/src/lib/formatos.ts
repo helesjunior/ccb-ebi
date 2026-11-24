@@ -40,6 +40,7 @@ const PAPEIS: Record<string, string> = {
   adm_setor: 'Administração de setor',
   adm_igreja: 'Administração da igreja',
   coordenadora: 'Coordenação',
+  coordenadora_chefe: 'Coordenação chefe',
   auxiliar: 'Auxiliar',
   ministerio_local: 'Ministério local',
   responsavel: 'Responsável',
@@ -47,6 +48,12 @@ const PAPEIS: Record<string, string> = {
 
 /** Papéis conhecidos, na ordem em que aparecem nos seletores. */
 export const PAPEIS_CONHECIDOS = Object.keys(PAPEIS)
+
+/**
+ * Papéis que só existem com escopo de EBI (a chefe coordena uma EBI). Nos
+ * formulários de vínculo, escolher um deles trava o tipo de escopo em `ebi`.
+ */
+export const PAPEIS_SO_EBI = ['coordenadora_chefe']
 
 export function rotuloPapel(codigo?: string | null): string {
   if (!codigo) return '—'
@@ -99,6 +106,34 @@ const STATUS: Record<string, string> = {
 export function rotuloStatus(codigo?: string | null): string {
   if (!codigo) return '—'
   return STATUS[codigo] ?? codigo.replaceAll('_', ' ')
+}
+
+/**
+ * Situação da escala. A escala só tem `prevista` e `aprovada` (alterar uma
+ * aprovada volta para `prevista`), por isso não reusa o `rotuloStatus` de
+ * sessão.
+ */
+const SITUACOES_ESCALA: Record<string, string> = {
+  prevista: 'Prevista',
+  aprovada: 'Aprovada',
+}
+
+export function rotuloSituacaoEscala(codigo?: string | null): string {
+  if (!codigo) return '—'
+  return SITUACOES_ESCALA[codigo] ?? codigo.replaceAll('_', ' ')
+}
+
+/** Situação da vaga na escala (a presença é registrada à parte). */
+const SITUACOES_MEMBRO: Record<string, string> = {
+  escalado: 'Escalado',
+  confirmado: 'Confirmado',
+  troca_solicitada: 'Troca solicitada',
+  substituido: 'Substituído',
+}
+
+export function rotuloSituacaoMembro(codigo?: string | null): string {
+  if (!codigo) return '—'
+  return SITUACOES_MEMBRO[codigo] ?? codigo.replaceAll('_', ' ')
 }
 
 /** Primeiro nome, para saudações. */

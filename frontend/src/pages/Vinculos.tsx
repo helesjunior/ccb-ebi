@@ -74,6 +74,7 @@ const PAPEIS_CADASTRO = [
   'adm_setor',
   'adm_igreja',
   'coordenadora',
+  'coordenadora_chefe',
   'auxiliar',
   'ministerio_local',
 ]
@@ -85,6 +86,7 @@ const PAPEIS_GESTAO_VINCULO = [
   'adm_setor',
   'adm_igreja',
   'coordenadora',
+  'coordenadora_chefe',
   'auxiliar',
   'ministerio_local',
 ]

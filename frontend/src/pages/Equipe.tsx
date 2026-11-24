@@ -8,7 +8,7 @@ import { cabecalhos, type ContextoAtuacao, type Usuario } from '../api/sessao'
 import { ConfirmarAcao } from '../components/ConfirmarAcao'
 import { EstadoTabela } from '../components/EstadoTabela'
 import { Obrigatorio } from '../components/Obrigatorio'
-import { PAPEIS_CONHECIDOS, rotuloPapel, rotuloStatus, rotuloTipoEscopo } from '@/lib/formatos'
+import { PAPEIS_CONHECIDOS, PAPEIS_SO_EBI, rotuloPapel, rotuloStatus, rotuloTipoEscopo } from '@/lib/formatos'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -205,7 +205,15 @@ export function Equipe() {
               <Label htmlFor="convite-papel">
                 Papel <Obrigatorio />
               </Label>
-              <Select value={papel} onValueChange={setPapel}>
+              <Select
+                value={papel}
+                onValueChange={(v) => {
+                  setPapel(v)
+                  // A chefe só existe com escopo de EBI: ao escolhê-la, o tipo
+                  // de escopo acompanha e fica travado.
+                  if (PAPEIS_SO_EBI.includes(v)) setTipoEscopo('ebi')
+                }}
+              >
                 <SelectTrigger id="convite-papel" className="w-full" aria-required="true">
                   <SelectValue placeholder="Escolha o papel" />
                 </SelectTrigger>
@@ -222,7 +230,11 @@ export function Equipe() {
               <Label htmlFor="convite-escopo-tipo">
                 Tipo de escopo <Obrigatorio />
               </Label>
-              <Select value={tipoEscopo} onValueChange={(v) => setTipoEscopo(v as TipoEscopo)}>
+              <Select
+                value={tipoEscopo}
+                onValueChange={(v) => setTipoEscopo(v as TipoEscopo)}
+                disabled={PAPEIS_SO_EBI.includes(papel)}
+              >
                 <SelectTrigger id="convite-escopo-tipo" className="w-full">
                   <SelectValue />
                 </SelectTrigger>
@@ -250,7 +262,9 @@ export function Equipe() {
                 required
               />
               <p id="convite-escopo-id-ajuda" className="text-xs text-muted-foreground">
-                Identificador da {rotuloTipoEscopo(tipoEscopo).toLowerCase()} onde a pessoa vai atuar.
+                {PAPEIS_SO_EBI.includes(papel)
+                  ? 'Identificador da EBI que esta pessoa vai coordenar.'
+                  : `Identificador da ${rotuloTipoEscopo(tipoEscopo).toLowerCase()} onde a pessoa vai atuar.`}
               </p>
             </div>
             <Button

@@ -37,6 +37,9 @@ function relatorio(no: Partial<{ nivel: string; id: string; nome: string }> = {}
       participantes_cadastrados: indicador(30),
       participantes_ativos: indicador(25),
       igrejas_com_ebi_ativo: indicador(3),
+      sessoes_previstas: indicador(6),
+      sessoes_com_equipe_minima: indicador(3),
+      cobertura_escala: indicador(50),
       ...totais,
     },
     filhos: [],
@@ -98,5 +101,47 @@ describe('tela de relatorios', () => {
     expect(screen.getByText(/America\/Sao_Paulo/)).toBeInTheDocument()
     expect(screen.getByText(/gerado em/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /exportar csv/i })).toBeInTheDocument()
+  })
+
+  it('mostra os tres indicadores da cobertura da escala (M-06)', async () => {
+    getJson.mockResolvedValue({
+      data: {
+        ...relatorio(),
+        totais: {
+          ...relatorio().totais,
+          cobertura_escala: indicador(66.7),
+          sessoes_com_equipe_minima: indicador(2),
+        },
+      },
+    })
+
+    render(<Relatorios contexto={escopo} />)
+
+    const bloco = (await screen.findByRole('heading', { name: 'Cobertura da escala' })).parentElement!
+    expect(within(bloco).getAllByRole('term').map((item) => item.textContent)).toEqual([
+      'Sessões previstas',
+      'Sessões com equipe mínima',
+      'Cobertura da escala (%)',
+    ])
+    expect(within(bloco).getByText('66,7')).toBeInTheDocument()
+  })
+
+  it('cobertura sem sessoes previstas aparece como —', async () => {
+    getJson.mockResolvedValue({
+      data: {
+        ...relatorio(),
+        totais: {
+          ...relatorio().totais,
+          sessoes_previstas: indicador(0),
+          sessoes_com_equipe_minima: indicador(0),
+          cobertura_escala: indicador(null),
+        },
+      },
+    })
+
+    render(<Relatorios contexto={escopo} />)
+
+    const bloco = (await screen.findByRole('heading', { name: 'Cobertura da escala' })).parentElement!
+    expect(within(bloco).getByText('—')).toBeInTheDocument()
   })
 })

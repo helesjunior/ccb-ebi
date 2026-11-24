@@ -5,6 +5,7 @@ import { api } from '../api/client'
 import { lerErro } from '../api/erro'
 import { cabecalhos } from '../api/sessao'
 import type { components } from '../api/schema'
+import { obterEscala, registrarPresencaEquipe } from '../api/escalas'
 import { EstadoTabela } from '../components/EstadoTabela'
 import { Sugestoes } from '../components/Sugestoes'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -19,10 +20,13 @@ import { Label } from '@/components/ui/label'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
-import { formatarDataHora, formatarHora, rotuloStatus, SUGESTOES_FINALIDADE } from '@/lib/formatos'
+import {
+  formatarDataHora, formatarHora, rotuloSituacaoMembro, rotuloStatus, SUGESTOES_FINALIDADE,
+} from '@/lib/formatos'
 
 type Candidato = components['schemas']['CandidatoPresenca']
 type Registro = components['schemas']['Presenca']
+type Escala = components['schemas']['Escala']
 
 const FINALIDADES = [
   ...SUGESTOES_FINALIDADE,
@@ -48,10 +52,13 @@ export function Presenca({ sessaoId, onVoltar, papeis }: {
   const [motivoContingencia, setMotivoContingencia] = useState('')
   const [estorno, setEstorno] = useState<Registro | null>(null)
   const [motivoEstorno, setMotivoEstorno] = useState('')
+  const [escala, setEscala] = useState<Escala | null>(null)
+  const [presencaEquipe, setPresencaEquipe] = useState<Record<string, boolean>>({})
+  const [erroEquipe, setErroEquipe] = useState<string | null>(null)
   const consulta = useRef<AbortController | null>(null)
   const consultaBusca = useRef<AbortController | null>(null)
-  const podeGerenciar = papeis.some((p) => ['adm_igreja', 'coordenadora'].includes(p))
-  const podeRegistrar = papeis.some((p) => ['coordenadora', 'auxiliar'].includes(p))
+  const podeGerenciar = papeis.some((p) => ['adm_igreja', 'coordenadora', 'coordenadora_chefe'].includes(p))
+  const podeRegistrar = papeis.some((p) => ['coordenadora', 'coordenadora_chefe', 'auxiliar'].includes(p))
   const podeContingencia = sessao?.status === 'encerrada' && podeGerenciar
   const emContingencia = modoContingencia && podeContingencia
   const podeConfirmar = emContingencia || (sessao?.status === 'aberta' && podeRegistrar)
@@ -91,9 +98,18 @@ export function Presenca({ sessaoId, onVoltar, papeis }: {
     setModoContingencia(false)
     setMotivoContingencia('')
     setEstorno(null)
+    setEscala(null)
+    setPresencaEquipe({})
+    setErroEquipe(null)
     void carregar()
     return () => consulta.current?.abort()
   }, [carregar])
+
+  useEffect(() => {
+    if (!sessaoId) return
+    void carregarEquipeDaEscala()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessaoId])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -180,6 +196,41 @@ export function Presenca({ sessaoId, onVoltar, papeis }: {
   const resumoEquipe = equipe
     ? `Equipe mínima: ${equipe.presentes ?? 0} presentes exigem ${equipe.auxiliares_necessarios ?? 0} auxiliares; ${equipe.auxiliares_informados ?? 'não'} informados.`
     : ''
+  // A presença da equipe só faz sentido com a escala aprovada e a sessão
+  // encerrada; a marcação parte do que foi confirmado antes da sessão.
+  const vagasDaEquipe = (escala?.membros ?? []).filter((m) => m.id && m.status !== 'substituido')
+  const mostrarEquipe =
+    sessao?.status === 'encerrada' && podeGerenciar && escala?.status === 'aprovada' && vagasDaEquipe.length > 0
+  const pendenteEquipe = escala?.presenca_equipe_pendente === true
+
+  async function carregarEquipeDaEscala() {
+    if (!sessaoId) return
+    const { data } = await obterEscala(sessaoId)
+    setEscala(data ?? null)
+    const inicio: Record<string, boolean> = {}
+    for (const membro of data?.membros ?? []) {
+      if (membro.id) inicio[membro.id] = membro.status === 'confirmado' || membro.presente === true
+    }
+    setPresencaEquipe(inicio)
+  }
+
+  async function enviarPresencaEquipe() {
+    if (!escala?.id || enviando) return
+    setEnviando(true)
+    setErroEquipe(null)
+    const { data, error } = await registrarPresencaEquipe(
+      escala.id,
+      vagasDaEquipe.map((m) => ({ id: m.id!, presente: presencaEquipe[m.id!] === true })),
+    )
+    setEnviando(false)
+    if (error) {
+      // O formulário fica como está para a pessoa corrigir e reenviar.
+      setErroEquipe(lerErro(error, 'Não foi possível registrar a presença da equipe.').detail)
+      return
+    }
+    setEscala(data ?? null)
+    toast.success('Presença da equipe registrada.')
+  }
 
   return (
     <section className="mx-auto flex max-w-5xl flex-col gap-6 pb-32">
@@ -281,6 +332,47 @@ export function Presenca({ sessaoId, onVoltar, papeis }: {
           </Table>
         </CardContent>
       </Card>
+      {mostrarEquipe && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Presença da equipe</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            {pendenteEquipe && (
+              <Alert role="status"><AlertDescription>Presença da equipe não registrada.</AlertDescription></Alert>
+            )}
+            {erroEquipe && <Alert variant="destructive" role="alert"><AlertDescription>{erroEquipe}</AlertDescription></Alert>}
+            <p className="text-sm text-muted-foreground">
+              As caixas já vêm marcadas para quem confirmou a escala; confira com a sessão e envie.
+            </p>
+            <Table>
+              <TableHeader><TableRow><TableHead>Pessoa</TableHead><TableHead>Função</TableHead><TableHead>Confirmou</TableHead><TableHead>Esteve</TableHead></TableRow></TableHeader>
+              <TableBody>
+                {vagasDaEquipe.map((membro) => (
+                  <TableRow key={membro.id}>
+                    <TableCell className="whitespace-normal">{membro.nome ?? '—'}</TableCell>
+                    <TableCell>{membro.funcao === 'coordenadora' ? 'Coordenação' : 'Auxiliar'}</TableCell>
+                    <TableCell>{rotuloSituacaoMembro(membro.status)}</TableCell>
+                    <TableCell>
+                      <input
+                        type="checkbox"
+                        className="size-4 accent-primary"
+                        aria-label={`Esteve: ${membro.nome ?? 'membro da equipe'}`}
+                        checked={presencaEquipe[membro.id!] === true}
+                        disabled={enviando}
+                        onChange={(e) => setPresencaEquipe({ ...presencaEquipe, [membro.id!]: e.target.checked })}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <Button type="button" className="self-start" disabled={enviando} onClick={() => void enviarPresencaEquipe()}>
+              {enviando ? 'Registrando…' : 'Registrar presença da equipe'}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
       {selecionado && mostrarBusca && podeConfirmar && <div className="fixed inset-x-0 bottom-0 z-30 flex flex-wrap items-center justify-center gap-3 border-t bg-background p-4 shadow-lg">
         <Button type="button" variant="outline" disabled={enviando} onClick={() => setSelecionado(null)}>Cancelar seleção</Button>
         <Button type="button" className="h-auto min-h-11 whitespace-normal" disabled={enviando || carregando || (emContingencia && !motivoContingenciaValido)} onClick={() => void confirmar()}>

@@ -1,7 +1,9 @@
 import {
   BarChart3Icon,
   AccessibilityIcon,
+  CalendarCheckIcon,
   CalendarDaysIcon,
+  ClipboardListIcon,
   CombineIcon,
   HouseIcon,
   LinkIcon,
@@ -30,6 +32,8 @@ export type IdTela =
   | 'dependentes'
   | 'sessoes'
   | 'presenca'
+  | 'escalas'
+  | 'minhas-escalas'
   | 'cadastro-assistido'
   | 'vinculos'
   | 'excecao'
@@ -67,20 +71,33 @@ const PARTICIPANTES = [
   'adm_setor',
   'adm_igreja',
   'coordenadora',
+  'coordenadora_chefe',
   'auxiliar',
   'ministerio_local',
 ]
-const CADASTRO = ['super_admin', 'adm_igreja', 'coordenadora', 'auxiliar', 'responsavel']
+const CADASTRO = ['super_admin', 'adm_igreja', 'coordenadora', 'coordenadora_chefe', 'auxiliar', 'responsavel']
 const SESSOES = [
   'super_admin',
   'adm_regional',
   'adm_setor',
   'adm_igreja',
   'coordenadora',
+  'coordenadora_chefe',
   'auxiliar',
   'ministerio_local',
 ]
-const MESCLAGEM = ['super_admin', 'coordenadora']
+const MESCLAGEM = ['super_admin', 'coordenadora', 'coordenadora_chefe']
+// Quem tem `escala.ler` na matriz (a propria pessoa escalada tambem ve a sua).
+const ESCALAS = [
+  'super_admin',
+  'adm_regional',
+  'adm_setor',
+  'adm_igreja',
+  'coordenadora',
+  'coordenadora_chefe',
+  'ministerio_local',
+]
+const MINHAS_ESCALAS = ['coordenadora', 'coordenadora_chefe', 'auxiliar']
 const AUDITORIA = ['super_admin', 'adm_regional', 'adm_setor']
 // Quem tem `relatorio.ler` na matriz de autorizacao (ver docs).
 const RELATORIOS = [
@@ -93,6 +110,7 @@ const RELATORIOS = [
   'ministerio_setorial',
   'ministerio_local',
   'coordenadora',
+  'coordenadora_chefe',
 ]
 
 const ITENS: ItemNav[] = [
@@ -112,6 +130,22 @@ const ITENS: ItemNav[] = [
     icone: CalendarDaysIcon,
     grupo: 'Participantes',
     papeis: SESSOES,
+  },
+  {
+    id: 'escalas',
+    rotulo: 'Escalas',
+    descricao: 'Monte a equipe de cada sessão e acompanhe a cobertura.',
+    icone: ClipboardListIcon,
+    grupo: 'Participantes',
+    papeis: ESCALAS,
+  },
+  {
+    id: 'minhas-escalas',
+    rotulo: 'Minhas escalas',
+    descricao: 'Confirme presença, peça troca e veja seus conflitos.',
+    icone: CalendarCheckIcon,
+    grupo: 'Participantes',
+    papeis: MINHAS_ESCALAS,
   },
   {
     id: 'participantes',
