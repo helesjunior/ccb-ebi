@@ -2,6 +2,7 @@
 
 use App\Domain\Auditoria\Models\EventoAuditoria;
 use App\Domain\Escalas\Models\Equipe;
+use App\Domain\Identidade\Models\Papel;
 use App\Domain\Identidade\Models\Usuario;
 use App\Domain\Identidade\Models\VinculoAcesso;
 use Database\Seeders\PapelSeeder;
@@ -21,7 +22,7 @@ function membroEscalaComPeriodo(string $papel, string $tipo, string $escopoId, a
     $u = Usuario::factory()->create();
     VinculoAcesso::query()->create([
         'usuario_id' => $u->id,
-        'papel_id' => \App\Domain\Identidade\Models\Papel::query()->where('codigo', $papel)->value('id'),
+        'papel_id' => Papel::query()->where('codigo', $papel)->value('id'),
         'tipo_escopo' => $tipo,
         'escopo_id' => $escopoId,
         'inicio' => $periodo['inicio'] ?? now()->subMonth()->toDateString(),

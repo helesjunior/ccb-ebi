@@ -24,6 +24,7 @@ it('escala e avaliador usam a constante unica', function () {
 
     $definicoes = $arquivos->filter(function (string $caminho): bool {
         $conteudo = (string) File::get($caminho);
+
         // So a constante do modelo pode DECLARAR o mapa; os demais o consomem.
         return preg_match('/PAPEIS_POR_FUNCAO\s*=/', $conteudo) === 1
             && ! str_contains($caminho, 'EscalaMembro.php');

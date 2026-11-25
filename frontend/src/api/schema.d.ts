@@ -5267,6 +5267,8 @@ export interface components {
             usuario_id: string;
         };
         EscalaCriacaoInput: {
+            /** @description Equipe da coordenadora que monta a escala (obrigatório). A dona da equipe vira dona da escala. A coordenadora só usa a própria equipe; chefe e `adm_igreja` usam a de qualquer coordenadora vigente do EBI. */
+            equipe_id: string;
             estimativa_participantes: number;
             membros?: components["schemas"]["EscalaMembroInput"][];
         };
@@ -5330,6 +5332,15 @@ export interface components {
             equipe_minima?: Record<string, never>;
             membros?: components["schemas"]["EscalaMembro"][];
             presenca_equipe_pendente?: boolean;
+            equipe?: {
+                id?: string;
+                coordenadora_id?: string;
+                coordenadora_nome?: string;
+            };
+            /** @description Dona da escala (atuando como coordenadora) ou supervisão (`coordenadora_chefe`, `adm_igreja`). */
+            pode_gerir?: boolean;
+            /** @description Só a dona escolhe a oferta de uma vaga; a chefia apenas acompanha. */
+            pode_escolher_oferta?: boolean;
         };
         EscalaMembro: {
             id?: string;

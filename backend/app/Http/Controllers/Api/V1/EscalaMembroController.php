@@ -64,6 +64,7 @@ class EscalaMembroController
             $escalaId,
             (string) $request->validated('usuario_id'),
             (string) $request->validated('funcao'),
+            $this->autorizacao->contexto($request),
             $this->autorId($request),
         )->id));
     }
@@ -72,14 +73,14 @@ class EscalaMembroController
     {
         $this->autorizarPeloMembro($request, $id);
 
-        return $this->resposta($request, $this->consulta->referencia((string) $this->gerir->mudarFuncao($id, (string) $request->validated('funcao'), $this->autorId($request))->id));
+        return $this->resposta($request, $this->consulta->referencia((string) $this->gerir->mudarFuncao($id, (string) $request->validated('funcao'), $this->autorizacao->contexto($request), $this->autorId($request))->id));
     }
 
     public function destroy(Request $request, string $id): JsonResponse
     {
         $this->autorizarPeloMembro($request, $id);
 
-        return $this->resposta($request, $this->consulta->referencia((string) $this->gerir->retirarMembro($id, $this->autorId($request))->id));
+        return $this->resposta($request, $this->consulta->referencia((string) $this->gerir->retirarMembro($id, $this->autorizacao->contexto($request), $this->autorId($request))->id));
     }
 
     /**

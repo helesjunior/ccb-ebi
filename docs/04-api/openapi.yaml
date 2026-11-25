@@ -3311,8 +3311,14 @@ components:
 
     EscalaCriacaoInput:
       type: object
-      required: [estimativa_participantes]
+      required: [equipe_id, estimativa_participantes]
       properties:
+        equipe_id:
+          type: string
+          description: >-
+            Equipe da coordenadora que monta a escala (obrigatório). A dona da
+            equipe vira dona da escala. A coordenadora só usa a própria equipe;
+            chefe e `adm_igreja` usam a de qualquer coordenadora vigente do EBI.
         estimativa_participantes: { type: integer, minimum: 0, maximum: 65535 }
         membros:
           type: array
@@ -3389,6 +3395,18 @@ components:
           type: array
           items: { $ref: '#/components/schemas/EscalaMembro' }
         presenca_equipe_pendente: { type: boolean }
+        equipe:
+          type: object
+          properties:
+            id: { type: string }
+            coordenadora_id: { type: string }
+            coordenadora_nome: { type: string }
+        pode_gerir:
+          type: boolean
+          description: Dona da escala (atuando como coordenadora) ou supervisão (`coordenadora_chefe`, `adm_igreja`).
+        pode_escolher_oferta:
+          type: boolean
+          description: Só a dona escolhe a oferta de uma vaga; a chefia apenas acompanha.
     EscalaMembro:
       type: object
       properties:

@@ -36,6 +36,7 @@ class ConsultaEscala implements ConsultarEscala
         private readonly ConsultarEquipeEbi $equipe,
         private readonly AvaliadorEquipe $avaliador,
         private readonly DetectorConflito $conflitos,
+        private readonly DonaDaEscala $dona,
     ) {}
 
     public function detalhe(string $escalaId, EscalaVisao $visao): ?array
@@ -135,6 +136,23 @@ class ConsultaEscala implements ConsultarEscala
             // Presenca da equipe pendente: sessao encerrada e vaga ativa sem resposta.
             'presenca_equipe_pendente' => $sessao->status === 'encerrada'
                 && $membros->contains(fn (EscalaMembro $membro): bool => $membro->status !== EscalaMembro::STATUS_SUBSTITUIDO && $membro->presente === null),
+            'equipe' => $this->equipeDaEscala($escala),
+            // Sem contexto resolvido os booleanos sao falsos.
+            'pode_gerir' => $visao->contexto !== null && $this->dona->podeGerir((string) $escala->id, $visao->contexto),
+            'pode_escolher_oferta' => $visao->contexto !== null && $this->dona->podeEscolherOferta((string) $escala->id, $visao->contexto),
+        ];
+    }
+
+    /** @return array{id: string, coordenadora_id: string, coordenadora_nome: string} */
+    private function equipeDaEscala(Escala $escala): array
+    {
+        $equipe = $escala->equipe;
+        $coordenadoraId = $equipe === null ? '' : (string) $equipe->coordenadora_id;
+
+        return [
+            'id' => (string) $escala->equipe_id,
+            'coordenadora_id' => $coordenadoraId,
+            'coordenadora_nome' => $coordenadoraId === '' ? '' : ($this->equipe->nomes([$coordenadoraId])[$coordenadoraId] ?? ''),
         ];
     }
 

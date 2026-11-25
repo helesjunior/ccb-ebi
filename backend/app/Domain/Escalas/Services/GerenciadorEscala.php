@@ -4,6 +4,7 @@ namespace App\Domain\Escalas\Services;
 
 use App\Domain\Auditoria\Contracts\RegistrarEvento;
 use App\Domain\Escalas\Contracts\GerirEscala;
+use App\Domain\Escalas\Models\Equipe;
 use App\Domain\Escalas\Models\Escala;
 use App\Domain\Escalas\Models\EscalaMembro;
 use App\Domain\Escalas\Models\VagaEscala;
@@ -41,23 +42,21 @@ class GerenciadorEscala implements GerirEscala
         private readonly AvaliadorEquipe $avaliador,
         private readonly CancelamentoTroca $trocas,
         private readonly EncerradorVaga $vagas,
+        private readonly DonaDaEscala $dona,
     ) {}
 
-    public function criar(string $sessaoId, int $estimativa, array $membros, ?string $autorId, ?string $equipeId = null): Escala
+    public function criar(string $sessaoId, int $estimativa, array $membros, ContextoDecisao $contexto, ?string $autorId, string $equipeId): Escala
     {
         $sessao = $this->sessaoEditavel($sessaoId);
         $ebi = $this->ebi($sessao->ebiId);
+        $equipe = $this->equipeValida($sessao, $equipeId, $contexto);
         $funcoes = $this->validarMembros($sessao, $membros, []);
 
-        if ($equipeId === null || $equipeId === '') {
-            throw new ProblemException('equipe_obrigatoria', 'Equipe obrigatória', 422, 'Informe a equipe da coordenadora que monta esta escala.');
-        }
-
         try {
-            return DB::transaction(function () use ($sessao, $ebi, $estimativa, $membros, $funcoes, $autorId, $equipeId): Escala {
+            return DB::transaction(function () use ($sessao, $ebi, $estimativa, $membros, $funcoes, $autorId, $equipe): Escala {
                 $escala = Escala::query()->create([
                     'sessao_id' => $sessao->id,
-                    'equipe_id' => $equipeId,
+                    'equipe_id' => (string) $equipe->id,
                     'ebi_id' => $sessao->ebiId,
                     'igreja_id' => $sessao->igrejaId,
                     'estimativa_participantes' => $estimativa,
@@ -84,7 +83,7 @@ class GerenciadorEscala implements GerirEscala
                     'metadados_minimizados' => [
                         'escala_id' => (string) $escala->id,
                         'sessao_id' => $sessao->id,
-                        'equipe_id' => $equipeId,
+                        'equipe_id' => (string) $equipe->id,
                         'estimativa_participantes' => $estimativa,
                         'membros' => count($membros),
                         'status' => Escala::STATUS_PREVISTA,
@@ -102,9 +101,10 @@ class GerenciadorEscala implements GerirEscala
         }
     }
 
-    public function alterarEstimativa(string $escalaId, int $estimativa, ?string $autorId): Escala
+    public function alterarEstimativa(string $escalaId, int $estimativa, ContextoDecisao $contexto, ?string $autorId): Escala
     {
-        return $this->trava->executar($escalaId, function (Escala $escala) use ($estimativa, $autorId): Escala {
+        return $this->trava->executar($escalaId, function (Escala $escala) use ($escalaId, $estimativa, $contexto, $autorId): Escala {
+            $this->dona->garantirGerir($escalaId, $contexto);
             $sessao = $this->sessaoEditavel((string) $escala->sessao_id);
             $escala->forceFill(['estimativa_participantes' => $estimativa]);
 
@@ -112,9 +112,10 @@ class GerenciadorEscala implements GerirEscala
         });
     }
 
-    public function incluirMembro(string $escalaId, string $usuarioId, string $funcao, ?string $autorId): Escala
+    public function incluirMembro(string $escalaId, string $usuarioId, string $funcao, ContextoDecisao $contexto, ?string $autorId): Escala
     {
-        return $this->trava->executar($escalaId, function (Escala $escala) use ($usuarioId, $funcao, $autorId): Escala {
+        return $this->trava->executar($escalaId, function (Escala $escala) use ($escalaId, $usuarioId, $funcao, $contexto, $autorId): Escala {
+            $this->dona->garantirGerir($escalaId, $contexto);
             $sessao = $this->sessaoEditavel((string) $escala->sessao_id);
             $this->validarMembros($sessao, [['usuario_id' => $usuarioId, 'funcao' => $funcao]], $this->usuariosAtivos($escala));
 
@@ -129,11 +130,12 @@ class GerenciadorEscala implements GerirEscala
         });
     }
 
-    public function retirarMembro(string $membroId, ?string $autorId): Escala
+    public function retirarMembro(string $membroId, ContextoDecisao $contexto, ?string $autorId): Escala
     {
         $escalaId = (string) EscalaMembro::query()->whereKey($membroId)->value('escala_id');
 
-        return $this->trava->executar($escalaId, function (Escala $escala) use ($membroId, $autorId): Escala {
+        return $this->trava->executar($escalaId, function (Escala $escala) use ($membroId, $contexto, $autorId): Escala {
+            $this->dona->garantirGerir((string) $escala->id, $contexto);
             $sessao = $this->sessaoEditavel((string) $escala->sessao_id);
             $membro = $escala->membros()->whereKey($membroId)->first()
                 ?? throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Membro não encontrado.');
@@ -151,11 +153,12 @@ class GerenciadorEscala implements GerirEscala
         });
     }
 
-    public function mudarFuncao(string $membroId, string $funcao, ?string $autorId): Escala
+    public function mudarFuncao(string $membroId, string $funcao, ContextoDecisao $contexto, ?string $autorId): Escala
     {
         $escalaId = (string) EscalaMembro::query()->whereKey($membroId)->value('escala_id');
 
-        return $this->trava->executar($escalaId, function (Escala $escala) use ($membroId, $funcao, $autorId): Escala {
+        return $this->trava->executar($escalaId, function (Escala $escala) use ($membroId, $funcao, $contexto, $autorId): Escala {
+            $this->dona->garantirGerir((string) $escala->id, $contexto);
             $sessao = $this->sessaoEditavel((string) $escala->sessao_id);
             $membro = $escala->membros()->whereKey($membroId)->first()
                 ?? throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Membro não encontrado.');
@@ -243,9 +246,10 @@ class GerenciadorEscala implements GerirEscala
      *
      * @param  array<int, array{id: string, presente: bool}>  $membros
      */
-    public function registrarPresencaEquipe(string $escalaId, array $membros, ?string $autorId): Escala
+    public function registrarPresencaEquipe(string $escalaId, array $membros, ContextoDecisao $contexto, ?string $autorId): Escala
     {
-        return $this->trava->executar($escalaId, function (Escala $escala) use ($membros, $autorId): Escala {
+        return $this->trava->executar($escalaId, function (Escala $escala) use ($escalaId, $membros, $contexto, $autorId): Escala {
+            $this->dona->garantirGerir($escalaId, $contexto);
             $sessao = $this->sessao((string) $escala->sessao_id);
 
             if ($sessao->status !== 'encerrada') {
@@ -418,6 +422,32 @@ class GerenciadorEscala implements GerirEscala
         }
 
         return $funcoes;
+    }
+
+    /**
+     * Equipe de origem da escala: obrigatoria, do mesmo EBI da sessao, com a
+     * dona com vinculo vigente hoje. A `coordenadora` so monta a propria equipe;
+     * a chefia e o `adm_igreja` montam por qualquer uma do EBI.
+     */
+    private function equipeValida(IntervaloSessao $sessao, string $equipeId, ContextoDecisao $contexto): Equipe
+    {
+        if (trim($equipeId) === '') {
+            throw new ProblemException('equipe_obrigatoria', 'Equipe obrigatória', 422, 'Informe a equipe da coordenadora que monta esta escala.');
+        }
+
+        $equipe = Equipe::query()->find($equipeId);
+
+        if ($equipe !== null
+            && (string) $equipe->ebi_id === $sessao->ebiId
+            && ($contexto->papelCodigo !== 'coordenadora' || (string) $equipe->coordenadora_id === $contexto->usuarioId)) {
+            $papeis = $this->equipe->papeisVigentesHoje([(string) $equipe->coordenadora_id], $sessao->ebiId, $sessao->igrejaId);
+
+            if (array_intersect($papeis[(string) $equipe->coordenadora_id] ?? [], ['coordenadora', 'coordenadora_chefe']) !== []) {
+                return $equipe;
+            }
+        }
+
+        throw new ProblemException('equipe_invalida', 'Equipe inválida', 422, 'Esta equipe não pertence a uma coordenadora vigente deste EBI.');
     }
 
     private function garantirElegivel(IntervaloSessao $sessao, string $usuarioId, string $funcao): void

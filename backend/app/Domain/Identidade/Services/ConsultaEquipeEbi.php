@@ -67,7 +67,7 @@ class ConsultaEquipeEbi implements ConsultarEquipeEbi
         }
 
         return array_map(
-            fn (array $papeis): array => array_values(array_map('strval', array_keys($papeis))),
+            fn (array $papeis): array => array_map('strval', array_keys($papeis)),
             $porUsuario,
         );
     }

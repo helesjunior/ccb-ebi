@@ -83,8 +83,8 @@ Proposta inicial, prefixo `/api/v1`. Rotas marcadas *novo* não existiam na vers
 | GET | `/equipes/{id}` | Detalhe da equipe da coordenadora *novo (E07, evolucao)* (`no OpenAPI`) | RF-07 |
 | POST/DELETE | `/equipes/{id}/members/{usuarioId}` | Incluir e retirar auxiliar da equipe *novo (E07, evolucao)* (`no OpenAPI`) | RF-07 |
 | GET | `/ebis/{id}/schedules` | Consultar escala (era `/roster`) *novo (E07)* (`no OpenAPI`) | RF-07 |
-| POST | `/sessions/{id}/schedules` | Criar escala *novo (E07)* (`no OpenAPI`) | RF-07 |
-| GET/PATCH | `/schedules/{id}` | Detalhe e estimativa da escala *novo (E07)* (`no OpenAPI`) | RF-07 |
+| POST | `/sessions/{id}/schedules` | Criar escala, a partir da equipe da coordenadora (`equipe_id` obrigatório) *novo (E07)* (`no OpenAPI`) | RF-07 |
+| GET/PATCH | `/schedules/{id}` | Detalhe (com `equipe`, `pode_gerir`, `pode_escolher_oferta`) e estimativa da escala *novo (E07)* (`no OpenAPI`) | RF-07 |
 | POST | `/schedules/{id}/members` | Incluir membro na escala *novo (E07)* (`no OpenAPI`) | RF-07 |
 | PATCH/DELETE | `/schedule-members/{id}` | Mudar funcao e retirar membro *novo (E07)* (`no OpenAPI`) | RF-07 |
 | POST | `/schedules/{id}/approve` | Aprovação pela coordenadora chefe (sem chefe, `adm_igreja`) *novo (E07)* (`no OpenAPI`) | RF-07 |

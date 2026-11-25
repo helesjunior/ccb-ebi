@@ -56,7 +56,12 @@ class AutorizacaoEscala
             }
         }
 
-        return new EscalaVisao($contexto->usuarioId, $visiveis);
+        return new EscalaVisao(
+            $contexto->usuarioId,
+            $visiveis,
+            contexto: $this->contexto($request),
+            temEscalaLer: true,
+        );
     }
 
     /**

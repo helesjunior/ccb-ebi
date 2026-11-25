@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Escalas\Models\Equipe;
 use App\Domain\Escalas\Models\Escala;
 use App\Domain\Escalas\Models\EscalaMembro;
 use App\Domain\Identidade\Models\Papel;
@@ -37,7 +38,17 @@ function cenarioConflito(array $segundaSessao = []): array
     $escalaA = Escala::factory()->create(['sessao_id' => $a['sessao']->id, 'ebi_id' => $a['ebi']->id, 'igreja_id' => $a['igreja']->id]);
     EscalaMembro::factory()->for($escalaA)->create(['usuario_id' => $a['auxi']->id]);
 
-    $escalaB = Escala::factory()->create(['sessao_id' => $sessaoB->id, 'ebi_id' => $ebiB->id, 'igreja_id' => $igrejaB->id]);
+    // A dona da escala B e a coordenadora do EBI B; a escala B nasce da equipe dela.
+    $coordB = membroEscala('coordenadora', 'ebi', $ebiB->id);
+    $equipeB = Equipe::query()->create([
+        'ebi_id' => $ebiB->id, 'igreja_id' => $igrejaB->id,
+        'coordenadora_id' => $coordB->id, 'criado_por' => $coordB->id,
+    ]);
+
+    $escalaB = Escala::factory()->create([
+        'sessao_id' => $sessaoB->id, 'ebi_id' => $ebiB->id, 'igreja_id' => $igrejaB->id,
+        'equipe_id' => $equipeB->id,
+    ]);
     EscalaMembro::factory()->for($escalaB)->create(['usuario_id' => $a['auxi']->id]);
 
     return $a + [
@@ -46,6 +57,8 @@ function cenarioConflito(array $segundaSessao = []): array
         'sessao_b' => $sessaoB,
         'escala_a' => $escalaA,
         'escala_b' => $escalaB,
+        'equipe_b' => $equipeB,
+        'coord_b' => $coordB,
     ];
 }
 
@@ -166,7 +179,7 @@ it('incluir a pessoa com conflito nao bloqueia', function () {
     $resposta = $this->postJson("/api/v1/schedules/{$c['escala_b']->id}/members", [
         'usuario_id' => $pessoa->id,
         'funcao' => 'auxiliar',
-    ], authEscala(membroEscala('coordenadora', 'ebi', $c['ebi_b']->id)))->assertStatus(200);
+    ], authEscala($c['coord_b']))->assertStatus(200);
 
     $incluso = collect($resposta->json('escala.membros'))->firstWhere('usuario_id', $pessoa->id);
 

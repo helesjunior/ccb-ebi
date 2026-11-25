@@ -1,9 +1,9 @@
 <?php
 
 use App\Domain\Auditoria\Models\EventoAuditoria;
+use App\Domain\Escalas\Models\Equipe;
 use App\Domain\Escalas\Models\Escala;
 use App\Domain\Escalas\Models\EscalaMembro;
-use App\Domain\Escalas\Models\Equipe;
 use App\Domain\Escalas\Models\SolicitacaoTrocaEscala;
 use App\Domain\Identidade\Models\Papel;
 use App\Domain\Identidade\Models\Usuario;
@@ -117,6 +117,7 @@ it('nao cria escala de sessao cancelada', function () {
     $c = cenarioEscala(['status' => Sessao::STATUS_CANCELADA]);
 
     $this->postJson("/api/v1/sessions/{$c['sessao']->id}/schedules", [
+        'equipe_id' => $c['equipe']->id,
         'estimativa_participantes' => 5,
     ], authEscala($c['coord']))->assertStatus(409)->assertJsonPath('code', 'sessao_em_estado_invalido');
 });
@@ -274,6 +275,7 @@ it('coordenadora de outro EBI nao alcanca a sessao', function () {
     $outraEbi = Ebi::factory()->create(['igreja_id' => Igreja::factory()->create()->id]);
 
     $this->postJson("/api/v1/sessions/{$c['sessao']->id}/schedules", [
+        'equipe_id' => $c['equipe']->id,
         'estimativa_participantes' => 5,
     ], authEscala(membroEscala('coordenadora', 'ebi', $outraEbi->id)))->assertStatus(404);
 });

@@ -4,6 +4,7 @@ use App\Domain\Auditoria\Models\EventoAuditoria;
 use App\Domain\Escalas\Models\Escala;
 use App\Domain\Escalas\Models\EscalaMembro;
 use App\Domain\Escalas\Models\OfertaVagaEscala;
+use App\Domain\Escalas\Models\SolicitacaoTrocaEscala;
 use App\Domain\Escalas\Models\VagaEscala;
 use Database\Seeders\PapelSeeder;
 
@@ -126,7 +127,7 @@ it('troca aprovada cancela a vaga aberta do original', function () {
 
     $vaga = vagaDoMembro($auxi);
     $substituto = membroEscala('auxiliar', 'ebi', $c['ebi']->id);
-    $trocaId = (string) \App\Domain\Escalas\Models\SolicitacaoTrocaEscala::query()->where('escala_membro_id', $auxi->id)->value('id');
+    $trocaId = (string) SolicitacaoTrocaEscala::query()->where('escala_membro_id', $auxi->id)->value('id');
 
     $this->patchJson("/api/v1/schedule-swaps/{$trocaId}", ['decisao' => 'aprovar', 'substituto_usuario_id' => $substituto->id], authEscala($c['chefe']))
         ->assertStatus(200);

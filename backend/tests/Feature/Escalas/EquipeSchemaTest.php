@@ -1,13 +1,16 @@
 <?php
 
+use App\Domain\Escalas\Contracts\GerirEscala;
 use App\Domain\Escalas\Models\Equipe;
 use App\Domain\Escalas\Models\EquipeMembro;
 use App\Domain\Escalas\Models\Escala;
+use App\Domain\Identidade\Contracts\ContextoDecisao;
 use App\Domain\Identidade\Models\Usuario;
+use App\Domain\Sessoes\Models\Sessao;
+use App\Support\ProblemException;
+use Database\Seeders\PapelSeeder;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
-
-use Database\Seeders\PapelSeeder;
 
 beforeEach(fn () => $this->seed(PapelSeeder::class));
 
@@ -36,7 +39,7 @@ it('banco recusa escala sem equipe_id', function () {
     expect(fn () => DB::table('escala')->insert([
         ...$linha,
         'id' => (string) str()->ulid(),
-        'sessao_id' => \App\Domain\Sessoes\Models\Sessao::factory()->create(['ebi_id' => $escala->ebi_id, 'igreja_id' => $escala->igreja_id])->id,
+        'sessao_id' => Sessao::factory()->create(['ebi_id' => $escala->ebi_id, 'igreja_id' => $escala->igreja_id])->id,
     ]))->toThrow(QueryException::class);
 });
 
@@ -68,12 +71,22 @@ it('EscalaFactory cria equipe e escala com equipe_id', function () {
 it('criar escala sem equipe responde 422 equipe_obrigatoria', function () {
     $c = cenarioEscala();
 
+    // `equipe_id` e obrigatorio no contrato; o servico mantem a guarda propria.
     $this->postJson("/api/v1/sessions/{$c['sessao']->id}/schedules", [
         'estimativa_participantes' => 5,
         'membros' => [['usuario_id' => $c['coord']->id, 'funcao' => 'coordenadora']],
     ], authEscala($c['coord']))
         ->assertStatus(422)
-        ->assertJsonPath('code', 'equipe_obrigatoria');
+        ->assertJsonValidationErrors('equipe_id');
+
+    expect(fn () => app(GerirEscala::class)->criar(
+        (string) $c['sessao']->id,
+        5,
+        [],
+        new ContextoDecisao((string) $c['coord']->id, 'coordenadora', 'ebi', (string) $c['ebi']->id),
+        (string) $c['coord']->id,
+        '',
+    ))->toThrow(ProblemException::class);
 });
 
 it('criar escala com equipe grava equipe_id', function () {

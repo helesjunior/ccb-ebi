@@ -53,8 +53,9 @@ class EscalaController
             $sessaoId,
             (int) $request->validated('estimativa_participantes'),
             $request->validated('membros', []),
+            $this->autorizacao->contexto($request),
             $this->autorId($request),
-            $request->validated('equipe_id'),
+            (string) $request->validated('equipe_id'),
         );
 
         return new JsonResponse(['escala' => $this->consulta->detalheDaEscala($escala, EscalaVisao::interna($this->autorId($request)))], 201);
@@ -78,7 +79,7 @@ class EscalaController
     public function update(AlterarEscalaRequest $request, string $id): JsonResponse
     {
         $referencia = $this->autorizarGerenciar($request, $id);
-        $this->gerir->alterarEstimativa($id, (int) $request->validated('estimativa_participantes'), $this->autorId($request));
+        $this->gerir->alterarEstimativa($id, (int) $request->validated('estimativa_participantes'), $this->autorizacao->contexto($request), $this->autorId($request));
 
         return $this->resposta($request, $referencia);
     }
@@ -104,7 +105,7 @@ class EscalaController
     public function presenca(PresencaEquipeRequest $request, string $id): JsonResponse
     {
         $referencia = $this->autorizarGerenciar($request, $id);
-        $this->gerir->registrarPresencaEquipe($id, $request->membros(), $this->autorId($request));
+        $this->gerir->registrarPresencaEquipe($id, $request->membros(), $this->autorizacao->contexto($request), $this->autorId($request));
 
         return $this->resposta($request, $referencia);
     }
