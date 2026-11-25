@@ -20,6 +20,10 @@ foreach ([
     $_SERVER[$chave] = $valor;
 }
 
+// Testes de concorrencia exigem PostgreSQL (o `lockForUpdate` nao tem efeito
+// no SQLite). Precisa vir depois do bloco acima, que fixa `sqlite`.
+require_once __DIR__.'/Concorrencia/ambiente.php';
+
 use App\Domain\Identidade\Models\Papel;
 use App\Domain\Identidade\Models\Usuario;
 use App\Domain\Identidade\Models\VinculoAcesso;
@@ -40,6 +44,18 @@ use Tests\TestCase;
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->in('Feature');
+
+// Concorrencia: sem RefreshDatabase em massa (cada teste monta o cenario com
+// `migrate:fresh` no `ebi_teste`) e fora do SQLite.
+pest()->extend(TestCase::class)->in('Concorrencia');
+
+// Sem PostgreSQL os testes de concorrencia nao provam nada: pulam em vez de
+// passar por acidente.
+beforeEach(function () {
+    if (getenv('TESTE_PGSQL') !== '1') {
+        $this->markTestSkipped('Rode com TESTE_PGSQL=1 contra PostgreSQL.');
+    }
+})->in('Concorrencia');
 
 // Teste de unidade que depende do container (config(), etc.) mas nao do banco.
 // Restrito a este arquivo: os demais testes de Unit seguem sem boot do app.

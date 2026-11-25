@@ -15,7 +15,72 @@ type MinhaEscala = components['schemas']['MinhaEscala']
 type TrocaEscala = components['schemas']['TrocaEscala']
 
 type MembroDaEquipe = components['schemas']['MembroEquipe']
-export type { MembroDaEquipe }/** Sessões do EBI no período com a situação da escala. */
+type Equipe = components['schemas']['Equipe']
+type EquipeResumo = components['schemas']['EquipeResumo']
+export type { MembroDaEquipe, Equipe, EquipeResumo }
+
+/** Equipes de escala do EBI (uma por coordenadora). */
+export async function listarEquipes(
+  ebiId: string,
+  signal?: AbortSignal,
+): Promise<{ data?: EquipeResumo[]; error?: unknown }> {
+  const { data, error } = await api.GET('/ebis/{id}/equipes', {
+    params: { path: { id: ebiId } },
+    headers: cabecalhos(),
+    signal,
+  })
+  return { data: data?.data, error }
+}
+
+/** Equipe com os membros e se cada um ainda tem vínculo. */
+export async function obterEquipe(
+  equipeId: string,
+  signal?: AbortSignal,
+): Promise<{ data?: Equipe; error?: unknown }> {
+  const { data, error } = await api.GET('/equipes/{id}', {
+    params: { path: { id: equipeId } },
+    headers: cabecalhos(),
+    signal,
+  })
+  return { data: data?.data, error }
+}
+
+export async function criarEquipe(
+  ebiId: string,
+  coordenadoraId: string,
+): Promise<{ data?: Equipe; error?: unknown }> {
+  const { data, error } = await api.POST('/ebis/{id}/equipes', {
+    params: { path: { id: ebiId } },
+    headers: cabecalhos(),
+    body: { coordenadora_id: coordenadoraId },
+  })
+  return { data: data?.data, error }
+}
+
+export async function incluirMembroEquipe(
+  equipeId: string,
+  usuarioId: string,
+): Promise<{ data?: Equipe; error?: unknown }> {
+  const { data, error } = await api.POST('/equipes/{id}/members', {
+    params: { path: { id: equipeId } },
+    headers: cabecalhos(),
+    body: { usuario_id: usuarioId },
+  })
+  return { data: data?.data, error }
+}
+
+export async function retirarMembroEquipe(
+  equipeId: string,
+  usuarioId: string,
+): Promise<{ data?: Equipe; error?: unknown }> {
+  const { data, error } = await api.DELETE('/equipes/{id}/members/{usuarioId}', {
+    params: { path: { id: equipeId, usuarioId } },
+    headers: cabecalhos(),
+  })
+  return { data: data?.data, error }
+}
+
+/** Sessões do EBI no período com a situação da escala. */
 export async function listarEscalas(
   ebiId: string,
   inicio: string,

@@ -105,11 +105,9 @@ class GerenciadorVaga implements GerirVagaEscala
 
     public function cancelar(string $vagaId, ContextoDecisao $contexto, ?string $autorId): void
     {
-        $vaga = $this->vaga($vagaId);
-
-        $this->trava->executar((string) $vaga->escala_id, function () use ($vagaId, $contexto, $autorId): void {
-            $this->dona->garantirGerir((string) $this->vaga($vagaId)->escala_id, $contexto);
+        $this->trava->executarPelaVaga($vagaId, function () use ($vagaId, $contexto, $autorId): void {
             $vaga = $this->vaga($vagaId);
+            $this->dona->garantirGerir((string) $vaga->escala_id, $contexto);
 
             if (! $vaga->estaAberta()) {
                 throw new ProblemException('vaga_indisponivel', 'Vaga indisponível', 409, 'Esta vaga já foi preenchida ou cancelada.');
@@ -182,7 +180,7 @@ class GerenciadorVaga implements GerirVagaEscala
 
         $vaga = $this->vaga((string) $oferta->vaga_id);
 
-        $this->trava->executar((string) $vaga->escala_id, function () use ($ofertaId, $usuarioId): void {
+        $this->trava->executarPelaVaga((string) $vaga->id, function () use ($ofertaId, $usuarioId): void {
             $oferta = OfertaVagaEscala::query()->findOrFail($ofertaId);
 
             if ($oferta->status !== OfertaVagaEscala::STATUS_PENDENTE) {
@@ -202,10 +200,10 @@ class GerenciadorVaga implements GerirVagaEscala
 
     public function escolher(string $ofertaId, ContextoDecisao $contexto, ?string $autorId): string
     {
-        $vagaDaOferta = $this->vagaDaOferta($ofertaId);
+        $vagaId = (string) OfertaVagaEscala::query()->whereKey($ofertaId)->value('vaga_id');
 
         /** @var ResultadoVaga $resultado */
-        $resultado = $this->trava->executar((string) $vagaDaOferta->escala_id, function (Escala $escala) use ($ofertaId, $contexto, $autorId): ResultadoVaga {
+        $resultado = $this->trava->executarPelaVaga($vagaId, function (Escala $escala) use ($ofertaId, $contexto, $autorId): ResultadoVaga {
             $this->dona->garantirEscolher((string) $escala->id, $contexto);
 
             $oferta = OfertaVagaEscala::query()->findOrFail($ofertaId);
@@ -214,6 +212,8 @@ class GerenciadorVaga implements GerirVagaEscala
                 throw new ProblemException('oferta_ja_decidida', 'Oferta já decidida', 409, 'Esta oferta já foi decidida.');
             }
 
+            // A vaga e relida com a trava na mao: outro pedido pode ter trocado
+            // o original ou preenchido/cancelado a vaga enquanto esperavamos.
             $vaga = $this->vaga((string) $oferta->vaga_id);
             $sessao = $this->sessao((string) $escala->sessao_id);
             $original = $vaga->substitui_membro_id === null ? null : $escala->membros()->whereKey($vaga->substitui_membro_id)->first();
@@ -293,13 +293,6 @@ class GerenciadorVaga implements GerirVagaEscala
     {
         return VagaEscala::query()->find($vagaId)
             ?? throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Vaga não encontrada.');
-    }
-
-    private function vagaDaOferta(string $ofertaId): VagaEscala
-    {
-        $vagaId = (string) OfertaVagaEscala::query()->whereKey($ofertaId)->value('vaga_id');
-
-        return $this->vaga($vagaId);
     }
 
     private function escalaDa(string $escalaId): Escala

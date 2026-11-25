@@ -14,6 +14,10 @@
         <testsuite name="Arch">
             <directory>tests/Arch</directory>
         </testsuite>
+        <!-- Fora das suites acima: roda so com TESTE_PGSQL=1 (ver tests/Pest.php). -->
+        <testsuite name="Concorrencia">
+            <directory>tests/Concorrencia</directory>
+        </testsuite>
     </testsuites>
     <source>
         <include>

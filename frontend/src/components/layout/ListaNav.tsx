@@ -34,6 +34,7 @@ export type IdTela =
   | 'presenca'
   | 'escalas'
   | 'minhas-escalas'
+  | 'equipes-escala'
   | 'cadastro-assistido'
   | 'vinculos'
   | 'excecao'
@@ -98,6 +99,8 @@ const ESCALAS = [
   'ministerio_local',
 ]
 const MINHAS_ESCALAS = ['coordenadora', 'coordenadora_chefe', 'auxiliar']
+// Quem tem `equipe.gerenciar` na matriz: monta e mantem a propria equipe.
+const EQUIPES_ESCALA = ['coordenadora', 'coordenadora_chefe', 'adm_igreja']
 const AUDITORIA = ['super_admin', 'adm_regional', 'adm_setor']
 // Quem tem `relatorio.ler` na matriz de autorizacao (ver docs).
 const RELATORIOS = [
@@ -146,6 +149,14 @@ const ITENS: ItemNav[] = [
     icone: CalendarCheckIcon,
     grupo: 'Participantes',
     papeis: MINHAS_ESCALAS,
+  },
+  {
+    id: 'equipes-escala',
+    rotulo: 'Equipes de escala',
+    descricao: 'Monte a equipe de auxiliares de cada coordenadora.',
+    icone: UsersRoundIcon,
+    grupo: 'Participantes',
+    papeis: EQUIPES_ESCALA,
   },
   {
     id: 'participantes',

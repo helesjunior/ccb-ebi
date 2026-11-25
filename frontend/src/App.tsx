@@ -18,6 +18,7 @@ import { CadastroAssistido } from './pages/CadastroAssistido'
 import { Dependentes } from './pages/Dependentes'
 import { Dispositivos } from './pages/Dispositivos'
 import { Escalas } from './pages/Escalas'
+import { EquipesEscala } from './pages/EquipesEscala'
 import { Equipe } from './pages/Equipe'
 import { Inicio } from './pages/Inicio'
 import { ExcecaoInclusiva } from './pages/ExcecaoInclusiva'
@@ -167,6 +168,9 @@ function App() {
       {tela === 'cadastro-assistido' && <CadastroAssistido />}
       {tela === 'escalas' && <Escalas contexto={escopo} papeis={usuario.papeis ?? []} />}
       {tela === 'minhas-escalas' && <MinhasEscalas />}
+      {tela === 'equipes-escala' && (
+        <EquipesEscala contexto={escopo} papeis={usuario.papeis ?? []} usuario={usuario} />
+      )}
       {tela === 'vinculos' && <Vinculos escopos={escopos} usuarioId={usuario.id ?? null} />}
       {tela === 'excecao' && <ExcecaoInclusiva />}
       {tela === 'mesclagem' && <Mesclagem />}
