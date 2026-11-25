@@ -147,7 +147,7 @@ Nenhum deles cabe numa única tarefa. Cada um tem o teste que o fixa na tarefa *
 **Interfaces:**
 - Produces: o comando padrão do backend (`docker compose -p ebi-escalas -f docker-compose.yml -f docker-compose.worktree.yml exec app ...`), usado por **todas** as tarefas seguintes.
 
-- [ ] **Step 1: Escrever o override local**
+- [x] **Step 1: Escrever o override local**
 
 No worktree, criar `docker-compose.worktree.yml`:
 
@@ -171,7 +171,7 @@ Antes do primeiro `up`: `backend/.env` é ignorado pelo git e **não existe** no
 
 Conferir que o arquivo não entra no git: `git status --short` não deve listá-lo. Se listar, acrescentar `docker-compose.worktree.yml` a `.git/info/exclude`; **não** mexer no `.gitignore` versionado (e dentro do worktree `.git` é um arquivo, não uma pasta: usar `git rev-parse --git-path info/exclude` para achar o caminho real).
 
-- [ ] **Step 2: Subir e rodar a suíte de escalas intacta**
+- [x] **Step 2: Subir e rodar a suíte de escalas intacta**
 
 ```powershell
 docker compose -p ebi-escalas -f docker-compose.yml -f docker-compose.worktree.yml up -d app postgres mailpit redis
@@ -182,7 +182,7 @@ docker compose -p ebi-escalas -f docker-compose.yml -f docker-compose.worktree.y
 
 Expected: PASS. O container precisa montar **o código do worktree**; conferir com `... exec app grep -c "PAPEIS_POR_FUNCAO" app/Domain/Escalas/Services/GerenciadorEscala.php` (valor ≥ 1), e não por caminho absoluto.
 
-- [ ] **Step 3: Registrar e seguir**
+- [x] **Step 3: Registrar e seguir**
 
 Nada a commitar. Registrar no ledger de progresso que o comando padrão funciona.
 
@@ -204,7 +204,7 @@ Nada a commitar. Registrar no ledger de progresso que o comando padrão funciona
   - `Operacoes::EQUIPE_GERENCIAR = 'equipe.gerenciar'`
   - `AutorizadorOperacao::MATRIZ['equipe.gerenciar']`: `coordenadora` (entra em `OPERACOES_COORDENADORA`, a chefe herda por superconjunto), `adm_igreja`.
 
-- [ ] **Step 1: Espelhar o teste que falha**
+- [x] **Step 1: Espelhar o teste que falha**
 
 | Teste | Expectativa |
 |---|---|
@@ -215,22 +215,22 @@ Nada a commitar. Registrar no ledger de progresso que o comando padrão funciona
 
 Reaproveitar o arnês existente de matriz (`tests/Feature/...` que já valida superconjunto); não duplicar.
 
-- [ ] **Step 2: Rodar e ver falhar**
+- [x] **Step 2: Rodar e ver falhar**
 
 Run: `docker compose -p ebi-escalas -f docker-compose.yml -f docker-compose.worktree.yml exec app php artisan test --filter=PapeisPorFuncaoTest`
 Expected: FAIL — `Undefined constant App\Domain\Escalas\Models\EscalaMembro::PAPEIS_POR_FUNCAO` e `equipe.gerenciar` ausente.
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 - Mover o mapa para `EscalaMembro` (constante **pública**), atualizar os três usos (`GerenciadorEscala` em `garantirElegivel`, `vigenteNaData`, `funcaoValida`; `AvaliadorEquipe` em `vigenteEm`).
 - `Operacoes` + `MATRIZ`, rodar `... exec app php artisan optimize:clear`.
 
-- [ ] **Step 4: Rodar e ver passar**
+- [x] **Step 4: Rodar e ver passar**
 
 Run: `... exec app php artisan test --filter="PapeisPorFuncaoTest|EscalaGestaoTest|AvaliadorEquipeTest|AprovacaoEscalaTest"`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add backend/app/Domain/Escalas/Models/EscalaMembro.php backend/app/Domain/Escalas/Services/GerenciadorEscala.php backend/app/Domain/Escalas/Services/AvaliadorEquipe.php backend/app/Domain/Identidade/Support/Operacoes.php backend/app/Domain/Identidade/Services/AutorizadorOperacao.php backend/tests/Feature/Escalas/PapeisPorFuncaoTest.php
@@ -261,7 +261,7 @@ git commit -m "refactor(escalas): papeis por funcao numa constante unica e equip
   - `EscalaFactory::definition()` cria `Equipe::factory()` para o EBI e grava `equipe_id`.
   - `GerirEscala::criar(string $sessaoId, int $estimativa, array $membros, ?string $autorId, ?string $equipeId = null)`: `null` nesta tarefa → 422 `equipe_obrigatoria` (o erro final; a regra de dona vem na Task 8).
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 | Teste | Expectativa |
 |---|---|
@@ -275,24 +275,24 @@ git commit -m "refactor(escalas): papeis por funcao numa constante unica e equip
 
 Nasce com a base atual do E07, sem vaga ainda; usar `cenarioEscala()`.
 
-- [ ] **Step 2: Rodar e ver falhar**
+- [x] **Step 2: Rodar e ver falhar**
 
 Run: `... exec app php artisan test --filter=EquipeSchemaTest`
 Expected: FAIL — `Class "App\Domain\Escalas\Models\Equipe" not found` e coluna `equipe_id` inexistente.
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 - Migration: `equipe` e `equipe_membro` **antes** de `escala` (ordem do arquivo), com `UNIQUE` e índices da decisão 1; `escala` ganha `equipe_id` `NOT NULL` `restrictOnDelete` indexado.
 - Models e factories da interface.
 - `GerenciadorEscala::criar` grava `equipe_id` e, nesta tarefa, valida só presença (não vazio → `equipe_obrigatoria`).
 - Rodar `... exec app php artisan migrate:fresh --seed` no banco de desenvolvimento do container (ou `migrate` nos testes já cobre).
 
-- [ ] **Step 4: Rodar e ver passar**
+- [x] **Step 4: Rodar e ver passar**
 
 Run: `... exec app php artisan test --filter="EquipeSchemaTest|EscalaGestaoTest|TrocaEscalaTest|PresencaEquipeTest|ConflitoEscalaTest|CoberturaEscalaTest|AprovacaoEscalaTest"`
 Expected: PASS — a `EscalaFactory` absorve `equipe_id` nos testes existentes.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add backend/database/migrations/2026_11_20_100002_create_escala_tables.php backend/app/Domain/Escalas/Models backend/app/Domain/Escalas/Database/Factories backend/app/Domain/Escalas/Services/GerenciadorEscala.php backend/app/Domain/Escalas/Contracts/GerirEscala.php backend/app/Http/Controllers/Api/V1/EscalaController.php backend/app/Http/Requests/Escalas/CriarEscalaRequest.php backend/tests/Feature/Escalas/EquipeSchemaTest.php
@@ -334,11 +334,11 @@ git commit -m "feat(escalas): schema da equipe e escala obrigatoriamente vincula
 | `POST /equipes/{id}/members` | `equipes.members.store` | `equipe.gerenciar` | 200 `{data:equipe}` |
 | `DELETE /equipes/{id}/members/{usuarioId}` | `equipes.members.destroy` | `equipe.gerenciar` | 200 `{data:equipe}` |
 
-- [ ] **Step 1: OpenAPI e `endpoints.md`**
+- [x] **Step 1: OpenAPI e `endpoints.md`**
 
 Descrever as 5 rotas, os schemas `Equipe`, `EquipeResumo` e `MembroEquipe`, e os erros 403, 404, 409 e 422 desta tarefa. Depois: `cd frontend; npm run gen:api; cd ..`.
 
-- [ ] **Step 2: Escrever os testes que falham (`EquipeEscalaTest.php`)**
+- [x] **Step 2: Escrever os testes que falham (`EquipeEscalaTest.php`)**
 
 Base: `cenarioEscala()`, `authEscala()`, `escopoAprovacao()`. A equipe do cenário é criada explicitamente para `$c['coord']`. Os testes de criação usam `$nova = membroEscala('coordenadora','ebi',$c['ebi']->id)`.
 
@@ -364,12 +364,12 @@ Base: `cenarioEscala()`, `authEscala()`, `escopoAprovacao()`. A equipe do cenár
 | `it('ministerio_local nao escreve')` | POST → 403 `sem_permissao` |
 | `it('auditoria da equipe sai sem nomes')` | `metadados_minimizados` só com `equipe_id`, `ebi_id`, `coordenadora_id`, `usuario_id` |
 
-- [ ] **Step 3: Rodar e ver falhar**
+- [x] **Step 3: Rodar e ver falhar**
 
 Run: `... exec app php artisan test --filter=EquipeEscalaTest`
 Expected: FAIL — rotas `/api/v1/ebis/{id}/equipes` respondem 404.
 
-- [ ] **Step 4: Implementar**
+- [x] **Step 4: Implementar**
 
 - `VinculoEquipe` e `GerenciadorEquipe` (ordem das guardas):
   - `criar`: papel `coordenadora` e `coordenadoraId !== contexto->usuarioId` → 403 `nao_e_dona_da_equipe`; `! vigenteHoje(coordenadora, …, PAPEIS_POR_FUNCAO['coordenadora'])` → 422 `coordenadora_invalida`; `DB::transaction` + evento `equipe.criada`; `UniqueConstraintViolationException` → 409 `equipe_existente`.
@@ -379,12 +379,12 @@ Expected: FAIL — rotas `/api/v1/ebis/{id}/equipes` respondem 404.
 - Bindings no `DomainServiceProvider`; rotas: GETs fora do grupo de idempotência, POST/DELETE dentro.
 - `... exec app php artisan optimize:clear`.
 
-- [ ] **Step 5: Rodar e ver passar**
+- [x] **Step 5: Rodar e ver passar**
 
 Run: `... exec app php artisan test --filter="EquipeEscalaTest|EquipeEbiTest"`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```powershell
 git add backend/app/Domain/Escalas/Services/VinculoEquipe.php backend/app/Domain/Escalas/Contracts/GerirEquipe.php backend/app/Domain/Escalas/Contracts/ConsultarEquipeEscala.php backend/app/Domain/Escalas/Contracts/EquipeRef.php backend/app/Domain/Escalas/Services/GerenciadorEquipe.php backend/app/Domain/Escalas/Services/ConsultaEquipeEscala.php backend/app/Http/Controllers/Api/V1/EquipeEscalaController.php backend/app/Http/Requests/Escalas/CriarEquipeRequest.php backend/app/Http/Requests/Escalas/IncluirMembroEquipeRequest.php backend/app/Providers/DomainServiceProvider.php backend/routes/api.php backend/tests/Feature/Escalas/EquipeEscalaTest.php docs/04-api/openapi.yaml docs/04-api/endpoints.md frontend/src/api/schema.d.ts
@@ -408,7 +408,7 @@ git commit -m "feat(escalas): equipe da coordenadora com dominio e API"
   - `CancelamentoTroca::cancelarPendentes(string $escalaId, ?string $membroId, string $motivoDecisao, ?string $autorId): int` — cancela trocas `pendente` (todas, ou só as do membro), registra `escala.troca_cancelada` e devolve a quantidade.
 - Consumes: `cenarioAprovacao()` e `cenarioSemChefe()` de `AprovacaoEscalaTest.php`.
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 | Teste | Expectativa |
 |---|---|
@@ -418,23 +418,23 @@ git commit -m "feat(escalas): equipe da coordenadora com dominio e API"
 | `it('retirar, mudar funcao e estimativa voltam a prevista')` | dataset dos 3 → `prevista`, `aprovado_*` nulos, divisor recopiado (2), troca pendente `cancelada` (regressão do E07) |
 | `it('incluir com sessao encerrada responde 409')` | 409 `sessao_em_estado_invalido` |
 
-- [ ] **Step 2: Rodar e ver falhar**
+- [x] **Step 2: Rodar e ver falhar**
 
 Run: `... exec app php artisan test --filter=AcrescimoEscalaTest`
 Expected: FAIL no primeiro teste, com `Expected 'prevista' to be 'aprovada'`.
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 - `salvarAlteracao(..., bool $acrescimo = false)`: quando `true`, **não** toca em `status`, `aprovado_por/em` nem `participantes_por_auxiliar`, **não** cancela trocas; evento `escala.alterada` sai com `voltou_prevista = false`.
 - `incluirMembro` chama com `acrescimo: true`.
 - O trecho que cancela trocas migra para `CancelamentoTroca::cancelarPendentes($escalaId, null, 'escala alterada', $autorId)` sem mudar comportamento; binding no `DomainServiceProvider`.
 
-- [ ] **Step 4: Rodar e ver passar**
+- [x] **Step 4: Rodar e ver passar**
 
 Run: `... exec app php artisan test --filter="AcrescimoEscalaTest|EscalaGestaoTest|AprovacaoEscalaTest|TrocaEscalaTest"`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add backend/app/Domain/Escalas/Services/GerenciadorEscala.php backend/app/Domain/Escalas/Services/CancelamentoTroca.php backend/app/Providers/DomainServiceProvider.php backend/tests/Feature/Escalas/AcrescimoEscalaTest.php
@@ -453,17 +453,17 @@ git commit -m "feat(escalas): incluir membro preserva a aprovacao da escala"
 - Modify: `frontend/src/pages/Escalas.test.tsx` **um** teste fica **vermelho de propósito**
 - Test: `frontend/src/pages/Escalas.test.tsx`
 
-- [ ] **Step 1: Ajustar a tela e o teste**
+- [x] **Step 1: Ajustar a tela e o teste**
 
 - O teste `montar pre-seleciona a dona e os membros vigentes da equipe` é escrito **agora**, com a expectativa final (`criarEscala` recebe o `equipe_id` real da equipe da dona), e fica **vermelho de propósito**. `it.skip` **não** é permitido: o teste tem de rodar e falhar, para não virar esquecimento. No arquivo, ao lado do teste: `// Fixado pela Task 13.`
 - Na tela, enviar `equipe_id: ''` com o mesmo marcador `// TODO(Tarefa 13): montar pela equipe`.
 
-- [ ] **Step 2: Rodar e ver falhar**
+- [x] **Step 2: Rodar e ver falhar**
 
 Run: `cd frontend; npx vitest run src/pages/Escalas.test.tsx; cd ..`
 Expected: FAIL só no teste fixado; os demais passam.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```powershell
 git add frontend/src/api/escalas.ts frontend/src/pages/Escalas.tsx frontend/src/pages/Escalas.test.tsx
@@ -490,7 +490,7 @@ git commit -m "chore(escalas): tela de escalas envia equipe_id provisorio ate a 
   - `OfertaVagaEscala`: `STATUS_PENDENTE`, `STATUS_ACEITA`, `STATUS_RETIRADA`, `STATUS_DESCARTADA`.
   - `EncerradorVaga::cancelar(VagaEscala $vaga, string $motivo, ?string $autorId): void`; `EncerradorVaga::cancelarAbertasDoMembro(string $membroId, string $motivo, ?string $autorId): int`. O chamador já está dentro da `TravaEscala`; o encerrador não abre trava.
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 | Teste | Expectativa |
 |---|---|
@@ -501,23 +501,23 @@ git commit -m "chore(escalas): tela de escalas envia equipe_id provisorio ate a 
 | `it('alteracao que volta a prevista nao cancela vaga')` | PATCH estimativa → vaga continua `aberta` |
 | `it('evento de cancelamento leva so ids e motivo')` | metadados sem `observacao` |
 
-- [ ] **Step 2: Rodar e ver falhar**
+- [x] **Step 2: Rodar e ver falhar**
 
 Run: `... exec app php artisan test --filter=VagaSchemaTest`
 Expected: FAIL — `Class "App\Domain\Escalas\Models\VagaEscala" not found`.
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 - Migration da decisão 1 (`observacao` `string(280)` nullable; `funcao` default `'auxiliar'`; índices `(escala_id,status)`, `(vaga_id,status)`, `(usuario_id,status)`).
 - Integrações: `retirarMembro` → `cancelarAbertasDoMembro($id, MOTIVO_RETIRADO, …)` **antes** do delete; `mudarFuncao` → `MOTIVO_FUNCAO`; `GerenciadorTrocaEscala::aprovar` → `MOTIVO_TROCADO`, logo depois de marcar o original como `substituido`.
 - `... exec app php artisan migrate`.
 
-- [ ] **Step 4: Rodar e ver passar**
+- [x] **Step 4: Rodar e ver passar**
 
 Run: `... exec app php artisan test --filter="VagaSchemaTest|TrocaEscalaTest|EscalaGestaoTest"`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add backend/database/migrations/2026_11_25_100000_create_vaga_escala_tables.php backend/app/Domain/Escalas/Models backend/app/Domain/Escalas/Database/Factories backend/app/Domain/Escalas/Services/EncerradorVaga.php backend/app/Domain/Escalas/Services/GerenciadorEscala.php backend/app/Domain/Escalas/Services/GerenciadorTrocaEscala.php backend/app/Providers/DomainServiceProvider.php backend/tests/Feature/Escalas/VagaSchemaTest.php
@@ -551,11 +551,11 @@ git commit -m "feat(escalas): tabelas de vaga e cancelamento automatico na retir
   - `EscalaVisao` ganha `?ContextoDecisao $contexto = null` e `bool $temEscalaLer = false`; `::interna()` continua igual.
   - Detalhe da escala: `equipe: { id, coordenadora_id, coordenadora_nome }`, `pode_gerir: bool`, `pode_escolher_oferta: bool` (falsos sem contexto).
 
-- [ ] **Step 1: OpenAPI**
+- [x] **Step 1: OpenAPI**
 
 - `Escala`: `equipe`, `pode_gerir`, `pode_escolher_oferta`; `equipe_id` `required` em `POST /sessions/{id}/schedules`; escritas da escala ganham 403 `nao_e_dona_da_escala`. Depois `npm run gen:api`.
 
-- [ ] **Step 2: Escrever os testes que falham (`DonaDaEscalaTest.php`)**
+- [x] **Step 2: Escrever os testes que falham (`DonaDaEscalaTest.php`)**
 
 | Teste | Expectativa |
 |---|---|
@@ -574,24 +574,24 @@ git commit -m "feat(escalas): tabelas de vaga e cancelamento automatico na retir
 | `it('detalhe traz equipe, pode_gerir e pode_escolher_oferta')` | como dona → `true`/`true`; como `ministerio_local` → `false`/`false`; `equipe.coordenadora_nome` preenchido |
 | `it('escala.criada leva equipe_id')` | metadados |
 
-- [ ] **Step 3: Rodar e ver falhar**
+- [x] **Step 3: Rodar e ver falhar**
 
 Run: `... exec app php artisan test --filter=DonaDaEscalaTest`
 Expected: FAIL — `Class "App\Domain\Escalas\Services\DonaDaEscala" not found`; escritas da não dona respondem 2xx.
 
-- [ ] **Step 4: Implementar**
+- [x] **Step 4: Implementar**
 
 - `criar`: `equipe_id` ausente → 422 `equipe_obrigatoria`; `coordenadora` com equipe de outra → 422 `equipe_invalida`; equipe de outro EBI → 422; dona sem vínculo vigente → 422 `equipe_invalida`. Grava `equipe_id` e o evento leva `equipe_id`.
 - Cada escrita da escala chama `garantirGerir` **dentro** da `TravaEscala`, antes das demais guardas.
 - Controllers: `autorizacao->contexto($request)` em todas as escritas; `AutorizacaoEscala::visao` preenche `contexto` e `temEscalaLer`; `detalheDaEscala` calcula os booleanos.
 - Testes do E07: atores que escrevem e não são a dona passam a ser `$c['coord']` ou a chefe. Achá-los com `--filter="EscalaGestaoTest|PresencaEquipeTest|ConflitoEscalaTest|AprovacaoEscalaTest"`.
 
-- [ ] **Step 5: Rodar e ver passar**
+- [x] **Step 5: Rodar e ver passar**
 
 Run: `... exec app composer test`
 Expected: PASS na suíte inteira.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```powershell
 git add backend/app/Domain/Escalas backend/app/Http backend/tests/Feature docs/04-api/openapi.yaml docs/04-api/endpoints.md frontend/src/api/schema.d.ts
@@ -618,7 +618,7 @@ git commit -m "feat(escalas): escala nasce com equipe e so a dona escreve"
   - `GerirVagaEscala::escolher(string $ofertaId, ContextoDecisao $ctx, ?string $autorId): string` — devolve o id do membro criado
   - `final readonly class ResultadoVaga(?string $id, bool $indisponivel)`, com `::ok()`/`::indisponivel()`
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 | Teste | Expectativa |
 |---|---|
@@ -643,24 +643,24 @@ git commit -m "feat(escalas): escala nasce com equipe e so a dona escreve"
 | `it('oferta de quem ja entrou na escala nao pode ser escolhida')` | **RF-5**: inclusão manual → escolher 422 `membro_ja_escalado`; nenhum membro novo; oferta segue `pendente` |
 | `it('cancelar vaga descarta ofertas')` | `cancelada_pela_gestao`; vaga já `preenchida` → 409 `vaga_indisponivel` |
 
-- [ ] **Step 2: Rodar e ver falhar**
+- [x] **Step 2: Rodar e ver falhar**
 
 Run: `... exec app php artisan test --filter=VagaDominioTest`
 Expected: FAIL — `Target [App\Domain\Escalas\Contracts\GerirVagaEscala] is not instantiable`.
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 - Todos os métodos em `TravaEscala::executar($escalaId, fn)`; vaga e oferta relidas depois do lock; guardas na ordem da decisão 5.
 - `escolher`: original indisponível → `EncerradorVaga::cancelar(…, MOTIVO_INDISPONIVEL)` e callback devolve `ResultadoVaga::indisponivel()`; **depois** do `executar`, `throw new ProblemException('vaga_indisponivel', …, 409, …)`.
 - Conflito via `DetectorConflito::conflitos([$u], $intervalo, $escalaId)`; ofertas pendentes não contam.
 - Eventos: `escala.vaga_aberta`, `escala.vaga_cancelada`, `escala.vaga_oferta`, `escala.vaga_oferta_retirada`, `escala.vaga_preenchida` (ids apenas). Binding `GerirVagaEscala` → `GerenciadorVaga`.
 
-- [ ] **Step 4: Rodar e ver passar**
+- [x] **Step 4: Rodar e ver passar**
 
 Run: `... exec app php artisan test --filter=VagaDominioTest`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add backend/app/Domain/Escalas/Contracts/GerirVagaEscala.php backend/app/Domain/Escalas/Services/GerenciadorVaga.php backend/app/Domain/Escalas/Services/ResultadoVaga.php backend/app/Providers/DomainServiceProvider.php backend/tests/Feature/Escalas/VagaDominioTest.php
@@ -699,9 +699,9 @@ git commit -m "feat(escalas): ciclo da vaga e da oferta com escolha pela dona"
 | `POST /schedule-offers/{id}/withdraw` | `schedule-offers.withdraw` | 200 |
 | `POST /schedule-offers/{id}/accept` | `schedule-offers.accept` | 200 |
 
-- [ ] **Step 1: OpenAPI e `endpoints.md`** com as 7 rotas e os schemas `VagaPublica`, `VagaLeitor` e `VagaGestao`. Depois `npm run gen:api`.
+- [x] **Step 1: OpenAPI e `endpoints.md`** com as 7 rotas e os schemas `VagaPublica`, `VagaLeitor` e `VagaGestao`. Depois `npm run gen:api`.
 
-- [ ] **Step 2: Escrever os testes que falham**
+- [x] **Step 2: Escrever os testes que falham**
 
 | Teste | Expectativa |
 |---|---|
@@ -719,23 +719,23 @@ git commit -m "feat(escalas): ciclo da vaga e da oferta com escolha pela dona"
 | `it('repetir oferta e aceite com a mesma Idempotency-Key nao duplica')` | **RF-4**: dois POSTs iguais → mesma resposta; uma oferta e um membro |
 | `it('observacao nao entra na auditoria')` | metadados sem `observacao` |
 
-- [ ] **Step 3: Rodar e ver falhar**
+- [x] **Step 3: Rodar e ver falhar**
 
 Run: `... exec app php artisan test --filter=VagaApiTest`
 Expected: FAIL — 404 nas rotas novas.
 
-- [ ] **Step 4: Implementar**
+- [x] **Step 4: Implementar**
 
 - Projeção: `Gestao` se `DonaDaEscala::podeGerir`; `Leitor` se a visão tem `temEscalaLer`; `Publica` nos demais.
 - `expirada` = vaga `aberta` com a sessão fora de `prevista`/`aberta`. Nomes numa `nomes()` por resposta.
 - `MinhasVagasController` usa `escoposDeEquipeVigentes()` e exclui escalas em que o usuário é membro ativo.
 
-- [ ] **Step 5: Rodar e ver passar**
+- [x] **Step 5: Rodar e ver passar**
 
 Run: `... exec app composer test`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```powershell
 git add backend/app/Domain/Escalas backend/app/Domain/Identidade/Contracts/ConsultarEquipeEbi.php backend/app/Domain/Identidade/Services/ConsultaEquipeEbi.php backend/app/Http backend/routes/api.php backend/app/Providers/DomainServiceProvider.php backend/tests/Feature/Escalas/VagaApiTest.php docs/04-api/openapi.yaml docs/04-api/endpoints.md frontend/src/api/schema.d.ts
@@ -759,9 +759,9 @@ git commit -m "feat(escalas): API de vagas e ofertas com projecao de privacidade
   - `SessaoResource` com `?string $escalaId = null` → `escala_id`
   - `Presenca.tsx` busca a escala por `sessao.escala_id`; bloco da equipe por `escala.pode_gerir`.
 
-- [ ] **Step 1: OpenAPI** (`Sessao.escala_id: string|null`) e depois `npm run gen:api`.
+- [x] **Step 1: OpenAPI** (`Sessao.escala_id: string|null`) e depois `npm run gen:api`.
 
-- [ ] **Step 2: Escrever os testes que falham**
+- [x] **Step 2: Escrever os testes que falham**
 
 Backend:
 
@@ -779,23 +779,23 @@ Vitest (`Presenca.test.tsx`):
 | `it('leitora nao dona ve a equipe so em leitura')` | `pode_gerir: false` → sem botão de salvar |
 | `it('recarrega a equipe apos 422 membro_invalido mantendo marcacoes')` | |
 
-- [ ] **Step 3: Rodar e ver falhar**
+- [x] **Step 3: Rodar e ver falhar**
 
 Run: `... exec app php artisan test --filter=PresencaEscalaIdTest`
 Expected: FAIL — `Unable to find JSON path [escala_id]`.
 Run: `cd frontend; npx vitest run src/pages/Presenca.test.tsx; cd ..`
 Expected: FAIL — `obterEscala` chamado com o id da sessão.
 
-- [ ] **Step 4: Implementar**
+- [x] **Step 4: Implementar**
 
 - `escalaDaSessao`: `Escala::query()->where('sessao_id', $id)->value('id')`; `SessaoController::show` passa ao resource.
 - `Presenca.tsx`: troca o `podeGerenciar` por papéis pela `escala.pode_gerir`; recarrega a equipe ao abrir, depois de encerrar a sessão e no `422 membro_invalido`, mantendo os ids marcados que continuam na equipe; lista só os ativos.
 
-- [ ] **Step 5: Rodar e ver passar**
+- [x] **Step 5: Rodar e ver passar**
 
 Os mesmos dois comandos do Step 3, agora PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```powershell
 git add backend/app/Domain/Escalas/Contracts/ConsultarEquipeEscalada.php backend/app/Domain/Escalas/Services/ConsultaEquipeEscalada.php backend/app/Http/Controllers/Api/V1/SessaoController.php backend/app/Http/Resources/SessaoResource.php backend/tests/Feature/Escalas/PresencaEscalaIdTest.php docs/04-api/openapi.yaml docs/04-api/endpoints.md frontend/src/api/schema.d.ts frontend/src/pages/Presenca.tsx frontend/src/pages/Presenca.test.tsx
@@ -820,7 +820,7 @@ git commit -m "fix(escalas): presenca acha a escala por escala_id da sessao"
   - `Suporte::correr(array $comandoA, array $comandoB): array{0:string,1:string}` — dispara os dois `proc_open` **antes** de ler qualquer saída (duas conexões independentes).
   - `Suporte::cenario(): array` — `migrate:fresh` no `ebi_teste` e semeia escala, vaga e duas ofertas.
 
-- [ ] **Step 1: Escrever os 5 pares** da decisão 12; cada um confere **as duas saídas** e o **estado persistido**.
+- [x] **Step 1: Escrever os 5 pares** da decisão 12; cada um confere **as duas saídas** e o **estado persistido**.
 
 | Teste | Expectativa |
 |---|---|
@@ -830,7 +830,7 @@ git commit -m "fix(escalas): presenca acha a escala por escala_id da sessao"
 | `it('aceite x inclusao manual da mesma pessoa')` | exatamente 1 `escala_membro` ativo da pessoa |
 | `it('dois aceites de ofertas da mesma vaga')` | `ok` e `oferta_ja_decidida` (ou `vaga_indisponivel`); 1 oferta `aceita` e 1 `descartada` |
 
-- [ ] **Step 2: Rodar e ver falhar** (trava desligada de propósito)
+- [x] **Step 2: Rodar e ver falhar** (trava desligada de propósito)
 
 Em `TravaEscala::executar`, trocar temporariamente `lockForUpdate()` por sem lock (`get()`/`find()`).
 
@@ -842,16 +842,16 @@ $env:TESTE_PGSQL='1'; docker compose -p ebi-escalas -f docker-compose.yml -f doc
 
 Expected: FAIL em pelo menos `dois aceites` (2 membros criados). **Reverter a alteração** antes de seguir.
 
-- [ ] **Step 3: Implementar** o suporte. Código de produção não muda. Se um par falhar com a trava ligada, a guarda que faltava volta para a tarefa dona (6 ou 8), sem afrouxar o teste.
+- [x] **Step 3: Implementar** o suporte. Código de produção não muda. Se um par falhar com a trava ligada, a guarda que faltava volta para a tarefa dona (6 ou 8), sem afrouxar o teste.
 
-- [ ] **Step 4: Rodar e ver passar**
+- [x] **Step 4: Rodar e ver passar**
 
 Run: mesmo comando do Step 2, com `$env:TESTE_PGSQL='1'` antes e `Remove-Item Env:TESTE_PGSQL` depois.
 Expected: PASS (5 testes), repetido **3 vezes seguidas**.
 Run: `... exec app composer test`
 Expected: PASS, **sem** executar a pasta `Concorrencia`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add backend/tests/Concorrencia backend/phpunit.xml backend/tests/Pest.php .github/workflows/ci.yml
@@ -874,7 +874,7 @@ git commit -m "test(escalas): corridas de vaga em PostgreSQL com processos separ
   - `export function EquipesEscala({ contexto, papeis }: { contexto: ContextoAtuacao | null; papeis: string[] })`
   - `IdTela` ganha `'equipes-escala'`
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 | Teste | Expectativa |
 |---|---|
@@ -885,21 +885,21 @@ git commit -m "test(escalas): corridas de vaga em PostgreSQL com processos separ
 | `it('membro sem vinculo aparece marcado')` | |
 | `ListaNav: it('mostra equipes-escala para coordenadora, chefe e adm_igreja')` | e **não** mostra para `auxiliar` |
 
-- [ ] **Step 2: Rodar e ver falhar**
+- [x] **Step 2: Rodar e ver falhar**
 
 Run: `cd frontend; npx vitest run src/pages/EquipesEscala.test.tsx src/components/layout/ListaNav.test.tsx; cd ..`
 Expected: FAIL — `Failed to resolve import "./EquipesEscala"`.
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 - Padrão de `Escalas.tsx`: seletor de EBI, lista e detalhe. Escrita liberada para `coordenadora`, `coordenadora_chefe` e `adm_igreja`; o servidor decide a regra de dona.
 - `App.tsx` ganha a rota `tela === 'equipes-escala'`.
 
-- [ ] **Step 4: Rodar e ver passar**
+- [x] **Step 4: Rodar e ver passar**
 
 O mesmo comando, PASS; depois `npm run lint` e `npx tsc -b`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add frontend/src/api/escalas.ts frontend/src/pages/EquipesEscala.tsx frontend/src/pages/EquipesEscala.test.tsx frontend/src/components/layout/ListaNav.tsx frontend/src/components/layout/ListaNav.test.tsx frontend/src/App.tsx
@@ -921,7 +921,7 @@ git commit -m "feat(escalas): tela de equipes da coordenadora"
   - `abrirVaga(escalaId, corpo: { substitui_membro_id?: string; observacao?: string })`, `cancelarVaga(id)`, `listarVagasEbi(ebiId, filtro)`, `minhasVagas(inicio, fim)`, `oferecer(vagaId)`, `retirarOferta(id)`, `escolherOferta(id)`
   - `rotuloStatusVaga(s)`, `rotuloMotivoVaga(m)`, `rotuloStatusOferta(s)`
 
-- [ ] **Step 1: Escrever os testes que falham**
+- [x] **Step 1: Escrever os testes que falham**
 
 `Escalas.test.tsx`:
 - `it('montar pre-seleciona a dona e os membros vigentes da equipe')` — **o teste fixado na Task 5 passa a verde**: `criarEscala` recebe `equipe_id`, a dona como `coordenadora` e os membros sem `sem_vinculo` como `auxiliar`;
@@ -936,21 +936,21 @@ git commit -m "feat(escalas): tela de equipes da coordenadora"
 - `it('mostra minha_oferta e permite retirar')`;
 - `it('mostra conflito_de_horario devolvido pelo servidor')`.
 
-- [ ] **Step 2: Rodar e ver falhar**
+- [x] **Step 2: Rodar e ver falhar**
 
 Run: `cd frontend; npx vitest run src/pages/Escalas.test.tsx src/pages/MinhasEscalas.test.tsx; cd ..`
 Expected: FAIL — `abrirVaga is not a function` e textos inexistentes.
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 - Remover o `equipe_id: ''` provisório da Task 5 (o comentário `TODO(Tarefa 13)` sai junto).
 - Substituir `podeGerir`/`podeAprovar` por papéis pelos campos do servidor onde existirem (`pode_gerir`, `pode_escolher_oferta`).
 
-- [ ] **Step 4: Rodar e ver passar**
+- [x] **Step 4: Rodar e ver passar**
 
 O mesmo comando, PASS; depois `npm run lint`, `npx tsc -b` e `npx vitest run` (suíte toda do frontend).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add frontend/src/api/escalas.ts frontend/src/pages/Escalas.tsx frontend/src/pages/Escalas.test.tsx frontend/src/pages/MinhasEscalas.tsx frontend/src/pages/MinhasEscalas.test.tsx frontend/src/lib/formatos.ts
@@ -967,7 +967,7 @@ git commit -m "feat(escalas): montar escala pela equipe, vagas e ofertas nas tel
 - Modify: `docs/05-seguranca-e-privacidade/matriz-de-autorizacao.md` (linhas "Equipe da coordenadora" e "Vaga: oferecer"; corrigir a linha 57)
 - Modify: `docs/03-dados/estados.md`, `docs/03-dados/modelo-conceitual.md`, `docs/01-requisitos/funcionais/RF-07-escalas.md`, `docs/CHANGELOG.md`
 
-- [ ] **Step 1: Escrever a lista de verificação.** Cada item confirmado por `grep`:
+- [x] **Step 1: Escrever a lista de verificação.** Cada item confirmado por `grep`:
   - ADR-0034: contexto, decisão (equipe, dona, acréscimo, vaga, privacidade, concorrência, duas regras de conflito), alternativas descartadas, consequências e a seção **Backlog** com (a)–(e) da spec;
   - ADR-0033: §4 e §5 anotados com "emendado pelo ADR-0034"; §5 diz "cancela trocas **pendentes**"; §7 alinhado ao `RelatorioPresenca`;
   - matriz: `equipe.gerenciar`; linha 57 corrigida (auxiliar sem `escala.ler`; `GET /ebis/{id}/team` sob `escala.gerenciar`);
@@ -976,16 +976,16 @@ git commit -m "feat(escalas): montar escala pela equipe, vagas e ofertas nas tel
   - RF-07: critérios de aceite novos;
   - CHANGELOG: eventos novos e a quebra (não há dados a migrar).
 
-- [ ] **Step 2: Conferir que ainda falta**
+- [x] **Step 2: Conferir que ainda falta**
 
 ```powershell
 Select-String -Path docs\06-arquitetura\decisoes\ADR-0034*.md,docs\05-seguranca-e-privacidade\matriz-de-autorizacao.md -Pattern "equipe.gerenciar"
 ```
 Expected: erro de arquivo inexistente (ADR-0034) e nenhuma ocorrência na matriz.
 
-- [ ] **Step 3: Escrever os documentos.**
+- [x] **Step 3: Escrever os documentos.**
 
-- [ ] **Step 4: Conferir e fechar com a suíte verde**
+- [x] **Step 4: Conferir e fechar com a suíte verde**
 
 ```powershell
 Select-String -Path docs\06-arquitetura\decisoes\ADR-0034*.md -Pattern "Backlog"
@@ -996,7 +996,7 @@ cd frontend; npx vitest run; cd ..
 ```
 Expected: uma ocorrência em cada arquivo; PASS nas duas suítes (**verificação final da entrega**).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add docs/06-arquitetura/decisoes/ADR-0034-equipes-da-coordenadora-e-vaga-de-escala.md docs/06-arquitetura/decisoes/ADR-0033-coordenadora-chefe-e-regras-da-escala.md docs/05-seguranca-e-privacidade/matriz-de-autorizacao.md docs/03-dados/estados.md docs/03-dados/modelo-conceitual.md docs/01-requisitos/funcionais/RF-07-escalas.md docs/CHANGELOG.md
