@@ -3,7 +3,10 @@
 use App\Domain\Escalas\Models\Escala;
 use App\Domain\Escalas\Models\EscalaMembro;
 use App\Domain\Escalas\Models\SolicitacaoTrocaEscala;
+use Database\Seeders\PapelSeeder;
 use Illuminate\Database\UniqueConstraintViolationException;
+
+beforeEach(fn () => $this->seed(PapelSeeder::class));
 
 it('as factories criam a cadeia escala, membro e troca', function () {
     $troca = SolicitacaoTrocaEscala::factory()->create();

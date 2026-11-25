@@ -6,6 +6,7 @@ use App\Domain\Escalas\Database\Factories\EscalaFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
@@ -27,7 +28,7 @@ class Escala extends Model
     protected $table = 'escala';
 
     protected $fillable = [
-        'sessao_id', 'ebi_id', 'igreja_id', 'estimativa_participantes',
+        'sessao_id', 'equipe_id', 'ebi_id', 'igreja_id', 'estimativa_participantes',
         'participantes_por_auxiliar', 'status', 'aprovado_por', 'aprovado_em', 'criado_por',
     ];
 
@@ -41,6 +42,12 @@ class Escala extends Model
     public function membros(): HasMany
     {
         return $this->hasMany(EscalaMembro::class);
+    }
+
+    /** @return BelongsTo<Equipe, $this> */
+    public function equipe(): BelongsTo
+    {
+        return $this->belongsTo(Equipe::class);
     }
 
     protected static function newFactory(): EscalaFactory

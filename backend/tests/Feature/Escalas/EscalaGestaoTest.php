@@ -3,6 +3,7 @@
 use App\Domain\Auditoria\Models\EventoAuditoria;
 use App\Domain\Escalas\Models\Escala;
 use App\Domain\Escalas\Models\EscalaMembro;
+use App\Domain\Escalas\Models\Equipe;
 use App\Domain\Escalas\Models\SolicitacaoTrocaEscala;
 use App\Domain\Identidade\Models\Papel;
 use App\Domain\Identidade\Models\Usuario;
@@ -33,14 +34,21 @@ function cenarioEscala(array $sessao = []): array
         'status' => Sessao::STATUS_PREVISTA,
     ]);
 
+    $coord = membroEscala('coordenadora', 'ebi', $ebi->id);
+
     return [
         'igreja' => $igreja,
         'ebi' => $ebi,
         'sessao' => $sessaoModel,
-        'coord' => membroEscala('coordenadora', 'ebi', $ebi->id),
+        'coord' => $coord,
         'auxi' => membroEscala('auxiliar', 'ebi', $ebi->id),
         'chefe' => membroEscala('coordenadora_chefe', 'ebi', $ebi->id),
         'ministro' => membroEscala('ministerio_local', 'ebi', $ebi->id),
+        // A equipe da coordenadora do cenario (dona da escala criada na API).
+        'equipe' => Equipe::query()->create([
+            'ebi_id' => $ebi->id, 'igreja_id' => $igreja->id,
+            'coordenadora_id' => $coord->id, 'criado_por' => $coord->id,
+        ]),
     ];
 }
 
@@ -73,6 +81,7 @@ it('cria a escala da sessao com a equipe minima calculada', function () {
     $c = cenarioEscala();
 
     $resposta = $this->postJson("/api/v1/sessions/{$c['sessao']->id}/schedules", [
+        'equipe_id' => $c['equipe']->id,
         'estimativa_participantes' => 5,
         'membros' => [
             ['usuario_id' => $c['coord']->id, 'funcao' => 'coordenadora'],
@@ -99,6 +108,7 @@ it('nao cria uma segunda escala para a mesma sessao', function () {
     Escala::factory()->create(['sessao_id' => $c['sessao']->id, 'ebi_id' => $c['ebi']->id, 'igreja_id' => $c['igreja']->id]);
 
     $this->postJson("/api/v1/sessions/{$c['sessao']->id}/schedules", [
+        'equipe_id' => $c['equipe']->id,
         'estimativa_participantes' => 5,
     ], authEscala($c['coord']))->assertStatus(409)->assertJsonPath('code', 'escala_existente');
 });
@@ -321,6 +331,7 @@ it('a auditoria da escala nao guarda nomes', function () {
     $c = cenarioEscala();
 
     $this->postJson("/api/v1/sessions/{$c['sessao']->id}/schedules", [
+        'equipe_id' => $c['equipe']->id,
         'estimativa_participantes' => 5,
         'membros' => [['usuario_id' => $c['coord']->id, 'funcao' => 'coordenadora']],
     ], authEscala($c['coord']))->assertStatus(201);

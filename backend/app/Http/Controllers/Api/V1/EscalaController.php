@@ -54,6 +54,7 @@ class EscalaController
             (int) $request->validated('estimativa_participantes'),
             $request->validated('membros', []),
             $this->autorId($request),
+            $request->validated('equipe_id'),
         );
 
         return new JsonResponse(['escala' => $this->consulta->detalheDaEscala($escala, EscalaVisao::interna($this->autorId($request)))], 201);

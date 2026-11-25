@@ -42,16 +42,21 @@ class GerenciadorEscala implements GerirEscala
         private readonly AvaliadorEquipe $avaliador,
     ) {}
 
-    public function criar(string $sessaoId, int $estimativa, array $membros, ?string $autorId): Escala
+    public function criar(string $sessaoId, int $estimativa, array $membros, ?string $autorId, ?string $equipeId = null): Escala
     {
         $sessao = $this->sessaoEditavel($sessaoId);
         $ebi = $this->ebi($sessao->ebiId);
         $funcoes = $this->validarMembros($sessao, $membros, []);
 
+        if ($equipeId === null || $equipeId === '') {
+            throw new ProblemException('equipe_obrigatoria', 'Equipe obrigatória', 422, 'Informe a equipe da coordenadora que monta esta escala.');
+        }
+
         try {
-            return DB::transaction(function () use ($sessao, $ebi, $estimativa, $membros, $funcoes, $autorId): Escala {
+            return DB::transaction(function () use ($sessao, $ebi, $estimativa, $membros, $funcoes, $autorId, $equipeId): Escala {
                 $escala = Escala::query()->create([
                     'sessao_id' => $sessao->id,
+                    'equipe_id' => $equipeId,
                     'ebi_id' => $sessao->ebiId,
                     'igreja_id' => $sessao->igrejaId,
                     'estimativa_participantes' => $estimativa,
@@ -78,6 +83,7 @@ class GerenciadorEscala implements GerirEscala
                     'metadados_minimizados' => [
                         'escala_id' => (string) $escala->id,
                         'sessao_id' => $sessao->id,
+                        'equipe_id' => $equipeId,
                         'estimativa_participantes' => $estimativa,
                         'membros' => count($membros),
                         'status' => Escala::STATUS_PREVISTA,

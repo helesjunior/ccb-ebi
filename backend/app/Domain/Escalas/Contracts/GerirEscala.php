@@ -12,7 +12,7 @@ interface GerirEscala
      *
      * @param  array<int, array{usuario_id: string, funcao: string}>  $membros
      */
-    public function criar(string $sessaoId, int $estimativa, array $membros, ?string $autorId): Escala;
+    public function criar(string $sessaoId, int $estimativa, array $membros, ?string $autorId, ?string $equipeId = null): Escala;
 
     public function alterarEstimativa(string $escalaId, int $estimativa, ?string $autorId): Escala;
 

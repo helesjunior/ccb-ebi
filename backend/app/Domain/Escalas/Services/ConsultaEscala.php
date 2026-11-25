@@ -102,6 +102,7 @@ class ConsultaEscala implements ConsultarEscala
         return [
             'id' => (string) $escala->id,
             'sessao_id' => (string) $escala->sessao_id,
+            'equipe_id' => (string) $escala->equipe_id,
             'ebi_id' => (string) $escala->ebi_id,
             'igreja_id' => (string) $escala->igreja_id,
             'status' => $this->statusDaEscala($escala, $sessao),
