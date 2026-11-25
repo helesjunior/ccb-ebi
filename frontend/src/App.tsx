@@ -166,7 +166,7 @@ function App() {
         />
       )}
       {tela === 'cadastro-assistido' && <CadastroAssistido />}
-      {tela === 'escalas' && <Escalas contexto={escopo} papeis={usuario.papeis ?? []} />}
+      {tela === 'escalas' && <Escalas contexto={escopo} papeis={usuario.papeis ?? []} usuario={usuario} />}
       {tela === 'minhas-escalas' && <MinhasEscalas />}
       {tela === 'equipes-escala' && (
         <EquipesEscala contexto={escopo} papeis={usuario.papeis ?? []} usuario={usuario} />

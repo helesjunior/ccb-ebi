@@ -6,17 +6,25 @@ import { lerErro } from '../api/erro'
 import type { components } from '../api/schema'
 import { cabecalhos, type ContextoAtuacao } from '../api/sessao'
 import {
+  abrirVaga,
   alterarEstimativa,
   aprovarEscala,
+  cancelarVaga,
   criarEscala,
   decidirTroca,
   equipeDoEbi,
+  type EquipeResumo,
+  escolherOferta,
   incluirMembro,
+  listarEquipes,
   listarEscalas,
   listarTrocas,
+  listarVagasEbi,
+  obterEquipe,
   obterEscala,
   retirarMembro,
   type MembroDaEquipe,
+  type VagaEscala,
 } from '../api/escalas'
 import { EstadoTabela } from '../components/EstadoTabela'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -31,7 +39,7 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
-import { formatarData, formatarHora, hojeIso, rotuloSituacaoEscala, rotuloSituacaoMembro } from '@/lib/formatos'
+import { formatarData, formatarHora, hojeIso, rotuloSituacaoEscala, rotuloSituacaoMembro, rotuloStatusOferta, rotuloStatusVaga, rotuloTipoVaga } from '@/lib/formatos'
 
 type Escala = components['schemas']['Escala']
 type EscalaResumo = components['schemas']['EscalaResumo']
@@ -76,8 +84,20 @@ function textoEquipeMinima(escala: Escala | undefined): string {
  * a estimativa, os membros com conflitos (CA-12) e a equipe mínima; "Aprovar"
  * apenas para quem aprova de fato (a chefe, ou o `adm_igreja` sem chefe); e as
  * trocas pendentes com a escolha do substituto.
+ *
+ * Montar parte da equipe da coordenadora: a dona entra como coordenadora e os
+ * demais membros vigentes como auxiliares — a escala nasce inteira, e a equipe
+ * fica registrada como dona dela.
  */
-export function Escalas({ contexto, papeis }: { contexto: ContextoAtuacao | null; papeis: string[] }) {
+export function Escalas({
+  contexto,
+  papeis,
+  usuario,
+}: {
+  contexto: ContextoAtuacao | null
+  papeis: string[]
+  usuario: { id?: string } | null
+}) {
   const [ebis, setEbis] = useState<components['schemas']['EbiResumo'][]>([])
   const [ebiId, setEbiId] = useState('')
   const [inicio, setInicio] = useState(hojeIso)
@@ -94,6 +114,9 @@ export function Escalas({ contexto, papeis }: { contexto: ContextoAtuacao | null
   const novaFuncao = 'auxiliar' as const
   const [trocas, setTrocas] = useState<TrocaEscala[]>([])
   const [substituto, setSubstituto] = useState<Record<string, string>>({})
+  const [vagasDoEbi, setVagasDoEbi] = useState<VagaEscala[]>([])
+  const [abrindoVaga, setAbrindoVaga] = useState(false)
+  const [vagaObservacao, setVagaObservacao] = useState('')
 
   const podeAprovar = papeis.some((p) => ['coordenadora_chefe', 'adm_igreja'].includes(p))
   const podeGerir = papeis.some((p) => ['coordenadora', 'coordenadora_chefe', 'adm_igreja'].includes(p))
@@ -140,6 +163,16 @@ export function Escalas({ contexto, papeis }: { contexto: ContextoAtuacao | null
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { void carregarTrocas() }, [ebiId, podeAprovar]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  /** Painel do EBI: todas as vagas abertas, a mais próxima primeiro. */
+  async function carregarVagas() {
+    if (!ebiId) return
+    const { data } = await listarVagasEbi(ebiId, { status: 'aberta', inicio: hojeIso(), fim })
+    setVagasDoEbi(data ?? [])
+  }
+
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { void carregarVagas() }, [ebiId, fim]) // eslint-disable-line react-hooks/exhaustive-deps
+
   async function abrir(sessaoId: string) {
     setErro(null)
     setSessaoAberta(sessaoId)
@@ -167,6 +200,42 @@ export function Escalas({ contexto, papeis }: { contexto: ContextoAtuacao | null
     setEquipe(data ?? [])
   }
 
+  /**
+   * Equipe da coordenadora que monta a escala: `null` quando não há nenhuma
+   * (a própria ou, para chefe e `adm_igreja`, a de qualquer coordenadora
+   * vigente). Quem monta a escala é a dona da equipe escolhida.
+   */
+  async function equipeParaMontar(): Promise<EquipeResumo | null> {
+    const { data, error } = await listarEquipes(ebiId)
+    if (error) {
+      setErro(lerErro(error, 'Não foi possível carregar as equipes.').detail)
+      return null
+    }
+    const todas = data ?? []
+    const minhaId = usuario?.id ?? ''
+    // Para a chefe, `minha` é a dela; sem a dela, vale a primeira de uma
+    // coordenadora vigente (é ela quem escolhe, e o servidor confere).
+    return todas.find((e) => e.coordenadora_id === minhaId) ?? todas[0] ?? null
+  }
+
+  /** Dona como coordenadora e os demais membros vigentes como auxiliares. */
+  async function membrosDaEquipe(equipeDona: EquipeResumo) {
+    const { data } = await obterEquipe(equipeDona.id ?? '')
+    const membros = data?.membros ?? []
+    const linhas: { usuario_id: string; funcao: 'coordenadora' | 'auxiliar' }[] = []
+
+    if (data?.coordenadora_id) {
+      linhas.push({ usuario_id: data.coordenadora_id, funcao: 'coordenadora' })
+    }
+    for (const membro of membros) {
+      if (membro.usuario_id && !membro.sem_vinculo) {
+        linhas.push({ usuario_id: membro.usuario_id, funcao: 'auxiliar' })
+      }
+    }
+
+    return linhas
+  }
+
   async function executar<T>(acao: () => Promise<{ data?: T; error?: unknown }>, sucesso: string) {
     setEnviando(true)
     setErro(null)
@@ -181,10 +250,23 @@ export function Escalas({ contexto, papeis }: { contexto: ContextoAtuacao | null
   }
 
   async function criar() {
-    if (!sessaoAberta) return
+    if (!sessaoAberta || enviando) return
+    setEnviando(true)
+    setErro(null)
+
+    const equipeDona = await equipeParaMontar()
+
+    if (!equipeDona) {
+      setEnviando(false)
+      setErro('Crie a equipe da coordenadora em “Equipes de escala” antes de montar a escala.')
+      return
+    }
+
+    const membros = await membrosDaEquipe(equipeDona)
+    setEnviando(false)
+
     const dados = await executar(
-      // TODO(Tarefa 13): montar pela equipe da dona.
-      () => criarEscala(sessaoAberta, Number(novaEstimativa || 0), [], ''),
+      () => criarEscala(sessaoAberta, Number(novaEstimativa || 0), membros, equipeDona.id ?? ''),
       'Escala criada.',
     )
     if (dados) {
@@ -234,6 +316,31 @@ export function Escalas({ contexto, papeis }: { contexto: ContextoAtuacao | null
       setEscala(dados)
       await carregarEscalas()
     }
+  }
+
+  async function abrirVagaNaEscala() {
+    if (!escala?.id) return
+    const dados = await executar(
+      () => abrirVaga(escala.id!, { observacao: vagaObservacao || null }),
+      'Vaga aberta; os auxiliares do EBI podem se oferecer.',
+    )
+    if (dados) {
+      setAbrindoVaga(false)
+      setVagaObservacao('')
+    }
+    // Mesmo no erro, o cartão pode ter mudado (vaga já aberta por outra pessoa).
+    await Promise.all([abrir(escala.sessao_id!), carregarVagas()])
+  }
+
+  async function cancelarVagaDaEscala(vagaId: string) {
+    await executar(() => cancelarVaga(vagaId), 'Vaga cancelada.')
+    await Promise.all([abrir(escala!.sessao_id!), carregarVagas()])
+  }
+
+  /** A dona escolhe; a pessoa entra já confirmada e a vaga fecha. */
+  async function escolher(vagaId: string, ofertaId: string) {
+    await executar(() => escolherOferta(vagaId, ofertaId), 'Oferta aceita.')
+    await Promise.all([abrir(escala!.sessao_id!), carregarVagas(), carregarEscalas()])
   }
 
   async function decidir(troca: TrocaEscala, decisao: 'aprovar' | 'recusar') {
@@ -399,7 +506,142 @@ export function Escalas({ contexto, papeis }: { contexto: ContextoAtuacao | null
                     <Button type="button" variant="outline" disabled={enviando || !novoMembro} onClick={() => void incluir()}>Incluir</Button>
                   </div>
                 )}
+
+                {podeGerir && (
+                  <div className="flex flex-col gap-3 rounded-md border p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-sm font-medium">Vagas desta escala</p>
+                      {!abrindoVaga && (
+                        <Button type="button" variant="outline" size="sm" disabled={enviando} onClick={() => setAbrindoVaga(true)}>
+                          Abrir vaga
+                        </Button>
+                      )}
+                    </div>
+
+                    {abrindoVaga && (
+                      <div className="flex flex-col gap-2">
+                        <Alert>
+                          <AlertDescription>
+                            A observação fica <strong>visível a todos os auxiliares do EBI</strong>. Não coloque dados de saúde nem
+                            outros dados sensíveis.
+                          </AlertDescription>
+                        </Alert>
+                        <div className="flex flex-col gap-2">
+                          <Label htmlFor="vaga-observacao">Observação (opcional)</Label>
+                          <Input
+                            id="vaga-observacao"
+                            value={vagaObservacao}
+                            maxLength={500}
+                            onChange={(e) => setVagaObservacao(e.target.value)}
+                          />
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <Button type="button" size="sm" disabled={enviando} onClick={() => void abrirVagaNaEscala()}>
+                            Confirmar vaga
+                          </Button>
+                          <Button type="button" variant="outline" size="sm" disabled={enviando} onClick={() => setAbrindoVaga(false)}>
+                            Cancelar
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {(escala.vagas ?? []).length === 0 ? (
+                      <p className="text-sm text-muted-foreground">Nenhuma vaga nesta escala.</p>
+                    ) : (
+                      (escala.vagas ?? []).map((vaga) => (
+                        <div key={vaga.id} className="flex flex-col gap-2 rounded-md border p-2">
+                          <div className="flex flex-wrap items-center gap-2 text-sm">
+                            <Badge variant="outline">{rotuloTipoVaga(vaga.tipo)}</Badge>
+                            <Badge variant={vaga.status === 'aberta' ? 'default' : 'secondary'}>{rotuloStatusVaga(vaga.status)}</Badge>
+                            {vaga.substituido_nome && <span>substitui {vaga.substituido_nome}</span>}
+                            {vaga.escolhido_nome && <span>· escolhida: {vaga.escolhido_nome}</span>}
+                            {vaga.status === 'aberta' && (
+                              <span className="text-muted-foreground">
+                                {vaga.ofertas_pendentes ?? 0} {(vaga.ofertas_pendentes ?? 0) === 1 ? 'oferta' : 'ofertas'}
+                              </span>
+                            )}
+                          </div>
+                          {vaga.observacao && <p className="text-sm text-muted-foreground">{vaga.observacao}</p>}
+                          {vaga.motivo_encerramento && (
+                            <p className="text-xs text-muted-foreground">Encerrada: {vaga.motivo_encerramento}</p>
+                          )}
+                          {vaga.status === 'aberta' && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="self-start"
+                              disabled={enviando}
+                              onClick={() => void cancelarVagaDaEscala(vaga.id!)}
+                            >
+                              Cancelar vaga
+                            </Button>
+                          )}
+                          {(vaga.ofertas ?? []).length > 0 && (
+                            <ul className="flex flex-col gap-1">
+                              {(vaga.ofertas ?? []).map((oferta) => (
+                                <li key={oferta.id} className="flex flex-wrap items-center gap-2 text-sm">
+                                  <span>{oferta.nome}</span>
+                                  <span className="text-xs text-muted-foreground">{rotuloStatusOferta(oferta.status)}</span>
+                                  {(oferta.conflitos ?? []).length > 0 && (
+                                    <span className="text-xs text-muted-foreground">
+                                      {oferta.conflitos?.length} conflito(s) de horário
+                                    </span>
+                                  )}
+                                  {vaga.status === 'aberta' && oferta.status === 'pendente' && escala.pode_escolher_oferta && (
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      disabled={enviando}
+                                      onClick={() => void escolher(vaga.id!, oferta.id!)}
+                                    >
+                                      Escolher
+                                    </Button>
+                                  )}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
               </>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {podeGerir && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Vagas do EBI</CardTitle>
+            <CardDescription>
+              Vagas abertas nas escalas deste EBI, a mais próxima primeiro. Quem se ofereceu aparece só na tela da
+              coordenadora dona da escala — aqui, apenas a contagem.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {vagasDoEbi.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhuma vaga aberta no período.</p>
+            ) : (
+              <ul className="flex flex-col gap-2">
+                {vagasDoEbi.map((vaga) => (
+                  <li key={vaga.id} className="flex flex-wrap items-center gap-2 rounded-md border p-2 text-sm">
+                    <span className="font-medium">
+                      {formatarData(vaga.sessao?.inicio_previsto)} {formatarHora(vaga.sessao?.inicio_previsto)} – {formatarHora(vaga.sessao?.fim_previsto)}
+                    </span>
+                    <Badge variant="outline">{rotuloTipoVaga(vaga.tipo)}</Badge>
+                    {vaga.dona_nome && <span className="text-muted-foreground">· {vaga.dona_nome}</span>}
+                    <span className="text-muted-foreground">
+                      · {vaga.ofertas_pendentes ?? 0} {(vaga.ofertas_pendentes ?? 0) === 1 ? 'oferta' : 'ofertas'}
+                    </span>
+                    {vaga.escolhido_nome && <span>· escolhida: {vaga.escolhido_nome}</span>}
+                  </li>
+                ))}
+              </ul>
             )}
           </CardContent>
         </Card>

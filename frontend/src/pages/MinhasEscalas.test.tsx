@@ -3,11 +3,13 @@ import { describe, expect, it, vi } from 'vitest'
 
 const get = vi.fn()
 const post = vi.fn()
+const del = vi.fn()
 
 vi.mock('../api/client', () => ({
   api: {
     GET: (...args: unknown[]) => get(...args),
     POST: (...args: unknown[]) => post(...args),
+    DELETE: (...args: unknown[]) => del(...args),
   },
 }))
 
@@ -71,5 +73,81 @@ describe('minhas escalas', () => {
     render(<MinhasEscalas />)
     fireEvent.click(await screen.findByRole('button', { name: /^confirmar$/i }))
     await waitFor(() => expect(post).toHaveBeenCalledWith('/schedule-members/{id}/confirm', expect.anything()))
+  })
+
+  const vagaAberta = (extras = {}) => ({
+    id: 'vg-1',
+    tipo: 'acrescimo',
+    status: 'aberta',
+    ebi_nome: 'EBI Central',
+    observacao: 'Precisamos de alguém',
+    ofertas_pendentes: 2,
+    minha_oferta: null,
+    conflitos: [],
+    sessao: { id: 'ses-1', inicio_previsto: '2026-12-05T23:00:00Z', fim_previsto: '2026-12-06T01:00:00Z' },
+    ...extras,
+  })
+
+  /** Rota das vagas abertas para a propria pessoa. */
+  function responderVagas(vagas: unknown[]) {
+    get.mockImplementation((rota: string) => {
+      if (rota === '/me/schedule-vacancies') return Promise.resolve({ data: { data: vagas } })
+      return Promise.resolve({ data: { data: [] } })
+    })
+  }
+
+  it('lista vagas abertas e permite oferecer-se', async () => {
+    responderVagas([vagaAberta()])
+    // Depois de oferecer, a recarga ja traz a propria oferta.
+    let ofereceu = false
+    get.mockImplementation((rota: string) => {
+      if (rota === '/me/schedule-vacancies') {
+        return Promise.resolve({ data: { data: [vagaAberta(ofereceu ? { minha_oferta: { id: 'of-1', status: 'pendente' } } : {})] } })
+      }
+      return Promise.resolve({ data: { data: [] } })
+    })
+    post.mockImplementation(() => {
+      ofereceu = true
+      return Promise.resolve({ data: { data: vagaAberta({ minha_oferta: { id: 'of-1', status: 'pendente' } }) } })
+    })
+    render(<MinhasEscalas />)
+
+    expect(await screen.findByText(/vagas abertas/i)).toBeInTheDocument()
+    expect(screen.getByText('Precisamos de alguém')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /oferecer-se/i }))
+
+    await waitFor(() => expect(post).toHaveBeenCalledWith('/schedule-vacancies/{id}/offers', expect.objectContaining({
+      params: { path: { id: 'vg-1' } },
+    })))
+    expect(await screen.findByText(/você se ofereceu/i)).toBeInTheDocument()
+  })
+
+  it('mostra minha oferta e permite retirar', async () => {
+    responderVagas([vagaAberta({ minha_oferta: { id: 'of-1', status: 'pendente' } })])
+    del.mockResolvedValue({ data: {} })
+    render(<MinhasEscalas />)
+
+    expect(await screen.findByText(/você se ofereceu/i)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /retirar oferta/i }))
+
+    await waitFor(() => expect(del).toHaveBeenCalledWith('/schedule-vacancy-offers/{id}', expect.objectContaining({
+      params: { path: { id: 'of-1' } },
+    })))
+  })
+
+  it('mostra o conflito de horario devolvido pelo servidor', async () => {
+    responderVagas([vagaAberta()])
+    post.mockResolvedValue({
+      error: {
+        status: 422,
+        code: 'conflito_de_horario',
+        detail: 'Você já tem outra atividade neste horário.',
+      },
+    })
+    render(<MinhasEscalas />)
+
+    fireEvent.click(await screen.findByRole('button', { name: /oferecer-se/i }))
+    expect(await screen.findByText(/já tem outra atividade neste horário/i)).toBeInTheDocument()
   })
 })

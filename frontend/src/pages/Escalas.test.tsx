@@ -69,7 +69,33 @@ function responderResumo(situacao: string) {
     if (rota === '/me/ebis') return Promise.resolve({ data: { data: [{ id: 'ebi-1', nome: 'EBI Central', igreja_nome: 'Igreja' }] } })
     if (rota === '/ebis/{id}/schedules') return Promise.resolve({ data: { data: [resumo(situacao)] } })
     if (rota === '/schedules/{id}') return Promise.resolve({ data: { escala: detalhe() } })
-    if (rota === '/ebis/{id}/team') return Promise.resolve({ data: { data: [] } })
+    if (rota === '/ebis/{id}/equipes') {
+      return Promise.resolve({ data: { data: [{ id: 'eq-1', coordenadora_id: 'u-1', coordenadora_nome: 'Ana', quantidade_membros: 2 }] } })
+    }
+    if (rota === '/equipes/{id}') {
+      return Promise.resolve({
+        data: {
+          data: {
+            id: 'eq-1', ebi_id: 'ebi-1', coordenadora_id: 'u-1', coordenadora_nome: 'Ana',
+            membros: [
+              { usuario_id: 'u-2', nome: 'Bia' },
+              { usuario_id: 'u-3', nome: 'Caio', sem_vinculo: true },
+            ],
+          },
+        },
+      })
+    }
+    if (rota === '/ebis/{id}/team') {
+      return Promise.resolve({
+        data: {
+          data: [
+            { usuario_id: 'u-1', nome: 'Ana', papeis: ['coordenadora'], equipe_id: 'eq-1' },
+            { usuario_id: 'u-2', nome: 'Bia', papeis: ['auxiliar'], equipe_id: 'eq-1' },
+            { usuario_id: 'u-3', nome: 'Caio', papeis: ['auxiliar'], equipe_id: 'eq-1', sem_vinculo: true },
+          ],
+        },
+      })
+    }
     if (rota === '/schedule-swaps') return Promise.resolve({ data: { data: [] } })
     return Promise.resolve({ error: { status: 404, detail: 'x' } })
   })
@@ -125,7 +151,6 @@ describe('tela de escalas', () => {
     post.mockResolvedValue({ data: { escala: detalhe({ status: 'prevista', situacao: 'em_montagem' }) } })
     render(<Escalas contexto={contexto} papeis={['coordenadora']} />)
 
-    // Fixado pela Task 13: ate la o painel monta um por um e o equipe_id vai vazio.
     fireEvent.click(await screen.findByRole('button', { name: /^montar$/i }))
     fireEvent.change(await screen.findByLabelText(/estimativa de participantes/i), { target: { value: '8' } })
     fireEvent.click(screen.getByRole('button', { name: /criar escala/i }))
@@ -138,5 +163,159 @@ describe('tela de escalas', () => {
       { usuario_id: 'u-1', funcao: 'coordenadora' },
       { usuario_id: 'u-2', funcao: 'auxiliar' },
     ])
+  })
+
+  it('sem equipe mostra o atalho para criar a equipe', async () => {
+    get.mockImplementation((rota: string) => {
+      if (rota === '/me/ebis') return Promise.resolve({ data: { data: [{ id: 'ebi-1', nome: 'EBI Central', igreja_nome: 'Igreja' }] } })
+      if (rota === '/ebis/{id}/schedules') return Promise.resolve({ data: { data: [resumo('sem_escala')] } })
+      if (rota === '/ebis/{id}/equipes') return Promise.resolve({ data: { data: [] } })
+      if (rota === '/ebis/{id}/team') return Promise.resolve({ data: { data: [] } })
+      if (rota === '/schedule-swaps') return Promise.resolve({ data: { data: [] } })
+      return Promise.resolve({ error: { status: 404, detail: 'x' } })
+    })
+    render(<Escalas contexto={contexto} papeis={['coordenadora']} usuario={{ id: 'u-1' }} />)
+
+    fireEvent.click(await screen.findByRole('button', { name: /^montar$/i }))
+    fireEvent.change(await screen.findByLabelText(/estimativa de participantes/i), { target: { value: '8' } })
+    fireEvent.click(screen.getByRole('button', { name: /criar escala/i }))
+
+    expect(await screen.findByText(/equipes de escala/i)).toBeInTheDocument()
+    expect(post).not.toHaveBeenCalled()
+  })
+
+  it('escrita obedece pode_gerir do detalhe', async () => {
+    get.mockImplementation((rota: string) => {
+      if (rota === '/me/ebis') return Promise.resolve({ data: { data: [{ id: 'ebi-1', nome: 'EBI Central', igreja_nome: 'Igreja' }] } })
+      if (rota === '/ebis/{id}/schedules') return Promise.resolve({ data: { data: [resumo('abaixo_do_minimo')] } })
+      if (rota === '/schedules/{id}') return Promise.resolve({ data: { escala: detalhe(), pode_gerir: false } })
+      if (rota === '/ebis/{id}/team') return Promise.resolve({ data: { data: [] } })
+      if (rota === '/schedule-swaps') return Promise.resolve({ data: { data: [] } })
+      return Promise.resolve({ error: { status: 404, detail: 'x' } })
+    })
+    // O papel de leitura abre o detalhe, mas o servidor diz que nao gere.
+    render(<Escalas contexto={contexto} papeis={['ministerio_local']} usuario={{ id: 'u-1' }} />)
+
+    fireEvent.click(await screen.findByRole('button', { name: /detalhe/i }))
+    await screen.findByText('Ana')
+
+    expect(screen.queryByRole('button', { name: /retirar/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /salvar estimativa/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^aprovar$/i })).not.toBeInTheDocument()
+  })
+
+  it('dona abre vaga avisando que o texto e visivel a todos os auxiliares do EBI', async () => {
+    responderResumo('abaixo_do_minimo')
+    get.mockImplementation((rota: string) => {
+      if (rota === '/me/ebis') return Promise.resolve({ data: { data: [{ id: 'ebi-1', nome: 'EBI Central', igreja_nome: 'Igreja' }] } })
+      if (rota === '/ebis/{id}/schedules') return Promise.resolve({ data: { data: [resumo('abaixo_do_minimo')] } })
+      if (rota === '/schedules/{id}') {
+        return Promise.resolve({ data: { escala: detalhe({ vagas: [], pode_escolher_oferta: true, equipe: { id: 'eq-1', coordenadora_id: 'u-1', coordenadora_nome: 'Ana' } }) } })
+      }
+      if (rota === '/ebis/{id}/team') return Promise.resolve({ data: { data: [] } })
+      if (rota === '/schedule-vacancies') return Promise.resolve({ data: { data: [] } })
+      if (rota === '/schedule-swaps') return Promise.resolve({ data: { data: [] } })
+      return Promise.resolve({ error: { status: 404, detail: 'x' } })
+    })
+    post.mockResolvedValue({ data: { data: { id: 'vg-1', status: 'aberta', tipo: 'acrescimo' } } })
+    render(<Escalas contexto={contexto} papeis={['coordenadora']} usuario={{ id: 'u-1' }} />)
+
+    fireEvent.click(await screen.findByRole('button', { name: /detalhe/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /abrir vaga/i }))
+
+    expect(await screen.findByText(/visível a todos os auxiliares do EBI/i)).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText(/observação/i), { target: { value: 'Precisamos de 2 pessoas' } })
+    fireEvent.click(screen.getByRole('button', { name: /confirmar vaga/i }))
+
+    await waitFor(() => expect(post).toHaveBeenCalledWith('/schedules/{id}/vacancies', expect.objectContaining({
+      params: { path: { id: 'esc-1' } },
+      body: { substitui_membro_id: null, observacao: 'Precisamos de 2 pessoas' },
+    })))
+  })
+
+  it('escolher oferta so aparece com pode_escolher_oferta', async () => {
+    const vaga = {
+      id: 'vg-1',
+      status: 'aberta',
+      tipo: 'acrescimo',
+      ofertas_pendentes: 2,
+      ofertas: [
+        { id: 'of-1', usuario_id: 'u-2', nome: 'Bia', status: 'pendente', conflitos: [] },
+        { id: 'of-2', usuario_id: 'u-5', nome: 'Dora', status: 'pendente', conflitos: [] },
+      ],
+    }
+
+    // A chefe supervisa e ve os nomes, mas nao escolhe.
+    get.mockImplementation((rota: string) => {
+      if (rota === '/me/ebis') return Promise.resolve({ data: { data: [{ id: 'ebi-1', nome: 'EBI Central', igreja_nome: 'Igreja' }] } })
+      if (rota === '/ebis/{id}/schedules') return Promise.resolve({ data: { data: [resumo('abaixo_do_minimo')] } })
+      if (rota === '/schedules/{id}') return Promise.resolve({ data: { escala: detalhe({ vagas: [vaga], pode_escolher_oferta: false, pode_gerir: true }) } })
+      if (rota === '/ebis/{id}/team') return Promise.resolve({ data: { data: [] } })
+      if (rota === '/schedule-vacancies') return Promise.resolve({ data: { data: [] } })
+      if (rota === '/schedule-swaps') return Promise.resolve({ data: { data: [] } })
+      return Promise.resolve({ error: { status: 404, detail: 'x' } })
+    })
+    const { unmount } = render(<Escalas contexto={contexto} papeis={['coordenadora_chefe']} usuario={{ id: 'u-chefe' }} />)
+    fireEvent.click(await screen.findByRole('button', { name: /detalhe/i }))
+    await screen.findByText('Dora')
+    expect(screen.queryByRole('button', { name: /escolher/i })).not.toBeInTheDocument()
+    unmount()
+
+    // A dona escolhe.
+    get.mockImplementation((rota: string) => {
+      if (rota === '/me/ebis') return Promise.resolve({ data: { data: [{ id: 'ebi-1', nome: 'EBI Central', igreja_nome: 'Igreja' }] } })
+      if (rota === '/ebis/{id}/schedules') return Promise.resolve({ data: { data: [resumo('abaixo_do_minimo')] } })
+      if (rota === '/schedules/{id}') return Promise.resolve({ data: { escala: detalhe({ vagas: [vaga], pode_escolher_oferta: true, pode_gerir: true }) } })
+      if (rota === '/ebis/{id}/team') return Promise.resolve({ data: { data: [] } })
+      if (rota === '/schedule-vacancies') return Promise.resolve({ data: { data: [] } })
+      if (rota === '/schedule-swaps') return Promise.resolve({ data: { data: [] } })
+      return Promise.resolve({ error: { status: 404, detail: 'x' } })
+    })
+    post.mockResolvedValue({ data: { data: { ...vaga, status: 'preenchida' }, membro_id: 'm-9' } })
+    render(<Escalas contexto={contexto} papeis={['coordenadora']} usuario={{ id: 'u-1' }} />)
+    fireEvent.click(await screen.findByRole('button', { name: /detalhe/i }))
+
+    const escolher = await screen.findAllByRole('button', { name: /^escolher$/i })
+    fireEvent.click(escolher.at(-1)!)
+
+    await waitFor(() => expect(post).toHaveBeenCalledWith('/schedule-vacancies/{id}/choose', expect.objectContaining({
+      params: { path: { id: 'vg-1' } },
+      body: { oferta_id: 'of-2' },
+    })))
+  })
+
+  it('painel de vagas do EBI lista por data', async () => {
+    get.mockImplementation((rota: string) => {
+      if (rota === '/me/ebis') return Promise.resolve({ data: { data: [{ id: 'ebi-1', nome: 'EBI Central', igreja_nome: 'Igreja' }] } })
+      if (rota === '/ebis/{id}/schedules') return Promise.resolve({ data: { data: [] } })
+      if (rota === '/schedule-vacancies') {
+        return Promise.resolve({
+          data: {
+            data: [
+              {
+                id: 'vg-2', status: 'aberta', tipo: 'substituicao', ebi_nome: 'EBI Central', ofertas_pendentes: 3,
+                sessao: { id: 'ses-9', inicio_previsto: '2026-12-20T23:00:00Z', fim_previsto: '2026-12-21T01:00:00Z' },
+              },
+              {
+                id: 'vg-1', status: 'aberta', tipo: 'acrescimo', ebi_nome: 'EBI Central', ofertas_pendentes: 0,
+                sessao: { id: 'ses-8', inicio_previsto: '2026-12-06T23:00:00Z', fim_previsto: '2026-12-07T01:00:00Z' },
+              },
+            ],
+          },
+        })
+      }
+      if (rota === '/ebis/{id}/team') return Promise.resolve({ data: { data: [] } })
+      return Promise.resolve({ error: { status: 404, detail: 'x' } })
+    })
+    render(<Escalas contexto={contexto} papeis={['coordenadora']} usuario={{ id: 'u-1' }} />)
+
+    expect(await screen.findByText(/vagas do EBI/i)).toBeInTheDocument()
+
+    // O servidor entrega a vaga mais proxima primeiro; a tela preserva a ordem.
+    const itens = await screen.findAllByRole('listitem')
+    expect(itens.length).toBe(2)
+    expect(itens[0]).toHaveTextContent('Substituição')
+    expect(itens[1]).toHaveTextContent('Acréscimo')
   })
 })

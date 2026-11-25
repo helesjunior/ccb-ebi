@@ -135,6 +135,88 @@ export async function criarEscala(
   return { data: data?.escala, error }
 }
 
+type VagaEscala = components['schemas']['VagaEscala']
+type OfertaDaVaga = NonNullable<VagaEscala['ofertas']>[number]
+export type { VagaEscala, OfertaDaVaga }
+
+/** Abre vaga na escala: acréscimo (sem membro) ou substituição de um membro. */
+export async function abrirVaga(
+  escalaId: string,
+  corpo: { substitui_membro_id?: string | null; observacao?: string | null },
+): Promise<{ data?: VagaEscala; error?: unknown }> {
+  const { data, error } = await api.POST('/schedules/{id}/vacancies', {
+    params: { path: { id: escalaId } },
+    headers: cabecalhos(),
+    body: { substitui_membro_id: corpo.substitui_membro_id ?? null, observacao: corpo.observacao ?? null },
+  })
+  return { data: data?.data, error }
+}
+
+export async function cancelarVaga(vagaId: string): Promise<{ data?: VagaEscala; error?: unknown }> {
+  const { data, error } = await api.POST('/schedule-vacancies/{id}/cancel', {
+    params: { path: { id: vagaId } },
+    headers: cabecalhos(),
+  })
+  return { data: data?.data, error }
+}
+
+/** Vagas do EBI, já ordenadas pelo início da sessão. */
+export async function listarVagasEbi(
+  ebiId: string,
+  filtro: { status?: 'aberta' | 'preenchida' | 'cancelada'; inicio?: string; fim?: string } = {},
+  signal?: AbortSignal,
+): Promise<{ data?: VagaEscala[]; error?: unknown }> {
+  const { data, error } = await api.GET('/schedule-vacancies', {
+    params: { query: { ebi_id: ebiId, ...filtro } },
+    headers: cabecalhos(),
+    signal,
+  })
+  return { data: data?.data, error }
+}
+
+/** Vagas abertas em que a própria pessoa pode se oferecer. */
+export async function minhasVagas(
+  inicio: string,
+  fim: string,
+  signal?: AbortSignal,
+): Promise<{ data?: VagaEscala[]; error?: unknown }> {
+  const { data, error } = await api.GET('/me/schedule-vacancies', {
+    params: { query: { inicio, fim } },
+    headers: cabecalhos(),
+    signal,
+  })
+  return { data: data?.data, error }
+}
+
+export async function oferecer(vagaId: string): Promise<{ data?: VagaEscala; error?: unknown }> {
+  const { data, error } = await api.POST('/schedule-vacancies/{id}/offers', {
+    params: { path: { id: vagaId } },
+    headers: cabecalhos(),
+  })
+  return { data: data?.data, error }
+}
+
+export async function retirarOferta(ofertaId: string): Promise<{ error?: unknown }> {
+  const { error } = await api.DELETE('/schedule-vacancy-offers/{id}', {
+    params: { path: { id: ofertaId } },
+    headers: cabecalhos(),
+  })
+  return { error }
+}
+
+/** A dona escolhe quem preenche a vaga; a pessoa entra já confirmada. */
+export async function escolherOferta(
+  vagaId: string,
+  ofertaId: string,
+): Promise<{ data?: VagaEscala; membroId?: string; error?: unknown }> {
+  const { data, error } = await api.POST('/schedule-vacancies/{id}/choose', {
+    params: { path: { id: vagaId } },
+    headers: cabecalhos(),
+    body: { oferta_id: ofertaId },
+  })
+  return { data: data?.data, membroId: data?.membro_id, error }
+}
+
 export async function alterarEstimativa(
   escalaId: string,
   estimativa: number,

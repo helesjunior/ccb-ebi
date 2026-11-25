@@ -41,6 +41,8 @@ class ConsultaVagaEscala implements ConsultarVagaEscala
             ->when($status !== null, fn ($q) => $q->where('vaga_escala.status', $status))
             ->when($inicio !== null, fn ($q) => $q->where('sessao.inicio_previsto', '>=', $inicio))
             ->when($fim !== null, fn ($q) => $q->where('sessao.inicio_previsto', '<', $fim))
+            // Painel do EBI: a vaga mais próxima primeiro.
+            ->orderBy('sessao.inicio_previsto')
             ->get();
 
         return $this->apresentar($vagas, $projecao, null);
