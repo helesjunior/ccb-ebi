@@ -45,4 +45,12 @@ interface ConsultarEquipeEbi
      * @return array<string, string>
      */
     public function nomes(array $usuarioIds): array;
+
+    /**
+     * Escopos em que a pessoa tem papel de equipe vigente hoje (fim nulo),
+     * um por EBI, com a igreja do vinculo. Alimenta o cartao `/me`.
+     *
+     * @return list<array{ebi_id: ?string, igreja_id: string}>
+     */
+    public function escoposDeEquipeVigentes(string $usuarioId): array;
 }

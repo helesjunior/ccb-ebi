@@ -10,8 +10,11 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class SessaoResource extends JsonResource
 {
     /** @param array<string, mixed>|null $equipeMinima */
-    public function __construct($resource, private readonly ?array $equipeMinima = null)
-    {
+    public function __construct(
+        $resource,
+        private readonly ?array $equipeMinima = null,
+        private readonly ?string $escalaId = null,
+    ) {
         parent::__construct($resource);
     }
 
@@ -27,6 +30,7 @@ class SessaoResource extends JsonResource
             'tema' => $this->tema, 'passagem_biblica' => $this->passagemBiblica,
             'status' => $this->status, 'realizada' => $this->realizada,
             'motivo_cancelamento' => $this->motivoCancelamento, 'auxiliares_escalados' => $this->auxiliaresEscalados,
+            'escala_id' => $this->escalaId,
             'presentes' => $this->presentes,
             'equipe_minima' => $this->when($this->equipeMinima !== null, $this->equipeMinima),
         ];

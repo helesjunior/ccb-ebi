@@ -3134,6 +3134,413 @@ export interface paths {
         };
         trace?: never;
     };
+    "/schedule-vacancies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vagas de escala do EBI
+         * @description Exige `escala.ler` no escopo `ebi:<ebi_id>`. Lista as vagas das escalas do EBI, opcionalmente filtradas por `status` e pela janela `inicio`/`fim` (dias locais, maximo de 92 dias). Cada cartao segue a projecao de leitura: contagem de ofertas e quem foi escolhido, nunca os nomes de quem se ofereceu.
+         */
+        get: {
+            parameters: {
+                query: {
+                    ebi_id: string;
+                    status?: "aberta" | "preenchida" | "cancelada";
+                    inicio?: string;
+                    fim?: string;
+                };
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Vagas do EBI */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["VagaEscala"][];
+                        };
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/schedule-vacancies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Vagas abertas para a propria pessoa
+         * @description Nao exige papel: o recorte e sempre o do usuario autenticado. Lista as vagas abertas de sessoes `prevista`/`aberta` nos EBIs/igrejas em que a pessoa tem papel de equipe vigente, excluindo as escalas em que ela ja esta. Cartao publico: so a propria oferta e os proprios conflitos.
+         */
+        get: {
+            parameters: {
+                query: {
+                    inicio: string;
+                    /** @description No maximo 92 dias depois de `inicio`. */
+                    fim: string;
+                };
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Vagas abertas para a pessoa */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["VagaEscala"][];
+                        };
+                    };
+                };
+                401: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/schedule-vacancies/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Cartao da vaga
+         * @description Sem `escala.ler` no EBI responde so com a propria oferta e os proprios conflitos; com `escala.ler` acrescenta `ofertas_pendentes` e `motivo_encerramento`; quem gere a escala (dona ou supervisao) acrescenta `escolhido_nome` e os nomes das ofertas pendentes.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Cartao da vaga */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["VagaEscalaEnvelope"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/schedules/{id}/vacancies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Abrir vaga de acrescimo ou de substituicao
+         * @description Exige `escala.gerenciar` no EBI; so a dona e a supervisao abrem. Sem `substitui_membro_id` e vaga de acrescimo; com ele, o membro precisa ser auxiliar ativo da escala (422 `membro_invalido`), sem vaga aberta (409 `vaga_existente`). Sessao precisa estar `prevista` ou `aberta` (409 `sessao_em_estado_invalido`) e a dona precisa ter vinculo de coordenadora vigente (409 `dona_sem_vinculo`). Registra `escala.vaga_aberta`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    /** @description Id da escala. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        substitui_membro_id?: string | null;
+                        observacao?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Vaga aberta */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["VagaEscalaEnvelope"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                409: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/schedule-vacancies/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancelar a vaga
+         * @description Exige `escala.gerenciar` no EBI. Vaga ja preenchida ou cancelada responde 409 `vaga_indisponivel`. Registra `escala.vaga_cancelada`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Vaga cancelada */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["VagaEscalaEnvelope"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                409: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/schedule-vacancies/{id}/offers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Oferecer-se para a vaga
+         * @description Nao exige `escala.ler`: e a propria pessoa que se oferece. Precisa de papel de equipe vigente hoje no EBI/igreja da sessao (senao 404), estar fora da escala (422 `membro_ja_escalado`), ser elegivel na data da sessao (422 `membro_inelegivel`) e nao ter oferta pendente (409 `oferta_existente`). A resposta e o cartao publico, com `minha_oferta`. Registra `escala.vaga_oferta`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Oferta registrada */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["VagaEscalaEnvelope"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                409: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/schedule-vacancy-offers/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Retirar a propria oferta
+         * @description So o dono da oferta a retira; oferta alheia responde 404 e oferta ja decidida 409 `oferta_ja_decidida`. Registra `escala.vaga_oferta_retirada`.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Oferta retirada */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                409: components["responses"]["Problem"];
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/schedule-vacancies/{id}/choose": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Dona escolhe quem preenche a vaga
+         * @description Exige `escala.gerenciar` e so a dona decide (403 `nao_e_dona_da_escala` para chefe ou `adm_igreja`, que apenas supervisionam). A pessoa escolhida entra `confirmado`, sem nova confirmacao; as demais ofertas ficam `descartada` e a vaga `preenchida`. Na substituicao o original fica `substituido`. A oferta ainda precisa ter a pessoa elegivel na data (422 `membro_inelegivel`). Registra `escala.vaga_preenchida`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        oferta_id: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Vaga preenchida */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["VagaEscalaEnvelope"] & {
+                            membro_id?: string;
+                        };
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                409: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/ebis/{id}/sessions": {
         parameters: {
             query?: never;
@@ -5341,6 +5748,53 @@ export interface components {
             pode_gerir?: boolean;
             /** @description Só a dona escolhe a oferta de uma vaga; a chefia apenas acompanha. */
             pode_escolher_oferta?: boolean;
+            /** @description Vagas da escala. A dona e a supervisão recebem os nomes das ofertas; os demais, a contagem e quem foi escolhido. */
+            vagas?: components["schemas"]["VagaEscala"][];
+        };
+        VagaEscalaEnvelope: {
+            data?: components["schemas"]["VagaEscala"];
+        };
+        /** @description Cartao da vaga. Os campos alem do nucleo dependem da projecao do leitor: `minha_oferta` e `conflitos` sempre; `ofertas_pendentes` e `motivo_encerramento` para quem tem `escala.ler`; `escolhido_nome` e `ofertas` para quem gere a escala. */
+        VagaEscala: {
+            id?: string;
+            escala_id?: string;
+            sessao?: {
+                id?: string;
+                /** Format: date-time */
+                inicio_previsto?: string;
+                /** Format: date-time */
+                fim_previsto?: string;
+            } | null;
+            ebi_id?: string;
+            ebi_nome?: string;
+            /** @description Vazio na projecao publica (a pessoa nao ve nomes alheios). */
+            dona_nome?: string;
+            observacao?: string | null;
+            /** @enum {string} */
+            tipo?: "acrescimo" | "substituicao";
+            /** @enum {string} */
+            status?: "aberta" | "preenchida" | "cancelada";
+            /** @description Vaga aberta cuja sessao nao esta mais `prevista`/`aberta`. */
+            expirada?: boolean;
+            minha_oferta?: {
+                id?: string;
+                /** @enum {string} */
+                status?: "pendente" | "aceita" | "descartada" | "retirada";
+            } | null;
+            conflitos?: components["schemas"]["ConflitoEscala"][];
+            ofertas_pendentes?: number;
+            motivo_encerramento?: string | null;
+            escolhido_nome?: string | null;
+            /** @description So na projecao de leitura. */
+            substituido_nome?: string | null;
+            /** @description So para quem gere a escala. */
+            ofertas?: {
+                id?: string;
+                usuario_id?: string;
+                nome?: string;
+                status?: string;
+                conflitos?: components["schemas"]["ConflitoEscala"][];
+            }[];
         };
         EscalaMembro: {
             id?: string;
@@ -5471,6 +5925,8 @@ export interface components {
         };
         SessaoDetalhe: components["schemas"]["Sessao"] & {
             equipe_minima?: components["schemas"]["EquipeMinima"];
+            /** @description Id da escala da sessão (de qualquer status), para a tela de presença buscar a equipe; `null` quando a sessão não tem escala. */
+            escala_id?: string | null;
         };
         SessaoFechamentoInput: {
             realizada: boolean;

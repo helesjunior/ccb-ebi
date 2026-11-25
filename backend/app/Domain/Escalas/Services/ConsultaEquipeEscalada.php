@@ -35,4 +35,11 @@ class ConsultaEquipeEscalada implements ConsultarEquipeEscalada
 
         return $this->avaliador->contagem($escala, $sessao)['auxiliares'];
     }
+
+    public function escalaDaSessao(string $sessaoId): ?string
+    {
+        $id = Escala::query()->where('sessao_id', $sessaoId)->value('id');
+
+        return $id === null ? null : (string) $id;
+    }
 }

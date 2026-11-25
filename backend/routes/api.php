@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\V1\InvitationController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MfaController;
 use App\Http\Controllers\Api\V1\MinhasEscalasController;
+use App\Http\Controllers\Api\V1\OfertaVagaController;
 use App\Http\Controllers\Api\V1\ParticipantController;
 use App\Http\Controllers\Api\V1\ParticipantMergeController;
 use App\Http\Controllers\Api\V1\PasswordController;
@@ -39,6 +40,7 @@ use App\Http\Controllers\Api\V1\SessaoController;
 use App\Http\Controllers\Api\V1\SessionController;
 use App\Http\Controllers\Api\V1\TrocaEscalaController;
 use App\Http\Controllers\Api\V1\UserController;
+use App\Http\Controllers\Api\V1\VagaEscalaController;
 use App\Http\Middleware\IdempotenciaMiddleware;
 use Illuminate\Support\Facades\Route;
 
@@ -251,6 +253,24 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
                 ->name('schedules.team-attendance');
         });
         Route::get('schedules/{id}', [EscalaController::class, 'show'])->name('schedules.show');
+
+        // Vagas de escala (E07, evolucao): a dona abre e escolhe; qualquer
+        // pessoa da equipe se oferece. A leitura decide a projecao no controller.
+        Route::get('schedule-vacancies', [VagaEscalaController::class, 'index'])->name('schedule-vacancies.index');
+        Route::get('me/schedule-vacancies', [VagaEscalaController::class, 'minhas'])->name('me.schedule-vacancies');
+        Route::get('schedule-vacancies/{id}', [VagaEscalaController::class, 'show'])->name('schedule-vacancies.show');
+        Route::middleware(IdempotenciaMiddleware::class)->group(function (): void {
+            Route::post('schedules/{id}/vacancies', [VagaEscalaController::class, 'store'])
+                ->name('schedules.vacancies.store');
+            Route::post('schedule-vacancies/{id}/cancel', [VagaEscalaController::class, 'cancelar'])
+                ->name('schedule-vacancies.cancel');
+            Route::post('schedule-vacancies/{id}/offers', [VagaEscalaController::class, 'oferecer'])
+                ->name('schedule-vacancies.offers.store');
+            Route::post('schedule-vacancies/{id}/choose', [VagaEscalaController::class, 'escolher'])
+                ->name('schedule-vacancies.choose');
+            Route::delete('schedule-vacancy-offers/{id}', [OfertaVagaController::class, 'destroy'])
+                ->name('schedule-vacancy-offers.destroy');
+        });
 
         // "Minhas escalas" (E07): as vagas da propria pessoa no periodo.
         Route::get('me/schedules', [MinhasEscalasController::class, 'index'])->name('me.schedules');

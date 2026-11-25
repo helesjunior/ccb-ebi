@@ -9,4 +9,7 @@ namespace App\Domain\Escalas\Contracts;
 interface ConsultarEquipeEscalada
 {
     public function auxiliaresDaEscalaAprovada(string $sessaoId): ?int;
+
+    /** Id da escala da sessao, de qualquer status; null se a sessao nao tem escala. */
+    public function escalaDaSessao(string $sessaoId): ?string;
 }

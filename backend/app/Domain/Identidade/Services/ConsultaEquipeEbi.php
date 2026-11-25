@@ -119,6 +119,36 @@ class ConsultaEquipeEbi implements ConsultarEquipeEbi
             ->all();
     }
 
+    public function escoposDeEquipeVigentes(string $usuarioId): array
+    {
+        return array_values(array_map(
+            fn (VinculoAcesso $vinculo): array => [
+                'ebi_id' => $vinculo->tipo_escopo === 'ebi' ? (string) $vinculo->escopo_id : null,
+                'igreja_id' => $vinculo->tipo_escopo === 'igreja' ? (string) $vinculo->escopo_id : '',
+            ],
+            $this->vinculosDeEquipeVigentes($usuarioId),
+        ));
+    }
+
+    /**
+     * @return array<int, VinculoAcesso>
+     */
+    private function vinculosDeEquipeVigentes(string $usuarioId): array
+    {
+        $papeis = Papel::query()->whereIn('codigo', self::PAPEIS_EQUIPE)->select('id');
+
+        return VinculoAcesso::query()
+            ->where('usuario_id', $usuarioId)
+            ->whereNull('fim')
+            ->whereIn('papel_id', $papeis)
+            ->get()
+            // Papel na igreja vale para todas as EBIs dela; a vaga traz o EBI e
+            // a igreja da escala, entao o filtro aceita os dois escopos.
+            ->unique(fn (VinculoAcesso $v): string => $v->tipo_escopo.':'.$v->escopo_id)
+            ->values()
+            ->all();
+    }
+
     /**
      * @return Builder<VinculoAcesso>
      */

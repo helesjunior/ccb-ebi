@@ -128,7 +128,8 @@ class GerenciadorVaga implements GerirVagaEscala
             $escala = Escala::query()->findOrFail($vaga->escala_id);
             $sessao = $this->sessao((string) $escala->sessao_id);
 
-            // RF-2/RF-3: autorizacao atual no EBI/igreja da sessao; vaga alheia e 404.
+            // RF-2/RF-3: a oferta e de membro vigente da equipe do EBI hoje;
+            // a vigencia na data da sessao e checada na escolha.
             $aceitos = EscalaMembro::PAPEIS_POR_FUNCAO[EscalaMembro::FUNCAO_AUXILIAR];
             $papeis = $this->equipe->papeisVigentesHoje([$usuarioId], $sessao->ebiId, $sessao->igrejaId)[$usuarioId] ?? [];
 

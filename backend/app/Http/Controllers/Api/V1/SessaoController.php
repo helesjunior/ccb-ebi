@@ -55,7 +55,7 @@ class SessaoController
         $ebi = $this->ebis->dados($sessao->ebiId) ?? throw new ProblemException('not_found', 'Recurso não encontrado', 404);
         $equipe = $this->equipeMinima($sessao, $ebi->participantesPorAuxiliar);
 
-        return (new SessaoResource($sessao, $equipe))->response();
+        return (new SessaoResource($sessao, $equipe, $this->escala->escalaDaSessao($sessao->id)))->response();
     }
 
     /**

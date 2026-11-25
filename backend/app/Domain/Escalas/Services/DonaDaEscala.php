@@ -30,6 +30,17 @@ class DonaDaEscala
             ->value('coordenadora_id');
     }
 
+    /**
+     * Escopos em que a pessoa tem papel de equipe vigente hoje, para o cartao
+     * de vagas abertas (`/me`).
+     *
+     * @return list<array{ebi_id: ?string, igreja_id: string}>
+     */
+    public function escoposDeEquipe(string $usuarioId): array
+    {
+        return $this->equipe->escoposDeEquipeVigentes($usuarioId);
+    }
+
     public function podeGerir(string $escalaId, ContextoDecisao $ctx): bool
     {
         if (in_array($ctx->papelCodigo, self::PAPEIS_SUPERVISAO, true)) {

@@ -35,6 +35,9 @@ interface ConsultarEscala
     /** Referencia da escala dona da troca, ou `null` quando a troca nao existe. */
     public function referenciaDaTroca(string $trocaId): ?EscalaRef;
 
+    /** Referencia da escala dona da vaga, ou `null` quando a vaga nao existe. */
+    public function referenciaDaVaga(string $vagaId): ?EscalaRef;
+
     /**
      * EBIs das sessoes que conflitam com a escala (CA-12), para a HTTP decidir
      * a visao dos nomes.

@@ -1632,6 +1632,275 @@ paths:
         '404': { $ref: '#/components/responses/Problem' }
         '409': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/Problem' }
+  /schedule-vacancies:
+    get:
+      tags: [escalas]
+      summary: Vagas de escala do EBI
+      description: >-
+        Exige `escala.ler` no escopo `ebi:<ebi_id>`. Lista as vagas das
+        escalas do EBI, opcionalmente filtradas por `status` e pela janela
+        `inicio`/`fim` (dias locais, maximo de 92 dias). Cada cartao segue a
+        projecao de leitura: contagem de ofertas e quem foi escolhido, nunca os
+        nomes de quem se ofereceu.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - name: ebi_id
+          in: query
+          required: true
+          schema: { type: string }
+        - name: status
+          in: query
+          required: false
+          schema: { type: string, enum: [aberta, preenchida, cancelada] }
+        - name: inicio
+          in: query
+          required: false
+          schema: { type: string, format: date }
+        - name: fim
+          in: query
+          required: false
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: Vagas do EBI
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/VagaEscala' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /me/schedule-vacancies:
+    get:
+      tags: [escalas]
+      summary: Vagas abertas para a propria pessoa
+      description: >-
+        Nao exige papel: o recorte e sempre o do usuario autenticado. Lista as
+        vagas abertas de sessoes `prevista`/`aberta` nos EBIs/igrejas em que a
+        pessoa tem papel de equipe vigente, excluindo as escalas em que ela ja
+        esta. Cartao publico: so a propria oferta e os proprios conflitos.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - name: inicio
+          in: query
+          required: true
+          schema: { type: string, format: date }
+        - name: fim
+          in: query
+          required: true
+          description: No maximo 92 dias depois de `inicio`.
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: Vagas abertas para a pessoa
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/VagaEscala' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /schedule-vacancies/{id}:
+    get:
+      tags: [escalas]
+      summary: Cartao da vaga
+      description: >-
+        Sem `escala.ler` no EBI responde so com a propria oferta e os proprios
+        conflitos; com `escala.ler` acrescenta `ofertas_pendentes` e
+        `motivo_encerramento`; quem gere a escala (dona ou supervisao)
+        acrescenta `escolhido_nome` e os nomes das ofertas pendentes.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Cartao da vaga
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/VagaEscalaEnvelope' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /schedules/{id}/vacancies:
+    post:
+      tags: [escalas]
+      summary: Abrir vaga de acrescimo ou de substituicao
+      description: >-
+        Exige `escala.gerenciar` no EBI; so a dona e a supervisao abrem. Sem
+        `substitui_membro_id` e vaga de acrescimo; com ele, o membro precisa
+        ser auxiliar ativo da escala (422 `membro_invalido`), sem vaga aberta
+        (409 `vaga_existente`). Sessao precisa estar `prevista` ou `aberta`
+        (409 `sessao_em_estado_invalido`) e a dona precisa ter vinculo de
+        coordenadora vigente (409 `dona_sem_vinculo`). Registra
+        `escala.vaga_aberta`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - name: id
+          in: path
+          required: true
+          description: Id da escala.
+          schema: { type: string }
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                substitui_membro_id: { type: string, nullable: true }
+                observacao: { type: string, maxLength: 500, nullable: true }
+      responses:
+        '201':
+          description: Vaga aberta
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/VagaEscalaEnvelope' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /schedule-vacancies/{id}/cancel:
+    post:
+      tags: [escalas]
+      summary: Cancelar a vaga
+      description: >-
+        Exige `escala.gerenciar` no EBI. Vaga ja preenchida ou cancelada
+        responde 409 `vaga_indisponivel`. Registra `escala.vaga_cancelada`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Vaga cancelada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/VagaEscalaEnvelope' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /schedule-vacancies/{id}/offers:
+    post:
+      tags: [escalas]
+      summary: Oferecer-se para a vaga
+      description: >-
+        Nao exige `escala.ler`: e a propria pessoa que se oferece. Precisa de
+        papel de equipe vigente hoje no EBI/igreja da sessao (senao 404), estar
+        fora da escala (422 `membro_ja_escalado`), ser elegivel na data da
+        sessao (422 `membro_inelegivel`) e nao ter oferta pendente (409
+        `oferta_existente`). A resposta e o cartao publico, com `minha_oferta`.
+        Registra `escala.vaga_oferta`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '201':
+          description: Oferta registrada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/VagaEscalaEnvelope' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /schedule-vacancy-offers/{id}:
+    delete:
+      tags: [escalas]
+      summary: Retirar a propria oferta
+      description: >-
+        So o dono da oferta a retira; oferta alheia responde 404 e oferta ja
+        decidida 409 `oferta_ja_decidida`. Registra `escala.vaga_oferta_retirada`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '204':
+          description: Oferta retirada
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /schedule-vacancies/{id}/choose:
+    post:
+      tags: [escalas]
+      summary: Dona escolhe quem preenche a vaga
+      description: >-
+        Exige `escala.gerenciar` e so a dona decide (403
+        `nao_e_dona_da_escala` para chefe ou `adm_igreja`, que apenas
+        supervisionam). A pessoa escolhida entra `confirmado`, sem nova
+        confirmacao; as demais ofertas ficam `descartada` e a vaga
+        `preenchida`. Na substituicao o original fica `substituido`. A oferta
+        ainda precisa ter a pessoa elegivel na data (422 `membro_inelegivel`).
+        Registra `escala.vaga_preenchida`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [oferta_id]
+              properties:
+                oferta_id: { type: string }
+      responses:
+        '200':
+          description: Vaga preenchida
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/VagaEscalaEnvelope'
+                  - type: object
+                    properties:
+                      membro_id: { type: string }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
   /ebis/{id}/sessions:
     get:
       tags: [sessions]
@@ -3407,6 +3676,70 @@ components:
         pode_escolher_oferta:
           type: boolean
           description: Só a dona escolhe a oferta de uma vaga; a chefia apenas acompanha.
+        vagas:
+          type: array
+          description: >-
+            Vagas da escala. A dona e a supervisão recebem os nomes das
+            ofertas; os demais, a contagem e quem foi escolhido.
+          items: { $ref: '#/components/schemas/VagaEscala' }
+    VagaEscalaEnvelope:
+      type: object
+      properties:
+        data: { $ref: '#/components/schemas/VagaEscala' }
+    VagaEscala:
+      type: object
+      description: >-
+        Cartao da vaga. Os campos alem do nucleo dependem da projecao do leitor:
+        `minha_oferta` e `conflitos` sempre; `ofertas_pendentes` e
+        `motivo_encerramento` para quem tem `escala.ler`; `escolhido_nome` e
+        `ofertas` para quem gere a escala.
+      properties:
+        id: { type: string }
+        escala_id: { type: string }
+        sessao:
+          type: [object, 'null']
+          properties:
+            id: { type: string }
+            inicio_previsto: { type: string, format: date-time }
+            fim_previsto: { type: string, format: date-time }
+        ebi_id: { type: string }
+        ebi_nome: { type: string }
+        dona_nome:
+          type: string
+          description: 'Vazio na projecao publica (a pessoa nao ve nomes alheios).'
+        observacao: { type: [string, 'null'] }
+        tipo: { type: string, enum: [acrescimo, substituicao] }
+        status: { type: string, enum: [aberta, preenchida, cancelada] }
+        expirada:
+          type: boolean
+          description: Vaga aberta cuja sessao nao esta mais `prevista`/`aberta`.
+        minha_oferta:
+          type: [object, 'null']
+          properties:
+            id: { type: string }
+            status: { type: string, enum: [pendente, aceita, descartada, retirada] }
+        conflitos:
+          type: array
+          items: { $ref: '#/components/schemas/ConflitoEscala' }
+        ofertas_pendentes: { type: integer }
+        motivo_encerramento: { type: [string, 'null'] }
+        escolhido_nome: { type: [string, 'null'] }
+        substituido_nome:
+          type: [string, 'null']
+          description: So na projecao de leitura.
+        ofertas:
+          type: array
+          description: So para quem gere a escala.
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              usuario_id: { type: string }
+              nome: { type: string }
+              status: { type: string }
+              conflitos:
+                type: array
+                items: { $ref: '#/components/schemas/ConflitoEscala' }
     EscalaMembro:
       type: object
       properties:
@@ -3533,6 +3866,11 @@ components:
         - type: object
           properties:
             equipe_minima: { $ref: '#/components/schemas/EquipeMinima' }
+            escala_id:
+              type: [string, 'null']
+              description: >-
+                Id da escala da sessão (de qualquer status), para a tela de
+                presença buscar a equipe; `null` quando a sessão não tem escala.
     SessaoFechamentoInput:
       type: object
       required: [realizada]

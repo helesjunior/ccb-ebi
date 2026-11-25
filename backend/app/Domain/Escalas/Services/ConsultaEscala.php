@@ -3,11 +3,14 @@
 namespace App\Domain\Escalas\Services;
 
 use App\Domain\Escalas\Contracts\ConsultarEscala;
+use App\Domain\Escalas\Contracts\ConsultarVagaEscala;
 use App\Domain\Escalas\Contracts\EscalaRef;
 use App\Domain\Escalas\Contracts\EscalaVisao;
+use App\Domain\Escalas\Contracts\ProjecaoVaga;
 use App\Domain\Escalas\Models\Escala;
 use App\Domain\Escalas\Models\EscalaMembro;
 use App\Domain\Escalas\Models\SolicitacaoTrocaEscala;
+use App\Domain\Escalas\Models\VagaEscala;
 use App\Domain\Identidade\Contracts\ConsultarEquipeEbi;
 use App\Domain\Sessoes\Contracts\ConsultarSessao;
 use App\Domain\Sessoes\Contracts\IntervaloSessao;
@@ -37,6 +40,7 @@ class ConsultaEscala implements ConsultarEscala
         private readonly AvaliadorEquipe $avaliador,
         private readonly DetectorConflito $conflitos,
         private readonly DonaDaEscala $dona,
+        private readonly ConsultarVagaEscala $vagas,
     ) {}
 
     public function detalhe(string $escalaId, EscalaVisao $visao): ?array
@@ -65,6 +69,13 @@ class ConsultaEscala implements ConsultarEscala
         $membroId = (string) SolicitacaoTrocaEscala::query()->whereKey($trocaId)->value('escala_membro_id');
 
         return $membroId === '' ? null : $this->referenciaDoMembro($membroId);
+    }
+
+    public function referenciaDaVaga(string $vagaId): ?EscalaRef
+    {
+        $escalaId = (string) VagaEscala::query()->whereKey($vagaId)->value('escala_id');
+
+        return $escalaId === '' ? null : $this->referencia($escalaId);
     }
 
     public function ebisEmConflito(string $escalaId): array
@@ -99,6 +110,7 @@ class ConsultaEscala implements ConsultarEscala
         $usuarioIds = $membros->pluck('usuario_id')->map(fn ($id): string => (string) $id)->unique()->values()->all();
         $nomes = $this->equipe->nomes($usuarioIds);
         $conflitos = $this->conflitos->conflitos($usuarioIds, $sessao, (string) $escala->id);
+        $podeGerir = $visao->contexto !== null && $this->dona->podeGerir((string) $escala->id, $visao->contexto);
 
         return [
             'id' => (string) $escala->id,
@@ -138,8 +150,15 @@ class ConsultaEscala implements ConsultarEscala
                 && $membros->contains(fn (EscalaMembro $membro): bool => $membro->status !== EscalaMembro::STATUS_SUBSTITUIDO && $membro->presente === null),
             'equipe' => $this->equipeDaEscala($escala),
             // Sem contexto resolvido os booleanos sao falsos.
-            'pode_gerir' => $visao->contexto !== null && $this->dona->podeGerir((string) $escala->id, $visao->contexto),
+            'pode_gerir' => $podeGerir,
             'pode_escolher_oferta' => $visao->contexto !== null && $this->dona->podeEscolherOferta((string) $escala->id, $visao->contexto),
+            // A dona e a supervisao veem os nomes de quem se ofereceu; os
+            // demais, so a contagem e quem foi escolhido (decisao 9).
+            'vagas' => $this->vagas->daEscala(
+                (string) $escala->id,
+                $podeGerir ? ProjecaoVaga::Gestao : ProjecaoVaga::Leitor,
+                $visao->leitorId,
+            ),
         ];
     }
 
