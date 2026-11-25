@@ -60,11 +60,12 @@ export async function criarEscala(
   sessaoId: string,
   estimativa: number,
   membros: { usuario_id: string; funcao: 'coordenadora' | 'auxiliar' }[] = [],
+  equipeId = '', // TODO(Tarefa 13): substituir pela equipe da dona
 ): Promise<{ data?: Escala; error?: unknown }> {
   const { data, error } = await api.POST('/sessions/{id}/schedules', {
     params: { path: { id: sessaoId } },
     headers: cabecalhos(),
-    body: { estimativa_participantes: estimativa, membros },
+    body: { equipe_id: equipeId, estimativa_participantes: estimativa, membros },
   })
   return { data: data?.escala, error }
 }

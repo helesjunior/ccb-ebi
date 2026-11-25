@@ -118,4 +118,25 @@ describe('tela de escalas', () => {
     fireEvent.click(await screen.findByRole('button', { name: /detalhe/i }))
     expect(await screen.findByText(/outra igreja/i)).toBeInTheDocument()
   })
+
+  // Fixado pela Task 13.
+  it('montar pre-seleciona a dona e os membros vigentes da equipe', async () => {
+    responderResumo('sem_escala')
+    post.mockResolvedValue({ data: { escala: detalhe({ status: 'prevista', situacao: 'em_montagem' }) } })
+    render(<Escalas contexto={contexto} papeis={['coordenadora']} />)
+
+    // Fixado pela Task 13: ate la o painel monta um por um e o equipe_id vai vazio.
+    fireEvent.click(await screen.findByRole('button', { name: /^montar$/i }))
+    fireEvent.change(await screen.findByLabelText(/estimativa de participantes/i), { target: { value: '8' } })
+    fireEvent.click(screen.getByRole('button', { name: /criar escala/i }))
+
+    await waitFor(() => expect(post).toHaveBeenCalled())
+    const [, pedido] = post.mock.calls.at(-1) as [string, { body: Record<string, unknown> }]
+
+    expect(pedido.body.equipe_id).toBe('eq-1')
+    expect(pedido.body.membros).toEqual([
+      { usuario_id: 'u-1', funcao: 'coordenadora' },
+      { usuario_id: 'u-2', funcao: 'auxiliar' },
+    ])
+  })
 })

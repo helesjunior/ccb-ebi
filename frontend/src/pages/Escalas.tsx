@@ -183,7 +183,8 @@ export function Escalas({ contexto, papeis }: { contexto: ContextoAtuacao | null
   async function criar() {
     if (!sessaoAberta) return
     const dados = await executar(
-      () => criarEscala(sessaoAberta, Number(novaEstimativa || 0)),
+      // TODO(Tarefa 13): montar pela equipe da dona.
+      () => criarEscala(sessaoAberta, Number(novaEstimativa || 0), [], ''),
       'Escala criada.',
     )
     if (dados) {
