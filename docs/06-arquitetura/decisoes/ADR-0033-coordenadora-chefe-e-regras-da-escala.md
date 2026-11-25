@@ -24,13 +24,15 @@ O ADR-0010 fixou a equipe mínima e "a escala é aprovada pela Coordenadora chef
 - `auxiliares_necessarios = ⌈estimativa ÷ participantes_por_auxiliar⌉` e `coordenadoras_necessarias = 1`. **Estimativa 0 → 0 auxiliares; o mínimo é só a coordenadora**, que é a fórmula literal do ADR-0010 e a mesma da `CalculadoraEquipeMinima`.
 
 ### 4. Divisor registrado na escala
-- O `divisor_de_participantes` do EBI é **copiado para a escala na criação** e não muda depois. Mudar o divisor do EBI **não reescreve** escalas já criadas: o que vale é o número gravado.
+- O `divisor_de_participantes` do EBI é **copiado para a escala na criação** e não muda enquanto a escala é aprovada. Mudar o divisor do EBI **não reescreve** escalas já criadas: o que vale é o número gravado.
 - O cálculo usa o divisor gravado; a escala aprovada mostra o mínimo que foi conferido.
+- *Emendado pelo [ADR-0034](ADR-0034-equipes-da-coordenadora-e-vaga-de-escala.md):* o **acréscimo** (incluir membro numa escala aprovada) preserva o divisor e a aprovação — não recopia nada. Retirar membro, mudar função ou estimativa reverte para `prevista` e recopia o divisor vigente do EBI.
 
 ### 5. Alterar a escala depois de aprovada
 - A escala `aprovada` **volta a `prevista`** quando a coordenadora altera a equipe, a estimativa ou os participantes; a aprovação anterior deixa de valer e o mínimo é conferido de novo.
 - **As trocas abertas e aceitas daquela escala são canceladas** na mesma operação (`situacao = cancelada`), para ninguém ser aprovado por um pedido que a nova equipe desfez. Trocas já decididas (`recusada`) ficam como estão.
 - Só a `coordenadora_chefe` (ou o `adm_igreja`, no fallback) aprova de novo; quem alterou não aprova sozinha se não for ela.
+- *Emendado pelo [ADR-0034](ADR-0034-equipes-da-coordenadora-e-vaga-de-escala.md):* a revisão cancela só as trocas **pendentes** (`escala.troca_cancelada`); a escala passa a pertencer a uma equipe (`escala.equipe_id` NOT NULL), e a dona da equipe é a dona da escala.
 
 ### 6. Conflito de agenda não bloqueia
 - Escalar alguém que já está em outra escala na mesma sessão (ou na mesma hora) **não bloqueia**: o conflito é reportado na leitura da escala e na lista de minhas escalas, sem impedir a gravação.
@@ -39,6 +41,7 @@ O ADR-0010 fixou a equipe mínima e "a escala é aprovada pela Coordenadora chef
 ### 7. Planejado × cumprido e o indicador M-06
 - O **planejado** é a escala aprovada (participantes, equipe, estimativa) e o **cumprido** é o que a sessão registrou (presentes, equipe efetiva). O relatório compara os dois por sessão e por EBI sem gravar uma cópia do cumprido.
 - **M-06 (cobertura da escala)** = cumprido ÷ planejado, com 1 decimal. É **sempre visível**: não entra em supressão por célula pequena e sai como `null` — exibido "—" — quando não há planejado, em vez de número inventado. O indicador não substitui o detalhamento da sessão.
+- *Emendado pelo [ADR-0034](ADR-0034-equipes-da-coordenadora-e-vaga-de-escala.md):* o `RelatorioPresenca` apura o M-06 como **sessões já ocorridas no período com escala `aprovada` e equipe mínima confirmada vigente na data ÷ sessões previstas** (`ConsultaCoberturaEscala`, confirmados pelo `AvaliadorEquipe`), em percentual — não por presentes ÷ planejado. O "cumprido" da equipe segue o mesmo recorte: quem conta é o membro `confirmado` e vigente na data, não o `escalado`.
 
 ## Consequências
 - O ADR-0010 perde a promessa de `ebis.coordenadora_chefe_id` e da estimativa calculada; a unicidade passa para `vinculo_acesso.chefe_de_ebi_id` e a estimativa é digitada.

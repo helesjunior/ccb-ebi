@@ -531,7 +531,7 @@ export function Escalas({
                           <Input
                             id="vaga-observacao"
                             value={vagaObservacao}
-                            maxLength={500}
+                            maxLength={280}
                             onChange={(e) => setVagaObservacao(e.target.value)}
                           />
                         </div>

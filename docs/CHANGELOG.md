@@ -2,6 +2,20 @@
 
 Formato: versão, data, autor e mudanças. Itens mais recentes primeiro.
 
+## 2.20 — 25/11/2026
+
+Etapa 7 — correção do modelo de escalas: equipe da coordenadora e vaga (E07, RF-07).
+
+- **Equipe da coordenadora (ADR-0034):** cada coordenadora monta e mantém a **própria equipe** (`equipe`, `equipe_membro`); uma auxiliar pode servir a mais de uma coordenadora. Os membros só a dona edita; a chefe e o `adm_igreja` criam equipe em nome de qualquer coordenadora vigente e supervisionam. Operação nova `equipe.gerenciar`; tela **Equipes de escala** no grupo *Participantes*.
+- **A escala nasce de uma equipe:** `escala.equipe_id` passa a ser obrigatório e a dona da equipe é a dona da escala. Montar pré-seleciona a dona (coordenadora) e os membros vigentes (auxiliares) numa chamada só; sem equipe, o atalho "Criar minha equipe".
+- **Acréscimo preserva a aprovação:** incluir membro numa escala aprovada mantém `status`, `aprovado_por`/`aprovado_em` e as trocas pendentes. Retirar membro, mudar função ou estimativa volta a `prevista`, recopia o divisor do EBI e cancela as trocas **pendentes** (ADR-0033 §4 e §5 emendados).
+- **Vaga de escala:** a dona abre vaga de acréscimo ou de substituição, e **só a dona escolhe** quem preenche (`403 nao_e_dona_da_escala` para a chefe e o `adm_igreja`); a escolhida entra já `confirmado`. A chefe é avisada pelo painel "Vagas do EBI" e não aprova.
+- **Privacidade da vaga:** a vaga aberta aparece para todos os auxiliares do EBI (`GET /me/schedule-vacancies`, sem `escala.ler`), que se oferecem e retiram a oferta. A supervisão vê só a contagem e quem foi escolhida; os nomes de quem se ofereceu e não foi escolhida ficam com a dona. A observação da vaga é pública para o EBI e a tela avisa.
+- **Conflito e concorrência:** a oferta mantém a elegibilidade da sessão e ganha `422 membro_ja_escalado`; conflito de horário é informativo. A trava passou a ser sempre **escala → vaga** (`TravaEscala::executarPelaVaga`), eliminando o deadlock (`40P01`) entre aceite e retirada; testes de concorrência novos contra PostgreSQL (`tests/Concorrencia`, `TESTE_PGSQL=1`).
+- **Quebra (sem migração de dados — sistema não está em produção):** `escala.equipe_id` vira obrigatório editando a migration original; `GET /ebis/{id}/team` sai de `escala.ler` para `escala.gerenciar`; o auxiliar **não** tem mais `escala.ler` (lê a própria escala por `/me/schedules` e a própria vaga). O `M-06` fica como implementado (sessões com escala aprovada e equipe mínima confirmada ÷ sessões previstas), registrado no ADR-0033 §7.
+- **Contrato e telas:** rotas de equipe e de vaga no OpenAPI (`npm run gen:api`), painéis de vaga nas telas Escalas e Minhas escalas, e `GET /sessions/{id}` expõe `escala_id`.
+- **Backlog:** coordenadora falta com a sessão aberta; reforço depois do encerramento; transferir dona; indicador de "nova atividade" para a chefe; notificação externa (E12).
+
 ## 2.19 — 24/11/2026
 
 Etapa 7 — Escalas (E07, RF-07).

@@ -28,6 +28,13 @@ erDiagram
   papel ||--o{ vinculo_acesso : define
   ebi ||--o{ vinculo_acesso : "chefe vigente (chefe_de_ebi_id)"
   escala ||--o{ escala_membro : "designa"
+  equipe ||--o{ escala : "dona da escala"
+  usuario ||--o{ equipe : "coordena"
+  equipe ||--o{ equipe_membro : "monta"
+  usuario ||--o{ equipe_membro : "auxilia"
+  escala ||--o{ vaga_escala : "abre"
+  vaga_escala ||--o{ oferta_vaga_escala : "recebe"
+  usuario ||--o{ oferta_vaga_escala : "se oferece"
   usuario ||--o{ escala_membro : "escalado"
   escala_membro ||--o{ solicitacao_troca_escala : "pede troca"
   termo_versao ||--o{ manifestacao_privacidade : "aceito em"
@@ -83,9 +90,13 @@ erDiagram
 | `agenda_excecao` | id, agenda_ebi_id ou ebi_id, data, tipo (feriado, cancelamento, horário especial), motivo *(novo, RF-06)* |
 | `sessao` | id, ebi_id, agenda_ebi_id, igreja_id, inicio_previsto, fim_previsto, inicio_real, fim_real, tema, passagem_biblica, status, realizada, auxiliares_escalados *(setor e regional derivam do vínculo vigente da igreja — a igreja é a âncora e o setor é sempre o atual, RN-09; previsto/real separados; `auxiliares_escalados` alimenta o aviso de equipe mínima, ADR-0010)* |
 | `sessao_correcao` | id, sessao_id, autor_id, antes (json), depois (json), motivo, ocorrido_em *(novo, RF-06)* |
-| `escala` | id, sessao_id (único — uma escala por sessão), ebi_id, igreja_id, estimativa_participantes, participantes_por_auxiliar (divisor copiado na criação), status (prevista, aprovada), aprovado_por, aprovado_em, criado_por *(aprovação pela coordenadora chefe ou pelo `adm_igreja` sem chefe, ADR-0033)* |
+| `escala` | id, sessao_id (único — uma escala por sessão), ebi_id, igreja_id, equipe_id (**NOT NULL** — a dona da escala é a coordenadora dona da equipe, ADR-0034), estimativa_participantes, participantes_por_auxiliar (divisor copiado na criação), status (prevista, aprovada), aprovado_por, aprovado_em, criado_por *(aprovação pela coordenadora chefe ou pelo `adm_igreja` sem chefe, ADR-0033)* |
+| `equipe` | id, ebi_id, igreja_id, coordenadora_id, criado_por, unique por (ebi_id, coordenadora_id) *(novo, ADR-0034: cada coordenadora monta o próprio quadro de auxiliares; tabela sem coluna de vigência)* |
+| `equipe_membro` | id, equipe_id, usuario_id, incluido_por, único por (equipe_id, usuario_id) *(novo; o quadro guarda a intenção — a vigência do papel vem do `vinculo_acesso` na leitura; a mesma pessoa pode estar em 1..N equipes)* |
 | `escala_membro` | id, escala_id, usuario_id, função (coordenadora, auxiliar), status (escalado, confirmado, troca_solicitada, substituido), confirmado_em, presente, presenca_registrada_por, presenca_registrada_em, substitui_membro_id *(novo, RF-07; unicidade de membro ativo por escala e horário é do serviço)* |
 | `solicitacao_troca_escala` | id, escala_membro_id, solicitante_id, motivo, status (pendente, aprovada, recusada, cancelada), substituto_membro_id, decidido_por, decidido_em, motivo_decisao *(novo, RF-07; `expirada` só na listagem)* |
+| `vaga_escala` | id, escala_id, função, substitui_membro_id (nullable, nullOnDelete), substituido_usuario_id (snapshot), observacao (pública, até 280), status (aberta, preenchida, cancelada), aberta_por, encerrada_por, encerrada_em, motivo_encerramento *(novo, ADR-0034: acréscimo — sem `substitui_membro_id` — ou substituição)* |
+| `oferta_vaga_escala` | id, vaga_id, usuario_id, status (pendente, aceita, retirada, descartada), membro_criado_id (nullable, nullOnDelete) *(novo; a escolha da dona liga a oferta `aceita` ao membro criado, já `confirmado`)* |
 | `presenca` | id, sessao_id, participante_id, registrado_por, registrado_em, origem (web, app, contingencia), status, estornado_por, estornado_em, motivo_estorno *(origem e estorno novos, RF-08; `contingencia` na E04)* |
 | `feedback` | id, sessao_id, participante_id, autor_id, conteúdo, participação, visibilidade, status, moderado_por (Ministério Local), moderado_em |
 
