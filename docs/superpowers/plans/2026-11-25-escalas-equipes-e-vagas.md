@@ -49,6 +49,12 @@ docker compose -p ebi-escalas -f docker-compose.yml -f docker-compose.worktree.y
 - O `-f` explícito deixa de fora o `docker-compose.override.yml` (S3 e ClamAV), que o E07 não usa.
 - O volume nomeado `vendordata` nasce vazio e **sombra** o `vendor/` do host: `composer install` uma vez por volume novo (Task 0), senão `php artisan test` responde `Command "test" is not defined`.
 - `docker compose exec` **não aceita `-e`**: variável de ambiente passa pelo `compose` pai (`$env:TESTE_PGSQL='1'; docker compose ... exec app ... ; Remove-Item Env:TESTE_PGSQL`).
+- **Suíte inteira** (o `composer test` estoura o timeout de 300 s do Composer, e `pest --parallel` dá 81 falsos negativos porque os helpers são funções globais dos arquivos de teste):
+
+```powershell
+docker compose -p ebi-escalas -f docker-compose.yml -f docker-compose.worktree.yml exec -T app sh -c "php -d memory_limit=1536M vendor/bin/pest 2>&1 | tail -8"
+```
+
 - **Nunca** usar `--filter` com caminho de arquivo: helpers como `cenarioEscala()` só carregam com a suíte inteira lida. Sempre `--filter=ClasseDoTeste` ou `--filter="A|B|C"`.
 - Depois de mexer em `MATRIZ`, `Operacoes` ou bindings: `... exec app php artisan optimize:clear`.
 

@@ -16,12 +16,6 @@ use Illuminate\Support\Collection;
  */
 class AvaliadorEquipe
 {
-    /** Papeis aceitos por funcao da escala. */
-    private const PAPEIS_POR_FUNCAO = [
-        EscalaMembro::FUNCAO_COORDENADORA => ['coordenadora', 'coordenadora_chefe'],
-        EscalaMembro::FUNCAO_AUXILIAR => ['auxiliar', 'coordenadora', 'coordenadora_chefe'],
-    ];
-
     public function __construct(
         private readonly ConsultarEquipeEbi $equipe,
         private readonly CalculadoraEquipeMinima $calculadora,
@@ -32,7 +26,7 @@ class AvaliadorEquipe
      */
     public function vigenteEm(array $vigencias, string $dataLocal, string $funcao): bool
     {
-        $papeis = self::PAPEIS_POR_FUNCAO[$funcao] ?? [];
+        $papeis = EscalaMembro::PAPEIS_POR_FUNCAO[$funcao] ?? [];
 
         foreach ($vigencias as $vigencia) {
             if (! in_array($vigencia['papel'], $papeis, true)) {

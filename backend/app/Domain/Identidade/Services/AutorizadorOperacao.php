@@ -33,6 +33,8 @@ class AutorizadorOperacao implements AutorizarOperacao
         Operacoes::RELATORIO_LER,
         // E07: monta e mantem a escala do EBI.
         Operacoes::ESCALA_LER, Operacoes::ESCALA_GERENCIAR,
+        // E07 (evolucao): monta e mantem a propria equipe de auxiliares.
+        Operacoes::EQUIPE_GERENCIAR,
     ];
 
     /**
@@ -100,6 +102,8 @@ class AutorizadorOperacao implements AutorizarOperacao
             // vigente (regra checada no servico).
             Operacoes::ESCALA_LER, Operacoes::ESCALA_GERENCIAR,
             Operacoes::ESCALA_APROVAR, Operacoes::TROCA_DECIDIR,
+            // E07 (evolucao): cria e mantem a equipe de qualquer coordenadora.
+            Operacoes::EQUIPE_GERENCIAR,
         ],
         'coordenadora' => self::OPERACOES_COORDENADORA,
         'coordenadora_chefe' => [

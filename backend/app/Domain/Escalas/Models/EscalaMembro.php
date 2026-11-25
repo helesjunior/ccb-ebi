@@ -29,6 +29,17 @@ class EscalaMembro extends Model
 
     public const STATUS_SUBSTITUIDO = 'substituido';
 
+    /**
+     * Papeis aceitos por funcao da escala. Constante unica do modulo: escala,
+     * equipe, troca e vaga decidem elegibilidade pela mesma tabela.
+     *
+     * @var array<string, array<int, string>>
+     */
+    public const PAPEIS_POR_FUNCAO = [
+        self::FUNCAO_COORDENADORA => ['coordenadora', 'coordenadora_chefe'],
+        self::FUNCAO_AUXILIAR => ['auxiliar', 'coordenadora', 'coordenadora_chefe'],
+    ];
+
     /** @use HasFactory<EscalaMembroFactory> */
     use HasFactory;
 

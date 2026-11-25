@@ -30,12 +30,6 @@ use Illuminate\Support\Facades\DB;
  */
 class GerenciadorEscala implements GerirEscala
 {
-    /** Funcoes aceitas na escala e os papeis que cada uma exige. */
-    private const PAPEIS_POR_FUNCAO = [
-        EscalaMembro::FUNCAO_COORDENADORA => ['coordenadora', 'coordenadora_chefe'],
-        EscalaMembro::FUNCAO_AUXILIAR => ['auxiliar', 'coordenadora', 'coordenadora_chefe'],
-    ];
-
     private const STATUS_SESSAO_ACEITOS = ['prevista', 'aberta'];
 
     public function __construct(
@@ -431,7 +425,7 @@ class GerenciadorEscala implements GerirEscala
             }
         }
 
-        if ($papeis === null || array_intersect($papeis, self::PAPEIS_POR_FUNCAO[$funcao]) === []) {
+        if ($papeis === null || array_intersect($papeis, EscalaMembro::PAPEIS_POR_FUNCAO[$funcao]) === []) {
             throw new ProblemException(
                 'membro_inelegivel',
                 'Membro inelegível',
@@ -454,7 +448,7 @@ class GerenciadorEscala implements GerirEscala
      */
     private function vigenteNaData(array $vigencias, string $dataLocal, string $funcao): bool
     {
-        $aceitos = self::PAPEIS_POR_FUNCAO[$funcao];
+        $aceitos = EscalaMembro::PAPEIS_POR_FUNCAO[$funcao];
 
         foreach ($vigencias as $vigencia) {
             if (! in_array($vigencia['papel'], $aceitos, true)) {
@@ -474,7 +468,7 @@ class GerenciadorEscala implements GerirEscala
 
     private function funcaoValida(string $funcao): string
     {
-        if (! array_key_exists($funcao, self::PAPEIS_POR_FUNCAO)) {
+        if (! array_key_exists($funcao, EscalaMembro::PAPEIS_POR_FUNCAO)) {
             throw new ProblemException('membro_invalido', 'Membro inválido', 422, 'Função inválida na escala.');
         }
 
