@@ -50,6 +50,12 @@ class Escala extends Model
         return $this->belongsTo(Equipe::class);
     }
 
+    /** @return HasMany<VagaEscala, $this> */
+    public function vagas(): HasMany
+    {
+        return $this->hasMany(VagaEscala::class);
+    }
+
     protected static function newFactory(): EscalaFactory
     {
         return EscalaFactory::new();

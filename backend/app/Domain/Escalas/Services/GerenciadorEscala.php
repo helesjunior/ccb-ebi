@@ -6,7 +6,7 @@ use App\Domain\Auditoria\Contracts\RegistrarEvento;
 use App\Domain\Escalas\Contracts\GerirEscala;
 use App\Domain\Escalas\Models\Escala;
 use App\Domain\Escalas\Models\EscalaMembro;
-use App\Domain\Escalas\Models\SolicitacaoTrocaEscala;
+use App\Domain\Escalas\Models\VagaEscala;
 use App\Domain\Identidade\Contracts\ConsultarEquipeEbi;
 use App\Domain\Identidade\Contracts\ContextoDecisao;
 use App\Domain\Organizacao\Contracts\ConsultarEbi;
@@ -15,7 +15,6 @@ use App\Domain\Sessoes\Contracts\ConsultarSessao;
 use App\Domain\Sessoes\Contracts\IntervaloSessao;
 use App\Support\ProblemException;
 use Illuminate\Database\UniqueConstraintViolationException;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -40,6 +39,8 @@ class GerenciadorEscala implements GerirEscala
         private readonly RegistrarEvento $auditoria,
         private readonly QuemAprova $quemAprova,
         private readonly AvaliadorEquipe $avaliador,
+        private readonly CancelamentoTroca $trocas,
+        private readonly EncerradorVaga $vagas,
     ) {}
 
     public function criar(string $sessaoId, int $estimativa, array $membros, ?string $autorId, ?string $equipeId = null): Escala
@@ -141,6 +142,9 @@ class GerenciadorEscala implements GerirEscala
                 throw new ProblemException('membro_em_estado_invalido', 'Membro em estado inválido', 409, 'Este membro já foi substituído.');
             }
 
+            // A vaga aberta para este membro deixa de existir com ele.
+            $this->vagas->cancelarAbertasDoMembro((string) $membro->id, VagaEscala::MOTIVO_RETIRADO, $autorId);
+
             $membro->delete();
 
             return $this->salvarAlteracao($escala, $sessao, $autorId);
@@ -167,6 +171,11 @@ class GerenciadorEscala implements GerirEscala
             );
 
             if ($membro->funcao !== $funcao) {
+                // Mudar para `coordenadora` tira o membro da funcao da vaga: a
+                // vaga so substitui auxiliar.
+                if ($funcao !== EscalaMembro::FUNCAO_AUXILIAR) {
+                    $this->vagas->cancelarAbertasDoMembro((string) $membro->id, VagaEscala::MOTIVO_FUNCAO, $autorId);
+                }
                 $membro->forceFill(['funcao' => $funcao])->save();
             }
 
@@ -328,37 +337,7 @@ class GerenciadorEscala implements GerirEscala
             'participantes_por_auxiliar' => $ebi->participantesPorAuxiliar,
         ])->save();
 
-        $canceladas = 0;
-
-        foreach ($this->trocasPendentes($escala) as $troca) {
-            $troca->forceFill([
-                'status' => SolicitacaoTrocaEscala::STATUS_CANCELADA,
-                'motivo_decisao' => 'escala alterada',
-                'decidido_em' => now(),
-            ])->save();
-
-            $membro = $troca->membro;
-            if ($membro !== null && $membro->status === EscalaMembro::STATUS_TROCA_SOLICITADA) {
-                $membro->forceFill(['status' => $membro->statusAnterior()])->save();
-            }
-
-            $this->auditoria->registrar([
-                'acao' => 'escala.troca_cancelada',
-                'recurso' => 'solicitacao_troca_escala',
-                'ator_id' => $autorId,
-                'origem' => 'api',
-                'escopo' => 'ebi:'.$sessao->ebiId,
-                'motivo' => 'escala alterada',
-                'metadados_minimizados' => [
-                    'troca_id' => (string) $troca->id,
-                    'escala_id' => (string) $escala->id,
-                    'membro_id' => (string) $troca->escala_membro_id,
-                    'status' => SolicitacaoTrocaEscala::STATUS_CANCELADA,
-                ],
-            ]);
-
-            $canceladas += 1;
-        }
+        $canceladas = $this->trocas->cancelarPendentes((string) $escala->id, null, 'escala alterada', $autorId);
 
         $this->auditoria->registrar([
             'acao' => 'escala.alterada',
@@ -506,15 +485,5 @@ class GerenciadorEscala implements GerirEscala
     private function usuariosAtivos(Escala $escala): array
     {
         return $escala->membros()->ativos()->pluck('usuario_id')->map(fn ($id): string => (string) $id)->all();
-    }
-
-    /** @return Collection<int, SolicitacaoTrocaEscala> */
-    private function trocasPendentes(Escala $escala): Collection
-    {
-        return SolicitacaoTrocaEscala::query()
-            ->whereIn('escala_membro_id', $escala->membros()->select('id'))
-            ->where('status', SolicitacaoTrocaEscala::STATUS_PENDENTE)
-            ->with('membro')
-            ->get();
     }
 }

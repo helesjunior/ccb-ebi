@@ -7,6 +7,7 @@ use App\Domain\Escalas\Contracts\GerirTrocaEscala;
 use App\Domain\Escalas\Models\Escala;
 use App\Domain\Escalas\Models\EscalaMembro;
 use App\Domain\Escalas\Models\SolicitacaoTrocaEscala;
+use App\Domain\Escalas\Models\VagaEscala;
 use App\Domain\Identidade\Contracts\ConsultarEquipeEbi;
 use App\Domain\Identidade\Contracts\ContextoDecisao;
 use App\Domain\Sessoes\Contracts\ConsultarSessao;
@@ -31,6 +32,7 @@ class GerenciadorTrocaEscala implements GerirTrocaEscala
         private readonly RegistrarEvento $auditoria,
         private readonly QuemAprova $quemAprova,
         private readonly AvaliadorEquipe $avaliador,
+        private readonly EncerradorVaga $vagas,
     ) {}
 
     public function solicitar(string $membroId, ?string $motivo, string $usuarioId): SolicitacaoTrocaEscala
@@ -142,7 +144,7 @@ class GerenciadorTrocaEscala implements GerirTrocaEscala
             }
 
             if ($decisao === 'aprovar') {
-                $this->aprovar($escala, $troca, $sessao, $substitutoUsuarioId);
+                $this->aprovar($escala, $troca, $sessao, $substitutoUsuarioId, $autorId);
             } else {
                 $this->devolverMembro($troca);
             }
@@ -237,7 +239,7 @@ class GerenciadorTrocaEscala implements GerirTrocaEscala
      * fora da escala. O original sai (`substituido`) e o novo entra na mesma
      * funcao, apontando para quem substituiu.
      */
-    private function aprovar(Escala $escala, SolicitacaoTrocaEscala $troca, IntervaloSessao $sessao, ?string $substitutoUsuarioId): void
+    private function aprovar(Escala $escala, SolicitacaoTrocaEscala $troca, IntervaloSessao $sessao, ?string $substitutoUsuarioId, ?string $autorId): void
     {
         $original = $this->membro($troca);
         $usuarioId = trim((string) $substitutoUsuarioId);
@@ -251,6 +253,9 @@ class GerenciadorTrocaEscala implements GerirTrocaEscala
         }
 
         $original->forceFill(['status' => EscalaMembro::STATUS_SUBSTITUIDO])->save();
+
+        // O original saiu pela troca: a vaga aberta para ele nao vale mais.
+        $this->vagas->cancelarAbertasDoMembro((string) $original->id, VagaEscala::MOTIVO_TROCADO, $autorId);
 
         $novo = EscalaMembro::query()->create([
             'escala_id' => $escala->id,
