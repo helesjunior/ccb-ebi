@@ -995,6 +995,165 @@ paths:
         '401': { $ref: '#/components/responses/Problem' }
         '403': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
+  /ebis/{id}/equipes:
+    get:
+      tags: [escalas]
+      summary: Equipes de escala do EBI
+      description: >-
+        Equipes das coordenadoras do EBI, com a dona, se ela ainda tem vinculo
+        vigente (`coordenadora_sem_vinculo`) e quantos membros a equipe tem.
+        Exige `escala.ler`; EBI fora do alcance responde 404.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/EbiId'
+      responses:
+        '200':
+          description: Equipes do EBI
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/EquipeResumo' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    post:
+      tags: [escalas]
+      summary: Criar a equipe de uma coordenadora
+      description: >-
+        Uma equipe por coordenadora no EBI (409 `equipe_existente`). A
+        coordenadora so cria a propria (403 `nao_e_dona_da_equipe`); a chefe e
+        o adm_igreja criam para qualquer coordenadora vigente. Coordenadora sem
+        vinculo vigente no EBI ou na igreja responde 422 `coordenadora_invalida`.
+        Exige `equipe.gerenciar`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/EbiId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EquipeCriacaoInput' }
+      responses:
+        '201':
+          description: Equipe criada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Equipe' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /equipes/{id}:
+    get:
+      tags: [escalas]
+      summary: Detalhe de uma equipe
+      description: >-
+        Equipe com a coordenadora e os membros; membro sem vinculo vigente
+        aparece com `sem_vinculo: true`. Exige `escala.ler`; equipe inexistente
+        ou fora do alcance responde 404.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Equipe
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Equipe' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /equipes/{id}/members:
+    post:
+      tags: [escalas]
+      summary: Incluir um auxiliar na equipe
+      description: >-
+        A dona da equipe inclui quem ela quiser dentre os papeis de equipe com
+        vinculo vigente hoje (422 `membro_inelegivel`). Incluir de novo responde
+        409 `membro_ja_na_equipe`. Exige `equipe.gerenciar`; nao dona, 403
+        `nao_e_dona_da_equipe`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EquipeMembroInput' }
+      responses:
+        '200':
+          description: Equipe atualizada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Equipe' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /equipes/{id}/members/{usuarioId}:
+    delete:
+      tags: [escalas]
+      summary: Retirar um auxiliar da equipe
+      description: >-
+        A dona da equipe retira o membro (delete fisico). Membro que nao esta na
+        equipe responde 404. Exige `equipe.gerenciar`; nao dona, 403
+        `nao_e_dona_da_equipe`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: usuarioId
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Equipe atualizada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Equipe' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
   /ebis/{id}/schedules:
     get:
       tags: [escalas]
@@ -3111,6 +3270,44 @@ components:
 
     EscalaEquipeMembro:
       $ref: '#/components/schemas/EscalaMembro'
+
+    Equipe:
+      type: object
+      properties:
+        id: { type: string }
+        ebi_id: { type: string }
+        igreja_id: { type: string }
+        coordenadora_id: { type: string }
+        coordenadora_nome: { type: string }
+        coordenadora_sem_vinculo: { type: boolean }
+        membros:
+          type: array
+          items: { $ref: '#/components/schemas/MembroDaEquipe' }
+    EquipeResumo:
+      type: object
+      properties:
+        id: { type: string }
+        ebi_id: { type: string }
+        coordenadora_id: { type: string }
+        coordenadora_nome: { type: string }
+        coordenadora_sem_vinculo: { type: boolean }
+        quantidade_membros: { type: integer }
+    MembroDaEquipe:
+      type: object
+      properties:
+        usuario_id: { type: string }
+        nome: { type: string }
+        sem_vinculo: { type: boolean }
+    EquipeCriacaoInput:
+      type: object
+      required: [coordenadora_id]
+      properties:
+        coordenadora_id: { type: string }
+    EquipeMembroInput:
+      type: object
+      required: [usuario_id]
+      properties:
+        usuario_id: { type: string }
 
     EscalaCriacaoInput:
       type: object

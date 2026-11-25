@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CentralController;
 use App\Http\Controllers\Api\V1\ChurchController;
 use App\Http\Controllers\Api\V1\EbiController;
+use App\Http\Controllers\Api\V1\EquipeController;
 use App\Http\Controllers\Api\V1\EquipeEbiController;
 use App\Http\Controllers\Api\V1\EscalaController;
 use App\Http\Controllers\Api\V1\EscalaMembroController;
@@ -212,6 +213,20 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         // Equipe do EBI para montar a escala (E07): quem pode ser escalado.
         Route::get('ebis/{id}/team', [EquipeEbiController::class, 'index'])
             ->name('ebis.team');
+
+        // Equipes de cada coordenadora (E07, evolucao): a dona monta o
+        // proprio quadro; a escala nasce de uma delas.
+        Route::get('ebis/{id}/equipes', [EquipeController::class, 'index'])
+            ->name('ebis.equipes.index');
+        Route::middleware(IdempotenciaMiddleware::class)->group(function (): void {
+            Route::post('ebis/{id}/equipes', [EquipeController::class, 'store'])
+                ->name('ebis.equipes.store');
+            Route::post('equipes/{id}/members', [EquipeController::class, 'incluirMembro'])
+                ->name('equipes.members.store');
+            Route::delete('equipes/{id}/members/{usuarioId}', [EquipeController::class, 'retirarMembro'])
+                ->name('equipes.members.destroy');
+        });
+        Route::get('equipes/{id}', [EquipeController::class, 'show'])->name('equipes.show');
 
         // Escalas (E07, RF-07): a autorizacao e feita no controller
         // (`AutorizacaoEscala`), que distingue 403 de 404 por territorio.

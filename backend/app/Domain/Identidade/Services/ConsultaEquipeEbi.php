@@ -45,6 +45,33 @@ class ConsultaEquipeEbi implements ConsultarEquipeEbi
         return $porUsuario;
     }
 
+    public function papeisVigentesHoje(array $usuarioIds, string $ebiId, string $igrejaId): array
+    {
+        if ($usuarioIds === []) {
+            return [];
+        }
+
+        $hoje = now()->toDateString();
+
+        $vinculos = $this->recorte($ebiId, $igrejaId)
+            ->whereIn('usuario_id', $usuarioIds)
+            ->where('inicio', '<=', $hoje)
+            ->where(fn (Builder $q) => $q->whereNull('fim')->orWhere('fim', '>=', $hoje))
+            ->with('papel')
+            ->get();
+
+        $porUsuario = [];
+
+        foreach ($vinculos as $vinculo) {
+            $porUsuario[(string) $vinculo->usuario_id][(string) $vinculo->papel?->codigo] = true;
+        }
+
+        return array_map(
+            fn (array $papeis): array => array_values(array_map('strval', array_keys($papeis))),
+            $porUsuario,
+        );
+    }
+
     public function vigencias(array $usuarioIds, string $ebiId, string $igrejaId): array
     {
         if ($usuarioIds === []) {

@@ -2153,6 +2153,251 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/ebis/{id}/equipes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Equipes de escala do EBI
+         * @description Equipes das coordenadoras do EBI, com a dona, se ela ainda tem vinculo vigente (`coordenadora_sem_vinculo`) e quantos membros a equipe tem. Exige `escala.ler`; EBI fora do alcance responde 404.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                };
+                path: {
+                    id: components["parameters"]["EbiId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Equipes do EBI */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["EquipeResumo"][];
+                        };
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        /**
+         * Criar a equipe de uma coordenadora
+         * @description Uma equipe por coordenadora no EBI (409 `equipe_existente`). A coordenadora so cria a propria (403 `nao_e_dona_da_equipe`); a chefe e o adm_igreja criam para qualquer coordenadora vigente. Coordenadora sem vinculo vigente no EBI ou na igreja responde 422 `coordenadora_invalida`. Exige `equipe.gerenciar`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: components["parameters"]["EbiId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["EquipeCriacaoInput"];
+                };
+            };
+            responses: {
+                /** @description Equipe criada */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["Equipe"];
+                        };
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                409: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/equipes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Detalhe de uma equipe
+         * @description Equipe com a coordenadora e os membros; membro sem vinculo vigente aparece com `sem_vinculo: true`. Exige `escala.ler`; equipe inexistente ou fora do alcance responde 404.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Equipe */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["Equipe"];
+                        };
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/equipes/{id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Incluir um auxiliar na equipe
+         * @description A dona da equipe inclui quem ela quiser dentre os papeis de equipe com vinculo vigente hoje (422 `membro_inelegivel`). Incluir de novo responde 409 `membro_ja_na_equipe`. Exige `equipe.gerenciar`; nao dona, 403 `nao_e_dona_da_equipe`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["EquipeMembroInput"];
+                };
+            };
+            responses: {
+                /** @description Equipe atualizada */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["Equipe"];
+                        };
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                409: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/equipes/{id}/members/{usuarioId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Retirar um auxiliar da equipe
+         * @description A dona da equipe retira o membro (delete fisico). Membro que nao esta na equipe responde 404. Exige `equipe.gerenciar`; nao dona, 403 `nao_e_dona_da_equipe`.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: string;
+                    usuarioId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Equipe atualizada */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data?: components["schemas"]["Equipe"];
+                        };
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/ebis/{id}/schedules": {
         parameters: {
             query?: never;
@@ -4993,6 +5238,34 @@ export interface components {
             papeis: string[];
         };
         EscalaEquipeMembro: components["schemas"]["EscalaMembro"];
+        Equipe: {
+            id?: string;
+            ebi_id?: string;
+            igreja_id?: string;
+            coordenadora_id?: string;
+            coordenadora_nome?: string;
+            coordenadora_sem_vinculo?: boolean;
+            membros?: components["schemas"]["MembroDaEquipe"][];
+        };
+        EquipeResumo: {
+            id?: string;
+            ebi_id?: string;
+            coordenadora_id?: string;
+            coordenadora_nome?: string;
+            coordenadora_sem_vinculo?: boolean;
+            quantidade_membros?: number;
+        };
+        MembroDaEquipe: {
+            usuario_id?: string;
+            nome?: string;
+            sem_vinculo?: boolean;
+        };
+        EquipeCriacaoInput: {
+            coordenadora_id: string;
+        };
+        EquipeMembroInput: {
+            usuario_id: string;
+        };
         EscalaCriacaoInput: {
             estimativa_participantes: number;
             membros?: components["schemas"]["EscalaMembroInput"][];
