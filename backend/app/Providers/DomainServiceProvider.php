@@ -23,6 +23,7 @@ use App\Domain\Escalas\Contracts\ConsultarEscala;
 use App\Domain\Escalas\Contracts\GerirEquipe;
 use App\Domain\Escalas\Contracts\GerirEscala;
 use App\Domain\Escalas\Contracts\GerirTrocaEscala;
+use App\Domain\Escalas\Contracts\GerirVagaEscala;
 use App\Domain\Escalas\Contracts\ParticiparEscala;
 use App\Domain\Escalas\Services\ConsultaCoberturaEscala;
 use App\Domain\Escalas\Services\ConsultaEquipe;
@@ -31,6 +32,7 @@ use App\Domain\Escalas\Services\ConsultaEscala;
 use App\Domain\Escalas\Services\GerenciadorEquipe;
 use App\Domain\Escalas\Services\GerenciadorEscala;
 use App\Domain\Escalas\Services\GerenciadorTrocaEscala;
+use App\Domain\Escalas\Services\GerenciadorVaga;
 use App\Domain\Escalas\Services\ParticipacaoEscala;
 use App\Domain\Identidade\Contracts\AceitarConvite;
 use App\Domain\Identidade\Contracts\Autenticar;
@@ -180,6 +182,7 @@ class DomainServiceProvider extends ServiceProvider
         $this->app->bind(ConsultarEscala::class, ConsultaEscala::class);
         $this->app->bind(ParticiparEscala::class, ParticipacaoEscala::class);
         $this->app->bind(GerirTrocaEscala::class, GerenciadorTrocaEscala::class);
+        $this->app->bind(GerirVagaEscala::class, GerenciadorVaga::class);
         $this->app->bind(ConsultarEquipeEscalada::class, ConsultaEquipeEscalada::class);
         $this->app->bind(ConsultarCoberturaEscala::class, ConsultaCoberturaEscala::class);
     }
