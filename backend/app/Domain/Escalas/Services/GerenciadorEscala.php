@@ -124,7 +124,7 @@ class GerenciadorEscala implements GerirEscala
                 'status' => EscalaMembro::STATUS_ESCALADO,
             ]);
 
-            return $this->salvarAlteracao($escala, $sessao, $autorId);
+            return $this->salvarAlteracao($escala, $sessao, $autorId, acrescimo: true);
         });
     }
 
@@ -292,11 +292,32 @@ class GerenciadorEscala implements GerirEscala
     }
 
     /**
-     * Persiste a alteracao e desfaz a aprovacao: volta a prevista, copia o
-     * divisor atual do EBI, mantem a confirmacao e cancela as trocas pendentes.
+     * Persiste a alteracao. Por padrao desfaz a aprovacao: volta a prevista,
+     * copia o divisor atual do EBI, mantem a confirmacao e cancela as trocas
+     * pendentes. Num acrescimo (`$acrescimo`) a aprovacao fica como esta: a
+     * dona so aumenta a equipe, o divisor e o da aprovacao e as trocas seguem.
      */
-    private function salvarAlteracao(Escala $escala, IntervaloSessao $sessao, ?string $autorId): Escala
+    private function salvarAlteracao(Escala $escala, IntervaloSessao $sessao, ?string $autorId, bool $acrescimo = false): Escala
     {
+        if ($acrescimo) {
+            $this->auditoria->registrar([
+                'acao' => 'escala.alterada',
+                'recurso' => 'escala',
+                'ator_id' => $autorId,
+                'origem' => 'api',
+                'escopo' => 'ebi:'.$sessao->ebiId,
+                'metadados_minimizados' => [
+                    'escala_id' => (string) $escala->id,
+                    'sessao_id' => $sessao->id,
+                    'voltou_prevista' => false,
+                    'estimativa_participantes' => (int) $escala->estimativa_participantes,
+                    'trocas_canceladas' => 0,
+                ],
+            ]);
+
+            return $escala->refresh();
+        }
+
         $voltouPrevista = $escala->status !== Escala::STATUS_PREVISTA;
         $ebi = $this->ebi($sessao->ebiId);
 
