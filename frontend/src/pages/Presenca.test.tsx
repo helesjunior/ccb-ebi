@@ -52,6 +52,16 @@ function responder(status: string, dadosEscala: unknown, extrasSessao = {}) {
   })
 }
 
+describe('finalidade', () => {
+  it('P1 envia finalidade registro_presenca na lista da sessao', async () => {
+    responder('aberta', escala())
+    render(<Presenca sessaoId="ses-1" onVoltar={() => {}} papeis={['coordenadora']} />)
+    await waitFor(() => expect(get).toHaveBeenCalledWith('/sessions/{id}/attendance', expect.objectContaining({
+      params: { path: { id: 'ses-1' }, query: { finalidade: 'registro_presenca' } },
+    })))
+  })
+})
+
 describe('presenca da equipe', () => {
   it('nao aparece com a sessao aberta', async () => {
     responder('aberta', escala())

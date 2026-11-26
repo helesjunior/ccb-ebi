@@ -46,7 +46,7 @@ export function HistoricoPresencas({ participanteId, rota }: {
     setErro(null)
     const resposta = rota === 'operador'
       ? await api.GET('/participants/{id}/attendance', {
-        params: { path: { id: participanteId } }, headers: cabecalhos(),
+        params: { path: { id: participanteId }, query: { finalidade: 'consulta_historico' } }, headers: cabecalhos(),
       })
       : await api.GET('/me/participants/{id}/attendance', {
         params: { path: { id: participanteId } }, headers: cabecalhos(),

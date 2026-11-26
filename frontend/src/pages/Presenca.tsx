@@ -76,7 +76,10 @@ export function Presenca({ sessaoId, onVoltar, papeis }: {
     try {
       const [detalhe, lista] = await Promise.all([
         api.GET('/sessions/{id}', options),
-        api.GET('/sessions/{id}/attendance', options),
+        api.GET('/sessions/{id}/attendance', {
+          ...options,
+          params: { path: { id: sessaoId }, query: { finalidade: 'registro_presenca' } },
+        }),
       ])
       if (controller.signal.aborted) return
       if (detalhe.error || !detalhe.data) throw detalhe.error
