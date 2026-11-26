@@ -96,5 +96,8 @@ return new class extends Migration
         Schema::dropIfExists('solicitacao_troca_escala');
         Schema::dropIfExists('escala_membro');
         Schema::dropIfExists('escala');
+        // Mesma migration: sem isso um novo `migrate` falha com "ja existe".
+        Schema::dropIfExists('equipe_membro');
+        Schema::dropIfExists('equipe');
     }
 };

@@ -54,7 +54,7 @@ class AutorizacaoEscala
      *
      * @param  array<int, string>  $outrosEbis  EBIs de sessoes em conflito
      */
-    public function visao(Request $request, array $outrosEbis): EscalaVisao
+    public function visao(Request $request, array $outrosEbis, string $ebiId): EscalaVisao
     {
         $contexto = $request->attributes->get('contexto_atuacao');
 
@@ -73,7 +73,9 @@ class AutorizacaoEscala
             $contexto->usuarioId,
             $visiveis,
             contexto: $this->contexto($request),
-            temEscalaLer: true,
+            // Membros da escala entram por excecao de propriedade, sem
+            // `escala.ler`: o que eles veem da vaga muda com isso.
+            temEscalaLer: $this->autorizar->permite($contexto, Operacoes::ESCALA_LER, 'ebi', $ebiId),
         );
     }
 

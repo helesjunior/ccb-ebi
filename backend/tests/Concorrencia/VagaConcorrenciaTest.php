@@ -101,21 +101,23 @@ it('aceite x retirada do original', function () {
 
     semErro($a, $b);
 
-    // A retirada sempre passa; o aceite so se chegar antes dela.
-    expect($b)->toBe('ok');
-    expect(Suporte::membro((string) $c['original']->id))->toBeNull();
-
     $vaga = Suporte::statusDaVaga((string) $c['vagaOriginal']->id);
 
-    if ($a === 'ok') {
-        expect($vaga)->toBe('preenchida');
-        expect(Suporte::membrosAtivos((string) $c['escala']->id, (string) $c['ofertante']->id))->toBe(1);
-    } else {
-        // Quem perdeu so pode ter perdido por vaga/oferta ja decidida.
+    if ($b === 'ok') {
+        // A retirada venceu: o membro saiu e a vaga dele morreu junto.
+        expect(Suporte::membro((string) $c['original']->id))->toBeNull();
         expect($a)->toStartWith('code:');
         expect($vaga)->toBe('cancelada');
         expect(Suporte::statusDaOferta((string) $c['ofertaOriginal']->id))->toBe('descartada');
         expect(Suporte::membrosAtivos((string) $c['escala']->id, (string) $c['ofertante']->id))->toBe(0);
+    } else {
+        // O aceite venceu: o original virou `substituido`, e retirar quem ja foi
+        // substituido e 409 `membro_em_estado_invalido` (nada some). A vaga
+        // fica preenchida e a ofertante entra — a retirada nao desfaz o aceite.
+        expect($b)->toBe('code:membro_em_estado_invalido');
+        expect($a)->toBe('ok');
+        expect($vaga)->toBe('preenchida');
+        expect(Suporte::membrosAtivos((string) $c['escala']->id, (string) $c['ofertante']->id))->toBe(1);
     }
 });
 

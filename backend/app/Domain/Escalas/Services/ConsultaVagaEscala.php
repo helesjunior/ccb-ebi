@@ -99,6 +99,11 @@ class ConsultaVagaEscala implements ConsultarVagaEscala
         return $this->apresentar($vagas, $projecao, $leitorId)[0] ?? null;
     }
 
+    public function ofertaDaVaga(string $ofertaId, string $vagaId): bool
+    {
+        return OfertaVagaEscala::query()->whereKey($ofertaId)->where('vaga_id', $vagaId)->exists();
+    }
+
     /**
      * @return Builder<VagaEscala>
      */
@@ -309,14 +314,22 @@ class ConsultaVagaEscala implements ConsultarVagaEscala
         $card['ofertas_pendentes'] = $pendentes->count();
         $card['motivo_encerramento'] = $vaga->motivo_encerramento;
 
+        $substituido = $vaga->substituido_usuario_id === null ? null : (string) $vaga->substituido_usuario_id;
+        $quemFoiEscolhido = $aceita === null ? null : ($nomes[(string) $aceita->usuario_id] ?? '');
+
         if ($projecao === ProjecaoVaga::Leitor) {
-            $substituido = $vaga->substituido_usuario_id === null ? null : (string) $vaga->substituido_usuario_id;
             $card['substituido_nome'] = $substituido === null ? null : ($nomes[$substituido] ?? '');
+            // Quem foi escolhido nao e sigilo (a vaga preenchida e fato publico
+            // do EBI); a tela da supervisao depende disso.
+            $card['escolhido_nome'] = $quemFoiEscolhido;
         }
 
         if ($projecao === ProjecaoVaga::Gestao) {
-            $card['escolhido_nome'] = $aceita === null ? null : ($nomes[(string) $aceita->usuario_id] ?? '');
-            $card['ofertas'] = $pendentes->map(function (OfertaVagaEscala $oferta) use ($nomes, $destaEscala): array {
+            $card['substituido_nome'] = $substituido === null ? null : ($nomes[$substituido] ?? '');
+            $card['escolhido_nome'] = $quemFoiEscolhido;
+            // Todas as ofertas, nao so as pendentes: a dona precisa ver quem
+            // retirou ou foi descartado para decidir com a informacao inteira.
+            $card['ofertas'] = $vaga->ofertas->map(function (OfertaVagaEscala $oferta) use ($nomes, $destaEscala): array {
                 return [
                     'id' => (string) $oferta->id,
                     'usuario_id' => (string) $oferta->usuario_id,

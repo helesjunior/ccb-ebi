@@ -131,12 +131,14 @@ class GerenciadorVaga implements GerirVagaEscala
             $aceitos = EscalaMembro::PAPEIS_POR_FUNCAO[EscalaMembro::FUNCAO_AUXILIAR];
             $papeis = $this->equipe->papeisVigentesHoje([$usuarioId], $sessao->ebiId, $sessao->igrejaId)[$usuarioId] ?? [];
 
+            // Sem papel de auxiliar hoje nao descobre a vaga (404). Quem tem o
+            // papel hoje e nao servia na data recebe `membro_inelegivel` (422).
             if (array_intersect($papeis, $aceitos) === []) {
                 throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Vaga não encontrada.');
             }
 
             $this->garantirVagaAberta($vaga, $sessao);
-            $this->garantirElegivelNaData($escala, $sessao, $usuarioId);
+            $this->garantirElegivelNaData($sessao, $usuarioId);
 
             if ($this->dona->donaId((string) $escala->id) === $usuarioId || in_array($usuarioId, $this->dona->usuariosNaEscala((string) $escala->id), true)) {
                 throw new ProblemException('membro_ja_escalado', 'Membro já escalado', 422, 'Esta pessoa já está na escala desta sessão.');
@@ -236,7 +238,7 @@ class GerenciadorVaga implements GerirVagaEscala
             $this->garantirSessaoAberta($sessao);
 
             $usuarioId = (string) $oferta->usuario_id;
-            $this->garantirElegivelNaData($escala, $sessao, $usuarioId);
+            $this->garantirElegivelNaData($sessao, $usuarioId);
 
             if ($this->dona->donaId((string) $escala->id) === $usuarioId || in_array($usuarioId, $this->dona->usuariosNaEscala((string) $escala->id), true)) {
                 throw new ProblemException('membro_ja_escalado', 'Membro já escalado', 422, 'Esta pessoa já está na escala desta sessão.');
@@ -329,15 +331,10 @@ class GerenciadorVaga implements GerirVagaEscala
         }
     }
 
-    /** Elegibilidade agora (autorizacao atual) e na data da sessao (RF-3). */
-    private function garantirElegivelNaData(Escala $escala, IntervaloSessao $sessao, string $usuarioId): void
+    /** Elegibilidade na data da sessao (RF-3). A autorizacao atual e a da oferta. */
+    private function garantirElegivelNaData(IntervaloSessao $sessao, string $usuarioId): void
     {
         $vigencias = $this->equipe->vigencias([$usuarioId], $sessao->ebiId, $sessao->igrejaId)[$usuarioId] ?? [];
-        $papeis = $this->equipe->papeisVigentesHoje([$usuarioId], (string) $escala->ebi_id, (string) $escala->igreja_id)[$usuarioId] ?? [];
-
-        if (array_intersect($papeis, EscalaMembro::PAPEIS_POR_FUNCAO[EscalaMembro::FUNCAO_AUXILIAR]) === []) {
-            throw new ProblemException('membro_inelegivel', 'Membro inelegível', 422, 'Esta pessoa não pertence à equipe deste EBI.');
-        }
 
         if (! $this->avaliador->vigenteEm($vigencias, $sessao->dataLocal, EscalaMembro::FUNCAO_AUXILIAR)) {
             throw new ProblemException('membro_inelegivel', 'Membro inelegível', 422, 'O vínculo desta pessoa não está vigente na data da sessão.');

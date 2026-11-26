@@ -243,27 +243,21 @@ it('vinculo com inicio futuro nao autoriza oferecer', function () {
     }
 });
 
-it('elegibilidade usa a data local da sessao', function () {
-    // Sessao das 23:00 de 05/12 em America/Sao_Paulo (06/12 02:00 UTC).
+it('vinculo com fim preenchido nao autoriza oferecer nem revela a vaga', function () {
     $c = cenarioEscala();
-    $c['sessao']->forceFill([
-        'inicio_previsto' => '2026-12-06 02:00:00', 'fim_previsto' => '2026-12-06 04:00:00',
-    ])->save();
     escalaComEquipe($c);
     $vagaId = gerirVaga()->abrir((string) $c['escala']->id, null, null, ctxVaga($c['coord'], 'coordenadora', $c), null);
 
-    $noDia = pessoaDeFora($c);
-    VinculoAcesso::query()->where('usuario_id', $noDia->id)->update(['fim' => '2026-12-05']);
-    expect(gerirVaga()->oferecer($vagaId, (string) $noDia->id))->not->toBe('');
-
-    $antes = pessoaDeFora($c);
-    VinculoAcesso::query()->where('usuario_id', $antes->id)->update(['fim' => '2026-12-04']);
+    $pessoa = pessoaDeFora($c);
+    // Ativo e so `fim` nulo; com data de fim ja e revogacao, e revogada nao
+    // descobre a vaga (404) em vez de receber um 422 que diria que ela existe.
+    VinculoAcesso::query()->where('usuario_id', $pessoa->id)->update(['fim' => '2026-11-30']);
 
     try {
-        gerirVaga()->oferecer($vagaId, (string) $antes->id);
+        gerirVaga()->oferecer($vagaId, (string) $pessoa->id);
         $this->fail('deveria recusar');
     } catch (ProblemException $e) {
-        expect($e->problemCode)->toBe('membro_inelegivel')->and($e->status)->toBe(422);
+        expect($e->problemCode)->toBe('not_found')->and($e->status)->toBe(404);
     }
 });
 

@@ -37,4 +37,7 @@ interface ConsultarVagaEscala
      * @return array<string, mixed>|null
      */
     public function uma(string $vagaId, ProjecaoVaga $projecao, ?string $leitorId): ?array;
+
+    /** A oferta pertence a esta vaga? A URL autoriza a vaga, nunca a oferta solta. */
+    public function ofertaDaVaga(string $ofertaId, string $vagaId): bool;
 }

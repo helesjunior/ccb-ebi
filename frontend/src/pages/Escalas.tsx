@@ -117,6 +117,9 @@ export function Escalas({
   const [vagasDoEbi, setVagasDoEbi] = useState<VagaEscala[]>([])
   const [abrindoVaga, setAbrindoVaga] = useState(false)
   const [vagaObservacao, setVagaObservacao] = useState('')
+  const [vagaSubstitui, setVagaSubstitui] = useState('')
+  const [equipesDisponiveis, setEquipesDisponiveis] = useState<EquipeResumo[]>([])
+  const [equipeEscolhida, setEquipeEscolhida] = useState('')
 
   const podeAprovar = papeis.some((p) => ['coordenadora_chefe', 'adm_igreja'].includes(p))
   const podeGerir = papeis.some((p) => ['coordenadora', 'coordenadora_chefe', 'adm_igreja'].includes(p))
@@ -198,6 +201,9 @@ export function Escalas({
     if (!ebiId) return
     const { data } = await equipeDoEbi(ebiId)
     setEquipe(data ?? [])
+    // A lista de equipes tambem alimenta o seletor de quem monta a escala.
+    const { data: todas } = await listarEquipes(ebiId)
+    setEquipesDisponiveis((todas ?? []) as EquipeResumo[])
   }
 
   /**
@@ -212,10 +218,13 @@ export function Escalas({
       return null
     }
     const todas = data ?? []
-    const minhaId = usuario?.id ?? ''
-    // Para a chefe, `minha` é a dela; sem a dela, vale a primeira de uma
-    // coordenadora vigente (é ela quem escolhe, e o servidor confere).
-    return todas.find((e) => e.coordenadora_id === minhaId) ?? todas[0] ?? null
+    setEquipesDisponiveis(todas)
+    const minha = todas.find((e) => e.coordenadora_id === (usuario?.id ?? ''))
+    if (minha || todas.length === 0) return minha ?? null
+
+    // Chefe/adm_igreja sem equipe própria: quem é dona da equipe escolhida é
+    // quem vai escolher a vaga. A primeira é só o padrão; a tela deixa trocar.
+    return todas.find((e) => e.id === equipeEscolhida) ?? todas[0]
   }
 
   /** Dona como coordenadora e os demais membros vigentes como auxiliares. */
@@ -321,12 +330,16 @@ export function Escalas({
   async function abrirVagaNaEscala() {
     if (!escala?.id) return
     const dados = await executar(
-      () => abrirVaga(escala.id!, { observacao: vagaObservacao || null }),
+      () => abrirVaga(escala.id!, {
+        observacao: vagaObservacao || null,
+        substitui_membro_id: vagaSubstitui || null,
+      }),
       'Vaga aberta; os auxiliares do EBI podem se oferecer.',
     )
     if (dados) {
       setAbrindoVaga(false)
       setVagaObservacao('')
+      setVagaSubstitui('')
     }
     // Mesmo no erro, o cartão pode ter mudado (vaga já aberta por outra pessoa).
     await Promise.all([abrir(escala.sessao_id!), carregarVagas()])
@@ -434,6 +447,21 @@ export function Escalas({
           <CardContent className="flex flex-col gap-4">
             {!escala && podeGerir && (
               <div className="flex flex-wrap items-end gap-3">
+                {equipesDisponiveis.some((e) => e.coordenadora_id === (usuario?.id ?? '')) === false
+                  && equipesDisponiveis.length > 0 && (
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="escala-equipe">Equipe que monta esta escala</Label>
+                    <Select value={equipeEscolhida} onValueChange={setEquipeEscolhida}>
+                      <SelectTrigger id="escala-equipe" className="w-full"><SelectValue placeholder="Escolha a coordenadora" /></SelectTrigger>
+                      <SelectContent>
+                        {equipesDisponiveis.map((e) => (
+                          <SelectItem key={e.id} value={e.id ?? ''}>{e.coordenadora_nome || e.coordenadora_id || 'Coordenadora'}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">A dona desta equipe é quem escolhe quem preenche a vaga.</p>
+                  </div>
+                )}
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="escala-estimativa">Estimativa de participantes</Label>
                   <Input id="escala-estimativa" type="number" min="0" step="1" value={novaEstimativa} onChange={(e) => setNovaEstimativa(e.target.value)} />
@@ -526,6 +554,22 @@ export function Escalas({
                             outros dados sensíveis.
                           </AlertDescription>
                         </Alert>
+                        <div className="flex flex-col gap-2">
+                          <Label htmlFor="vaga-substitui">Quem falta (opcional)</Label>
+                          <Select value={vagaSubstitui} onValueChange={setVagaSubstitui}>
+                            <SelectTrigger id="vaga-substitui" className="w-full"><SelectValue placeholder="Acréscimo (ninguém faltou)" /></SelectTrigger>
+                            <SelectContent>
+                              {(escala.membros ?? [])
+                                .filter((m) => m.status !== 'substituido' && m.funcao === 'auxiliar' && m.id)
+                                .map((m) => (
+                                  <SelectItem key={m.id} value={m.id!}>{m.nome}</SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                          <p className="text-xs text-muted-foreground">
+                            Escolher alguém abre uma substituição: a pessoa entra no lugar dela quando a dona aceitar a oferta.
+                          </p>
+                        </div>
                         <div className="flex flex-col gap-2">
                           <Label htmlFor="vaga-observacao">Observação (opcional)</Label>
                           <Input

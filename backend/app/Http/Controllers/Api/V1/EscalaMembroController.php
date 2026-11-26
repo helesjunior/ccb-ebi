@@ -113,7 +113,7 @@ class EscalaMembroController
             throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Escala não encontrada.');
         }
 
-        $visao = $this->autorizacao->visao($request, $this->consulta->ebisEmConflito($referencia->id));
+        $visao = $this->autorizacao->visao($request, $this->consulta->ebisEmConflito($referencia->id), $referencia->ebiId);
         $detalhe = $this->consulta->detalhe($referencia->id, $visao);
         if ($detalhe === null) {
             throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Escala não encontrada.');
@@ -135,7 +135,7 @@ class EscalaMembroController
      */
     private function conflitoDoMembro(Request $request, EscalaRef $referencia, string $membroId): array
     {
-        $visao = $this->autorizacao->visao($request, $this->consulta->ebisEmConflito($referencia->id));
+        $visao = $this->autorizacao->visao($request, $this->consulta->ebisEmConflito($referencia->id), $referencia->ebiId);
         $detalhe = $this->consulta->detalhe($referencia->id, $visao);
 
         foreach ($detalhe['membros'] ?? [] as $membro) {

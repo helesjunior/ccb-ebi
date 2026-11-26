@@ -152,11 +152,16 @@ class ConsultaEscala implements ConsultarEscala
             // Sem contexto resolvido os booleanos sao falsos.
             'pode_gerir' => $podeGerir,
             'pode_escolher_oferta' => $visao->contexto !== null && $this->dona->podeEscolherOferta((string) $escala->id, $visao->contexto),
-            // A dona e a supervisao veem os nomes de quem se ofereceu; os
-            // demais, so a contagem e quem foi escolhido (decisao 9).
+            // A dona e a supervisao veem os nomes de quem se ofereceu; quem tem
+            // `escala.ler` ve contagem e quem foi escolhido; quem entrou so pela
+            // excecao de membro da escala recebe o cartao publico (decisao 9).
             'vagas' => $this->vagas->daEscala(
                 (string) $escala->id,
-                $podeGerir ? ProjecaoVaga::Gestao : ProjecaoVaga::Leitor,
+                match (true) {
+                    $podeGerir => ProjecaoVaga::Gestao,
+                    $visao->temEscalaLer => ProjecaoVaga::Leitor,
+                    default => ProjecaoVaga::Publica,
+                },
                 $visao->leitorId,
             ),
         ];

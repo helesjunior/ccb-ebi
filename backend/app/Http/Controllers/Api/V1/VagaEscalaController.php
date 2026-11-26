@@ -86,14 +86,14 @@ class VagaEscalaController
 
     public function show(Request $request, string $id): JsonResponse
     {
-        $referencia = $this->escalas->referenciaDaVaga($id) ?? throw $this->naoEncontrada();
+        $referencia = $this->referencia($id);
 
         return new JsonResponse(['data' => $this->consulta->uma($id, $this->projecao($request, $referencia), $this->autorId($request)) ?? throw $this->naoEncontrada()]);
     }
 
     public function store(AbrirVagaRequest $request, string $escalaId): JsonResponse
     {
-        $referencia = $this->referencia($escalaId);
+        $referencia = $this->escalas->referencia($escalaId) ?? throw $this->naoEncontrada();
         $this->autorizacao->garantir($request, Operacoes::ESCALA_GERENCIAR, $referencia->ebiId);
 
         $vagaId = $this->gerir->abrir(
@@ -109,7 +109,7 @@ class VagaEscalaController
 
     public function cancelar(Request $request, string $id): JsonResponse
     {
-        $referencia = $this->escalas->referenciaDaVaga($id) ?? throw $this->naoEncontrada();
+        $referencia = $this->referencia($id);
         $this->autorizacao->garantir($request, Operacoes::ESCALA_GERENCIAR, $referencia->ebiId);
 
         $this->gerir->cancelar($id, $this->autorizacao->contexto($request), $this->autorId($request));
@@ -130,12 +130,17 @@ class VagaEscalaController
 
     public function escolher(Request $request, string $id): JsonResponse
     {
-        $referencia = $this->escalas->referenciaDaVaga($id) ?? throw $this->naoEncontrada();
+        $referencia = $this->referencia($id);
         $this->autorizacao->garantir($request, Operacoes::ESCALA_GERENCIAR, $referencia->ebiId);
 
         $dados = $request->validate([
             'oferta_id' => ['required', 'string', 'max:26'],
         ]);
+
+        $daVaga = $this->consulta->ofertaDaVaga($dados['oferta_id'], $id);
+        if (! $daVaga) {
+            throw new ProblemException('oferta_invalida', 'Oferta inválida', 422, 'Esta oferta não é desta vaga.');
+        }
 
         $membroId = $this->gerir->escolher($dados['oferta_id'], $this->autorizacao->contexto($request), $this->autorId($request));
 
@@ -151,15 +156,27 @@ class VagaEscalaController
      */
     private function projecao(Request $request, EscalaRef $escala): ProjecaoVaga
     {
-        $contexto = $this->autorizacao->contexto($request);
-
-        if ($this->dona->podeGerir($escala->id, $contexto)) {
+        if ($this->podeGerir($request, $escala)) {
             return ProjecaoVaga::Gestao;
         }
 
         return $this->autorizacao->alcanca($request, Operacoes::ESCALA_LER, $escala->ebiId)
             ? ProjecaoVaga::Leitor
             : ProjecaoVaga::Publica;
+    }
+
+    /**
+     * A supervisao so ve os nomes dentro do seu territorio; a dona decide pelo
+     * proprio vinculo de hoje. As duas perguntas sao resolvidas aqui, na camada
+     * HTTP, e o dominio recebe a resposta pronta.
+     */
+    private function podeGerir(Request $request, EscalaRef $escala): bool
+    {
+        return $this->dona->podeGerir(
+            $escala->id,
+            $this->autorizacao->contexto($request),
+            $this->autorizacao->alcanca($request, Operacoes::ESCALA_LER, $escala->ebiId),
+        );
     }
 
     /**
@@ -179,9 +196,10 @@ class VagaEscalaController
         return [$de?->utc()->toDateTimeString(), $ate?->addDay()->utc()->toDateTimeString()];
     }
 
-    private function referencia(string $escalaId): EscalaRef
+    /** Referencia da escala dona da vaga: autorizar e a partir dela, nunca so da vaga. */
+    private function referencia(string $vagaId): EscalaRef
     {
-        return $this->escalas->referencia($escalaId) ?? throw $this->naoEncontrada();
+        return $this->escalas->referenciaDaVaga($vagaId) ?? throw $this->naoEncontrada();
     }
 
     private function naoEncontrada(): ProblemException

@@ -51,12 +51,16 @@ class ConsultaEquipeEbi implements ConsultarEquipeEbi
             return [];
         }
 
+        // `fim` nulo e a autorizacao atual: quem foi revogado hoje ja nao oferece
+        // nem e escolhido. Ja ter comecado e a elegibilidade na data da equipe
+        // ou da sessao (futuro ainda nao conta); a data da sessao em si e outra
+        // pergunta (`AvaliadorEquipe::vigenteEm`).
         $hoje = now()->toDateString();
 
         $vinculos = $this->recorte($ebiId, $igrejaId)
             ->whereIn('usuario_id', $usuarioIds)
+            ->whereNull('fim')
             ->where('inicio', '<=', $hoje)
-            ->where(fn (Builder $q) => $q->whereNull('fim')->orWhere('fim', '>=', $hoje))
             ->with('papel')
             ->get();
 

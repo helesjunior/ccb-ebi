@@ -41,18 +41,23 @@ class DonaDaEscala
         return $this->equipe->escoposDeEquipeVigentes($usuarioId);
     }
 
-    public function podeGerir(string $escalaId, ContextoDecisao $ctx): bool
+    /**
+     * Supervisao so vale dentro do territorio (`$alcanca`): a chefe de outro EBI
+     * nao supervisiona esta escala nem ve os nomes das ofertantes. A dona decide
+     * pelo proprio vinculo de coordenadora, vigente hoje.
+     */
+    public function podeGerir(string $escalaId, ContextoDecisao $ctx, bool $alcanca = true): bool
     {
         if (in_array($ctx->papelCodigo, self::PAPEIS_SUPERVISAO, true)) {
-            return true;
+            return $alcanca;
         }
 
-        return $ctx->papelCodigo === 'coordenadora' && $ctx->usuarioId === $this->donaId($escalaId);
+        return $this->podeEscolherOferta($escalaId, $ctx);
     }
 
-    public function garantirGerir(string $escalaId, ContextoDecisao $ctx): void
+    public function garantirGerir(string $escalaId, ContextoDecisao $ctx, bool $alcanca = true): void
     {
-        if (! $this->podeGerir($escalaId, $ctx)) {
+        if (! $this->podeGerir($escalaId, $ctx, $alcanca)) {
             throw new ProblemException(
                 'nao_e_dona_da_escala',
                 'Acesso negado',

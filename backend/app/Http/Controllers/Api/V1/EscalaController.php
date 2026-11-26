@@ -132,7 +132,7 @@ class EscalaController
 
         $visao = $visaoAmpla
             ? EscalaVisao::interna($this->autorId($request))
-            : $this->autorizacao->visao($request, $this->consulta->ebisEmConflito($referencia->id));
+            : $this->autorizacao->visao($request, $this->consulta->ebisEmConflito($referencia->id), $referencia->ebiId);
         $detalhe = $this->consulta->detalhe($referencia->id, $visao);
         if ($detalhe === null) {
             throw $this->naoEncontrada();

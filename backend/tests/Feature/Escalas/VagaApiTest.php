@@ -7,8 +7,11 @@ use App\Domain\Escalas\Models\EscalaMembro;
 use App\Domain\Escalas\Models\OfertaVagaEscala;
 use App\Domain\Escalas\Models\VagaEscala;
 use App\Domain\Identidade\Models\Usuario;
+use App\Domain\Identidade\Models\VinculoAcesso;
 use App\Domain\Organizacao\Models\Ebi;
 use App\Domain\Organizacao\Models\Igreja;
+use App\Domain\Organizacao\Models\Regional;
+use App\Domain\Organizacao\Models\Setor;
 use App\Domain\Sessoes\Models\Sessao;
 use Database\Seeders\PapelSeeder;
 
@@ -134,18 +137,24 @@ it('chefe nao escolhe a oferta (so a dona)', function () {
         ->assertJsonPath('code', 'nao_e_dona_da_escala');
 });
 
-it('leitor sem gerir ve a contagem, nunca quem se ofereceu nem quem foi escolhido', function () {
+it('leitor sem gerir ve a contagem e quem foi escolhido, nunca quem so se ofereceu', function () {
     $c = cenarioVaga();
     $quem = ofertante($c);
 
     $this->postJson("/api/v1/schedule-vacancies/{$c['vaga']->id}/offers", [], authEscala($quem))->assertStatus(201);
-
     $this->app['auth']->forgetGuards();
+
+    // Escolhido e fato publico do EBI; os nao escolhidos continuam sigilo.
+    $this->postJson("/api/v1/schedule-vacancies/{$c['vaga']->id}/choose", ['oferta_id' => OfertaVagaEscala::query()->where('vaga_id', $c['vaga']->id)->value('id')], authEscala($c['coord']))
+        ->assertOk();
+    $this->app['auth']->forgetGuards();
+
     $this->getJson("/api/v1/schedule-vacancies/{$c['vaga']->id}", authEscala($c['ministro']))
         ->assertOk()
-        ->assertJsonPath('data.ofertas_pendentes', 1)
-        ->assertJsonMissingPath('data.ofertas')
-        ->assertJsonMissingPath('data.escolhido_nome');
+        ->assertJsonPath('data.status', 'preenchida')
+        ->assertJsonPath('data.ofertas_pendentes', 0)
+        ->assertJsonPath('data.escolhido_nome', $quem->nome)
+        ->assertJsonMissingPath('data.ofertas');
 });
 
 it('sem escala.ler a pessoa so ve a propria oferta', function () {
@@ -226,6 +235,15 @@ it('detalhe da escala traz as vagas com os nomes para quem gere e sem eles para 
         ->assertOk()
         ->assertJsonPath('escala.vagas.0.ofertas_pendentes', 1)
         ->assertJsonMissingPath('escala.vagas.0.ofertas');
+
+    // Membros da escala entram pela excecao de propriedade: cartao publico.
+    $this->app['auth']->forgetGuards();
+    $this->getJson("/api/v1/schedules/{$c['escala']->id}", authEscala($c['auxi']))
+        ->assertOk()
+        ->assertJsonPath('escala.vagas.0.id', $c['vaga']->id)
+        ->assertJsonMissingPath('escala.vagas.0.ofertas_pendentes')
+        ->assertJsonMissingPath('escala.vagas.0.substituido_nome')
+        ->assertDontSee($quem->nome);
 });
 
 it('pessoa retira a propria oferta; oferta alheia responde 404', function () {
@@ -264,6 +282,135 @@ it('vaga inexistente responde 404', function () {
 
     $this->getJson('/api/v1/schedule-vacancies/vaga-inexistente', authEscala($c['coord']))
         ->assertStatus(404);
+});
+
+/**
+ * Achado da revisao: o cartao decidia a projecao so pelo papel, e a chefe de
+ * outro territorio (que nao alcanca a escala) recebia os nomes das ofertantes.
+ */
+it('chefe e adm_igreja de fora do territorio veem so o cartao publico da vaga', function () {
+    $c = cenarioVaga();
+    $quem = ofertante($c);
+
+    $this->postJson("/api/v1/schedule-vacancies/{$c['vaga']->id}/offers", [], authEscala($quem))->assertStatus(201);
+    $this->app['auth']->forgetGuards();
+
+    $irma = igrejaNoSetor(Setor::factory()->create(['regional_id' => Regional::factory()->create()->id]));
+    $outraIgreja = $irma['igreja'];
+    $outroEbi = $irma['ebi'];
+
+    foreach ([['coordenadora_chefe', 'ebi', $outroEbi->id], ['adm_igreja', 'igreja', $outraIgreja->id]] as [$papel, $tipo, $escopoId]) {
+        $this->app['auth']->forgetGuards();
+        $forasteiro = membroEscala($papel, $tipo, $escopoId);
+
+        $this->getJson("/api/v1/schedule-vacancies/{$c['vaga']->id}", authEscala($forasteiro))
+            ->assertOk()
+            ->assertJsonPath('data.escolhido_nome', null)
+            ->assertJsonMissingPath('data.ofertas')
+            ->assertJsonMissingPath('data.ofertas_pendentes')
+            ->assertDontSee($quem->nome);
+    }
+});
+
+it('a dona que perdeu o vinculo de coordenadora hoje nao recebe os nomes das ofertas', function () {
+    $c = cenarioVaga();
+    $quem = ofertante($c);
+
+    $this->postJson("/api/v1/schedule-vacancies/{$c['vaga']->id}/offers", [], authEscala($quem))->assertStatus(201);
+    $this->app['auth']->forgetGuards();
+
+    // Vinculo da dona com o EBI encerrado hoje: ela nao escolhe nem ve os nomes.
+    VinculoAcesso::query()
+        ->where('usuario_id', $c['coord']->id)
+        ->update(['fim' => now()->toDateString()]);
+
+    $this->getJson("/api/v1/schedule-vacancies/{$c['vaga']->id}", authEscala($c['coord']))
+        ->assertOk()
+        ->assertJsonPath('data.escolhido_nome', null)
+        ->assertJsonMissingPath('data.ofertas')
+        ->assertDontSee($quem->nome);
+});
+
+it('pessoa revogada hoje nao oferece nem e escolhida', function () {
+    $c = cenarioVaga();
+    $quem = ofertante($c);
+    $id = $c['vaga']->id;
+
+    $this->postJson("/api/v1/schedule-vacancies/{$id}/offers", [], authEscala($quem))->assertStatus(201);
+    $oferta = OfertaVagaEscala::query()->where('vaga_id', $id)->firstOrFail();
+
+    // `fim = hoje` e como o revogar grava: ja nao e vinculo de equipe vigente.
+    VinculoAcesso::query()
+        ->where('usuario_id', $quem->id)
+        ->update(['fim' => now()->toDateString()]);
+
+    $this->app['auth']->forgetGuards();
+    $this->postJson("/api/v1/schedule-vacancies/{$id}/offers", [], authEscala($quem))
+        ->assertStatus(404);
+
+    $this->app['auth']->forgetGuards();
+    $this->postJson("/api/v1/schedule-vacancies/{$id}/choose", ['oferta_id' => $oferta->id], authEscala($c['coord']))
+        ->assertStatus(422)
+        ->assertJsonPath('code', 'membro_inelegivel');
+
+    expect($c['vaga']->fresh()->status)->toBe(VagaEscala::STATUS_ABERTA)
+        ->and($oferta->fresh()->status)->toBe(OfertaVagaEscala::STATUS_PENDENTE)
+        ->and(EscalaMembro::query()->where('escala_id', $c['escala']->id)->where('usuario_id', $quem->id)->exists())->toBeFalse();
+});
+
+it('a dona ve quem e substituido e todas as ofertas, inclusive retiradas', function () {
+    $c = cenarioVaga();
+    $original = EscalaMembro::query()->where('escala_id', $c['escala']->id)->where('usuario_id', $c['auxi']->id)->firstOrFail();
+    $desiste = ofertante($c);
+
+    $this->postJson("/api/v1/schedules/{$c['escala']->id}/vacancies", ['substitui_membro_id' => $original->id], authEscala($c['coord']))
+        ->assertStatus(201);
+    $vaga = VagaEscala::query()->where('substitui_membro_id', $original->id)->firstOrFail();
+
+    $this->app['auth']->forgetGuards();
+    $this->postJson("/api/v1/schedule-vacancies/{$vaga->id}/offers", [], authEscala($desiste))->assertStatus(201);
+    $oferta = OfertaVagaEscala::query()->where('vaga_id', $vaga->id)->firstOrFail();
+
+    $this->app['auth']->forgetGuards();
+    $this->deleteJson("/api/v1/schedule-vacancy-offers/{$oferta->id}", [], authEscala($desiste))->assertNoContent();
+
+    $this->app['auth']->forgetGuards();
+    $this->getJson("/api/v1/schedule-vacancies/{$vaga->id}", authEscala($c['coord']))
+        ->assertOk()
+        ->assertJsonPath('data.substituido_nome', $c['auxi']->nome)
+        ->assertJsonPath('data.ofertas.0.id', $oferta->id)
+        ->assertJsonPath('data.ofertas.0.status', 'retirada');
+});
+
+it('escolher com oferta de outra vaga responde 422 e nao preenche nada', function () {
+    $c = cenarioVaga();
+    $quem = ofertante($c);
+
+    $this->postJson("/api/v1/schedule-vacancies/{$c['vaga']->id}/offers", [], authEscala($quem))->assertStatus(201);
+    $oferta = OfertaVagaEscala::query()->where('vaga_id', $c['vaga']->id)->firstOrFail();
+
+    $outra = VagaEscala::query()->create([
+        'escala_id' => $c['escala']->id,
+        'funcao' => EscalaMembro::FUNCAO_AUXILIAR,
+        'status' => VagaEscala::STATUS_ABERTA,
+        'aberta_por' => $c['coord']->id,
+    ]);
+
+    $this->app['auth']->forgetGuards();
+    $this->postJson("/api/v1/schedule-vacancies/{$outra->id}/choose", ['oferta_id' => $oferta->id], authEscala($c['coord']))
+        ->assertStatus(422)
+        ->assertJsonPath('code', 'oferta_invalida');
+
+    expect($outra->fresh()->status)->toBe(VagaEscala::STATUS_ABERTA)
+        ->and($oferta->fresh()->status)->toBe(OfertaVagaEscala::STATUS_PENDENTE);
+});
+
+it('escolher com oferta inexistente responde 404 e nao quebra', function () {
+    $c = cenarioVaga();
+
+    $this->postJson("/api/v1/schedule-vacancies/{$c['vaga']->id}/choose", ['oferta_id' => 'oferta-inexistente'], authEscala($c['coord']))
+        ->assertStatus(422)
+        ->assertJsonPath('code', 'oferta_invalida');
 });
 
 it('substituicao escolhida marca o original como substituido', function () {
