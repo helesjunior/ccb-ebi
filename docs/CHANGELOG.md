@@ -2,6 +2,15 @@
 
 Formato: versão, data, autor e mudanças. Itens mais recentes primeiro.
 
+## 2.21 — 26/11/2026
+
+Dívidas da Etapa 6: escopo de mesclagem/correção (CA-27) e finalidade nas leituras de presença.
+
+- **Escopo de mesclagem (CA-27, ADR-0027):** cadastro "ligado" ao ator pela igreja de referência ou, sem igreja, por presença `valida` em EBI do escopo. A coordenadora mescla e desfaz só com os dois cadastros ligados; a coordenadora chefe, com um.
+- **Correção de cadastro:** nova rota `PATCH /participants/{id}` (`participante.corrigir`), com `motivo` obrigatório, auditoria com escopo e estado anterior, `409 participante_mesclado`, `422 nada_a_corrigir` e `422 igreja_fora_do_escopo`. A correção do principal sobrevive ao desfazer da mesclagem. Só API, sem tela.
+- **Finalidade nas leituras de presença:** `GET /sessions/{id}/attendance` e `GET /participants/{id}/attendance` exigem `finalidade` (`422 finalidade_obrigatoria`/`finalidade_invalida`) e auditam `presenca.lida`; o responsável fica isento. O portal envia `registro_presenca` e `consulta_historico`.
+- **Dívidas:** `escopo` nos eventos de mesclagem e cadastro; tela de correção.
+
 ## 2.20 — 25/11/2026
 
 Etapa 7 — correção do modelo de escalas: equipe da coordenadora e vaga (E07, RF-07).
