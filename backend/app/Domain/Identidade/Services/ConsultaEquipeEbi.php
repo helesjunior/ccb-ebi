@@ -45,6 +45,37 @@ class ConsultaEquipeEbi implements ConsultarEquipeEbi
         return $porUsuario;
     }
 
+    public function papeisVigentesHoje(array $usuarioIds, string $ebiId, string $igrejaId): array
+    {
+        if ($usuarioIds === []) {
+            return [];
+        }
+
+        // `fim` nulo e a autorizacao atual: quem foi revogado hoje ja nao oferece
+        // nem e escolhido. Ja ter comecado e a elegibilidade na data da equipe
+        // ou da sessao (futuro ainda nao conta); a data da sessao em si e outra
+        // pergunta (`AvaliadorEquipe::vigenteEm`).
+        $hoje = now()->toDateString();
+
+        $vinculos = $this->recorte($ebiId, $igrejaId)
+            ->whereIn('usuario_id', $usuarioIds)
+            ->whereNull('fim')
+            ->where('inicio', '<=', $hoje)
+            ->with('papel')
+            ->get();
+
+        $porUsuario = [];
+
+        foreach ($vinculos as $vinculo) {
+            $porUsuario[(string) $vinculo->usuario_id][(string) $vinculo->papel?->codigo] = true;
+        }
+
+        return array_map(
+            fn (array $papeis): array => array_map('strval', array_keys($papeis)),
+            $porUsuario,
+        );
+    }
+
     public function vigencias(array $usuarioIds, string $ebiId, string $igrejaId): array
     {
         if ($usuarioIds === []) {
@@ -89,6 +120,36 @@ class ConsultaEquipeEbi implements ConsultarEquipeEbi
             ->whereIn('id', $usuarioIds)
             ->pluck('nome', 'id')
             ->map(fn ($nome): string => (string) $nome)
+            ->all();
+    }
+
+    public function escoposDeEquipeVigentes(string $usuarioId): array
+    {
+        return array_values(array_map(
+            fn (VinculoAcesso $vinculo): array => [
+                'ebi_id' => $vinculo->tipo_escopo === 'ebi' ? (string) $vinculo->escopo_id : null,
+                'igreja_id' => $vinculo->tipo_escopo === 'igreja' ? (string) $vinculo->escopo_id : '',
+            ],
+            $this->vinculosDeEquipeVigentes($usuarioId),
+        ));
+    }
+
+    /**
+     * @return array<int, VinculoAcesso>
+     */
+    private function vinculosDeEquipeVigentes(string $usuarioId): array
+    {
+        $papeis = Papel::query()->whereIn('codigo', self::PAPEIS_EQUIPE)->select('id');
+
+        return VinculoAcesso::query()
+            ->where('usuario_id', $usuarioId)
+            ->whereNull('fim')
+            ->whereIn('papel_id', $papeis)
+            ->get()
+            // Papel na igreja vale para todas as EBIs dela; a vaga traz o EBI e
+            // a igreja da escala, entao o filtro aceita os dois escopos.
+            ->unique(fn (VinculoAcesso $v): string => $v->tipo_escopo.':'.$v->escopo_id)
+            ->values()
             ->all();
     }
 

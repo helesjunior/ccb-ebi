@@ -6,7 +6,11 @@ import type { components } from '../api/schema'
 import {
   confirmarVaga,
   minhasEscalas,
+  minhasVagas,
+  oferecer,
   pedirTroca,
+  retirarOferta,
+  type VagaEscala,
 } from '../api/escalas'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -14,7 +18,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { formatarData, formatarHora, hojeIso, rotuloSituacaoMembro } from '@/lib/formatos'
+import { formatarData, formatarHora, hojeIso, rotuloSituacaoMembro, rotuloTipoVaga } from '@/lib/formatos'
 
 type MinhaEscala = components['schemas']['MinhaEscala']
 
@@ -45,13 +49,15 @@ export function MinhasEscalas() {
   const [enviando, setEnviando] = useState(false)
   const [motivo, setMotivo] = useState('')
   const [pedindoTroca, setPedindoTroca] = useState<string | null>(null)
+  const [vagas, setVagas] = useState<VagaEscala[]>([])
 
   async function carregar(mostrarCarregando = false) {
     if (mostrarCarregando) setCarregando(true)
     setErro(null)
-    const { data, error } = await minhasEscalas(inicio, fim)
+    const [{ data, error }, abertas] = await Promise.all([minhasEscalas(inicio, fim), minhasVagas(inicio, fim)])
     if (error) setErro(lerErro(error, 'Não foi possível carregar suas escalas.').detail)
     setLinhas(data ?? [])
+    setVagas(abertas.data ?? [])
     setCarregando(false)
   }
 
@@ -89,9 +95,102 @@ export function MinhasEscalas() {
 
   const hoje = hojeIso()
 
+  async function oferecerSe(vagaId: string) {
+    setEnviando(true)
+    setErro(null)
+    const { data, error } = await oferecer(vagaId)
+    setEnviando(false)
+    if (error) {
+      setErro(lerErro(error, 'Não foi possível se oferecer.').detail)
+      return
+    }
+    setVagas((lista) => lista.map((v) => (v.id === vagaId ? (data ?? v) : v)))
+    toast.success('Oferta enviada; a coordenadora dona da escala escolhe.')
+  }
+
+  async function retirarMinhaOferta(ofertaId: string) {
+    setEnviando(true)
+    setErro(null)
+    const { error } = await retirarOferta(ofertaId)
+    setEnviando(false)
+    if (error) {
+      setErro(lerErro(error, 'Não foi possível retirar a oferta.').detail)
+      return
+    }
+    toast.success('Oferta retirada.')
+    await carregar()
+  }
+
   return (
     <section className="mx-auto flex max-w-4xl flex-col gap-6">
       {erro && <Alert variant="destructive" role="alert"><AlertDescription>{erro}</AlertDescription></Alert>}
+      {vagas.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Vagas abertas</CardTitle>
+            <CardDescription>
+              Escalas de outros times que precisam de gente. A coordenadora dona da escala escolhe quem entra;
+              ela não vê os nomes de quem não foi escolhido.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul className="flex flex-col gap-3">
+              {vagas.map((vaga) => {
+                const oferta = vaga.minha_oferta
+                return (
+                  <li key={vaga.id} className="flex flex-col gap-2 rounded-md border p-3">
+                    <div className="flex flex-wrap items-center gap-2 text-sm">
+                      <span className="font-medium">
+                        {formatarData(vaga.sessao?.inicio_previsto)} {formatarHora(vaga.sessao?.inicio_previsto)} – {formatarHora(vaga.sessao?.fim_previsto)}
+                      </span>
+                      <Badge variant="outline">{rotuloTipoVaga(vaga.tipo)}</Badge>
+                      {vaga.ebi_nome && <span className="text-muted-foreground">{vaga.ebi_nome}</span>}
+                      {vaga.dona_nome && <span className="text-muted-foreground">· {vaga.dona_nome}</span>}
+                    </div>
+                    {vaga.observacao && <p className="text-sm">{vaga.observacao}</p>}
+                    {(vaga.conflitos ?? []).length > 0 && (
+                      <div className="text-xs text-muted-foreground">
+                        <p className="font-medium text-foreground">Conflito de horário:</p>
+                        {(vaga.conflitos ?? []).map((c) => (
+                          <p key={`${c.inicio}-${c.fim}`}>
+                            {formatarData(c.inicio)} {formatarHora(c.inicio)} – {formatarHora(c.fim)}
+                            {c.ebi_nome ? ` · ${c.ebi_nome}` : ''}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                    {oferta ? (
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-sm text-muted-foreground">
+                          {oferta.status === 'aceita'
+                            ? 'Você foi escolhida.'
+                            : 'Você se ofereceu; aguardando a coordenação escolher.'}
+                        </span>
+                        {oferta.status === 'pendente' && oferta.id && (
+                          <Button type="button" variant="outline" size="sm" disabled={enviando} onClick={() => void retirarMinhaOferta(oferta.id!)}>
+                            Retirar oferta
+                          </Button>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Button type="button" size="sm" disabled={enviando} onClick={() => void oferecerSe(vaga.id!)}>
+                          Oferecer-se
+                        </Button>
+                        {(vaga.ofertas_pendentes ?? 0) > 0 && (
+                          <span className="text-xs text-muted-foreground">
+                            {vaga.ofertas_pendentes} {(vaga.ofertas_pendentes ?? 0) === 1 ? 'pessoa já se ofereceu' : 'pessoas já se ofereceram'}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </li>
+                )
+              })}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
       <Card>
         <CardHeader>
           <CardTitle>Minhas escalas</CardTitle>

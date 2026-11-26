@@ -27,4 +27,12 @@ describe('navegacao', () => {
     expect(ids(['auxiliar'])).toContain('minhas-escalas')
     expect(ids(['ministerio_local'])).not.toContain('minhas-escalas')
   })
+
+  it('Equipes de escala aparece para coordenadora, chefe e adm_igreja', () => {
+    for (const papel of ['coordenadora', 'coordenadora_chefe', 'adm_igreja']) {
+      expect(ids([papel])).toContain('equipes-escala')
+    }
+    // O auxiliar se oferece as vagas, mas nao gerencia equipes.
+    expect(ids(['auxiliar'])).not.toContain('equipes-escala')
+  })
 })

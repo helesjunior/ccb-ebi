@@ -79,9 +79,13 @@ Proposta inicial, prefixo `/api/v1`. Rotas marcadas *novo* não existiam na vers
 | GET | `/sessions/{id}/attendance` | Presenças da sessão *novo* (`no OpenAPI`) | RF-08 |
 | POST | `/attendance/{id}/reversal` | Estornar presença *novo* (`no OpenAPI`) | RF-08 |
 | GET | `/ebis/{id}/team` | Equipe do EBI para a escala *novo (E07)* (`no OpenAPI`) | RF-07 |
+| GET/POST | `/ebis/{id}/equipes` | Equipes de escala do EBI e criacao da equipe de uma coordenadora *novo (E07, evolucao)* (`no OpenAPI`) | RF-07 |
+| GET | `/equipes/{id}` | Detalhe da equipe da coordenadora *novo (E07, evolucao)* (`no OpenAPI`) | RF-07 |
+| POST | `/equipes/{id}/members` | Incluir auxiliar na equipe da coordenadora *novo (E07, evolucao)* (`no OpenAPI`) | RF-07 |
+| DELETE | `/equipes/{id}/members/{usuarioId}` | Retirar auxiliar da equipe da coordenadora *novo (E07, evolucao)* (`no OpenAPI`) | RF-07 |
 | GET | `/ebis/{id}/schedules` | Consultar escala (era `/roster`) *novo (E07)* (`no OpenAPI`) | RF-07 |
-| POST | `/sessions/{id}/schedules` | Criar escala *novo (E07)* (`no OpenAPI`) | RF-07 |
-| GET/PATCH | `/schedules/{id}` | Detalhe e estimativa da escala *novo (E07)* (`no OpenAPI`) | RF-07 |
+| POST | `/sessions/{id}/schedules` | Criar escala, a partir da equipe da coordenadora (`equipe_id` obrigatório) *novo (E07)* (`no OpenAPI`) | RF-07 |
+| GET/PATCH | `/schedules/{id}` | Detalhe (com `equipe`, `pode_gerir`, `pode_escolher_oferta`) e estimativa da escala *novo (E07)* (`no OpenAPI`) | RF-07 |
 | POST | `/schedules/{id}/members` | Incluir membro na escala *novo (E07)* (`no OpenAPI`) | RF-07 |
 | PATCH/DELETE | `/schedule-members/{id}` | Mudar funcao e retirar membro *novo (E07)* (`no OpenAPI`) | RF-07 |
 | POST | `/schedules/{id}/approve` | Aprovação pela coordenadora chefe (sem chefe, `adm_igreja`) *novo (E07)* (`no OpenAPI`) | RF-07 |
@@ -92,6 +96,14 @@ Proposta inicial, prefixo `/api/v1`. Rotas marcadas *novo* não existiam na vers
 | GET | `/schedule-swaps` | Trocas do EBI, por `ebi_id` e opcional `status` *novo (E07)* (`no OpenAPI`) | RF-07 |
 | PATCH | `/schedule-swaps/{id}` | Aprovar ou recusar a troca *novo (E07)* (`no OpenAPI`) | RF-07 |
 | POST | `/schedule-swaps/{id}/cancel` | Cancelar o próprio pedido de troca *novo (E07)* (`no OpenAPI`) | RF-07 |
+| GET | `/schedule-vacancies` | Vagas do EBI, por `ebi_id`, opcionais `status`, `inicio` e `fim` *novo (E07, evolucao)* (`no OpenAPI`) | RF-07 |
+| GET | `/me/schedule-vacancies` | Vagas abertas para a própria pessoa se oferecer (máx. 92 dias) *novo (E07, evolucao)* (`no OpenAPI`) | RF-07 |
+| GET | `/schedule-vacancies/{id}` | Cartão da vaga, com projeção por leitor *novo (E07, evolucao)* (`no OpenAPI`) | RF-07 |
+| POST | `/schedules/{id}/vacancies` | Abrir vaga de acréscimo ou de substituição *novo (E07, evolucao)* (`no OpenAPI`) | RF-07 |
+| POST | `/schedule-vacancies/{id}/cancel` | Dona ou supervisão cancela a vaga *novo (E07, evolucao)* (`no OpenAPI`) | RF-07 |
+| POST | `/schedule-vacancies/{id}/offers` | Pessoa da equipe se oferece *novo (E07, evolucao)* (`no OpenAPI`) | RF-07 |
+| DELETE | `/schedule-vacancy-offers/{id}` | Retirar a própria oferta *novo (E07, evolucao)* (`no OpenAPI`) | RF-07 |
+| POST | `/schedule-vacancies/{id}/choose` | Dona escolhe a oferta; a pessoa entra confirmada *novo (E07, evolucao)* (`no OpenAPI`) | RF-07 |
 | POST | `/sessions/{id}/feedback` | Registrar feedback | RF-09 |
 | POST | `/feedback/{id}/moderation` | Ministério Local libera ou devolve *novo* | RF-09 |
 | GET | `/me/ebis` | EBIs que o usuário pode operar *novo* (`no OpenAPI`) | RF-06 |
@@ -101,7 +113,7 @@ Proposta inicial, prefixo `/api/v1`. Rotas marcadas *novo* não existiam na vers
 | DELETE | `/agenda-exceptions/{id}` | Remover exceção *novo* (`no OpenAPI`) | RF-06 |
 | GET | `/ebis/{id}/sessions` | Sessões do EBI no período (`no OpenAPI`) | RF-06 |
 | POST | `/ebis/{id}/sessions/generate` | Gerar sessões previstas *novo* (`no OpenAPI`) | RF-06 |
-| GET/PATCH | `/sessions/{id}` | Detalhe e correção da sessão *novo* (`no OpenAPI`) | RF-06 |
+| GET/PATCH | `/sessions/{id}` | Detalhe (com `escala_id` para a presença da equipe) e correção da sessão *novo* (`no OpenAPI`) | RF-06 |
 | POST | `/sessions/{id}/open`, `/sessions/{id}/close`, `/sessions/{id}/cancel` | Ciclo da sessão *novo* (`no OpenAPI`) | RF-06 |
 | GET | `/sessions/{id}/participants` | Buscar participantes elegíveis na sessão (finalidade obrigatória) *novo* (`no OpenAPI`) | RF-08 |
 | POST | `/sessions/{id}/contingency-attendance` | Lançar presença de lista em papel *novo* (`no OpenAPI`) | RNF-03 |

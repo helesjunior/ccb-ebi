@@ -15,7 +15,72 @@ type MinhaEscala = components['schemas']['MinhaEscala']
 type TrocaEscala = components['schemas']['TrocaEscala']
 
 type MembroDaEquipe = components['schemas']['MembroEquipe']
-export type { MembroDaEquipe }/** Sessões do EBI no período com a situação da escala. */
+type Equipe = components['schemas']['Equipe']
+type EquipeResumo = components['schemas']['EquipeResumo']
+export type { MembroDaEquipe, Equipe, EquipeResumo }
+
+/** Equipes de escala do EBI (uma por coordenadora). */
+export async function listarEquipes(
+  ebiId: string,
+  signal?: AbortSignal,
+): Promise<{ data?: EquipeResumo[]; error?: unknown }> {
+  const { data, error } = await api.GET('/ebis/{id}/equipes', {
+    params: { path: { id: ebiId } },
+    headers: cabecalhos(),
+    signal,
+  })
+  return { data: data?.data, error }
+}
+
+/** Equipe com os membros e se cada um ainda tem vínculo. */
+export async function obterEquipe(
+  equipeId: string,
+  signal?: AbortSignal,
+): Promise<{ data?: Equipe; error?: unknown }> {
+  const { data, error } = await api.GET('/equipes/{id}', {
+    params: { path: { id: equipeId } },
+    headers: cabecalhos(),
+    signal,
+  })
+  return { data: data?.data, error }
+}
+
+export async function criarEquipe(
+  ebiId: string,
+  coordenadoraId: string,
+): Promise<{ data?: Equipe; error?: unknown }> {
+  const { data, error } = await api.POST('/ebis/{id}/equipes', {
+    params: { path: { id: ebiId } },
+    headers: cabecalhos(),
+    body: { coordenadora_id: coordenadoraId },
+  })
+  return { data: data?.data, error }
+}
+
+export async function incluirMembroEquipe(
+  equipeId: string,
+  usuarioId: string,
+): Promise<{ data?: Equipe; error?: unknown }> {
+  const { data, error } = await api.POST('/equipes/{id}/members', {
+    params: { path: { id: equipeId } },
+    headers: cabecalhos(),
+    body: { usuario_id: usuarioId },
+  })
+  return { data: data?.data, error }
+}
+
+export async function retirarMembroEquipe(
+  equipeId: string,
+  usuarioId: string,
+): Promise<{ data?: Equipe; error?: unknown }> {
+  const { data, error } = await api.DELETE('/equipes/{id}/members/{usuarioId}', {
+    params: { path: { id: equipeId, usuarioId } },
+    headers: cabecalhos(),
+  })
+  return { data: data?.data, error }
+}
+
+/** Sessões do EBI no período com a situação da escala. */
 export async function listarEscalas(
   ebiId: string,
   inicio: string,
@@ -60,13 +125,96 @@ export async function criarEscala(
   sessaoId: string,
   estimativa: number,
   membros: { usuario_id: string; funcao: 'coordenadora' | 'auxiliar' }[] = [],
+  equipeId = '', // TODO(Tarefa 13): substituir pela equipe da dona
 ): Promise<{ data?: Escala; error?: unknown }> {
   const { data, error } = await api.POST('/sessions/{id}/schedules', {
     params: { path: { id: sessaoId } },
     headers: cabecalhos(),
-    body: { estimativa_participantes: estimativa, membros },
+    body: { equipe_id: equipeId, estimativa_participantes: estimativa, membros },
   })
   return { data: data?.escala, error }
+}
+
+type VagaEscala = components['schemas']['VagaEscala']
+type OfertaDaVaga = NonNullable<VagaEscala['ofertas']>[number]
+export type { VagaEscala, OfertaDaVaga }
+
+/** Abre vaga na escala: acréscimo (sem membro) ou substituição de um membro. */
+export async function abrirVaga(
+  escalaId: string,
+  corpo: { substitui_membro_id?: string | null; observacao?: string | null },
+): Promise<{ data?: VagaEscala; error?: unknown }> {
+  const { data, error } = await api.POST('/schedules/{id}/vacancies', {
+    params: { path: { id: escalaId } },
+    headers: cabecalhos(),
+    body: { substitui_membro_id: corpo.substitui_membro_id ?? null, observacao: corpo.observacao ?? null },
+  })
+  return { data: data?.data, error }
+}
+
+export async function cancelarVaga(vagaId: string): Promise<{ data?: VagaEscala; error?: unknown }> {
+  const { data, error } = await api.POST('/schedule-vacancies/{id}/cancel', {
+    params: { path: { id: vagaId } },
+    headers: cabecalhos(),
+  })
+  return { data: data?.data, error }
+}
+
+/** Vagas do EBI, já ordenadas pelo início da sessão. */
+export async function listarVagasEbi(
+  ebiId: string,
+  filtro: { status?: 'aberta' | 'preenchida' | 'cancelada'; inicio?: string; fim?: string } = {},
+  signal?: AbortSignal,
+): Promise<{ data?: VagaEscala[]; error?: unknown }> {
+  const { data, error } = await api.GET('/schedule-vacancies', {
+    params: { query: { ebi_id: ebiId, ...filtro } },
+    headers: cabecalhos(),
+    signal,
+  })
+  return { data: data?.data, error }
+}
+
+/** Vagas abertas em que a própria pessoa pode se oferecer. */
+export async function minhasVagas(
+  inicio: string,
+  fim: string,
+  signal?: AbortSignal,
+): Promise<{ data?: VagaEscala[]; error?: unknown }> {
+  const { data, error } = await api.GET('/me/schedule-vacancies', {
+    params: { query: { inicio, fim } },
+    headers: cabecalhos(),
+    signal,
+  })
+  return { data: data?.data, error }
+}
+
+export async function oferecer(vagaId: string): Promise<{ data?: VagaEscala; error?: unknown }> {
+  const { data, error } = await api.POST('/schedule-vacancies/{id}/offers', {
+    params: { path: { id: vagaId } },
+    headers: cabecalhos(),
+  })
+  return { data: data?.data, error }
+}
+
+export async function retirarOferta(ofertaId: string): Promise<{ error?: unknown }> {
+  const { error } = await api.DELETE('/schedule-vacancy-offers/{id}', {
+    params: { path: { id: ofertaId } },
+    headers: cabecalhos(),
+  })
+  return { error }
+}
+
+/** A dona escolhe quem preenche a vaga; a pessoa entra já confirmada. */
+export async function escolherOferta(
+  vagaId: string,
+  ofertaId: string,
+): Promise<{ data?: VagaEscala; membroId?: string; error?: unknown }> {
+  const { data, error } = await api.POST('/schedule-vacancies/{id}/choose', {
+    params: { path: { id: vagaId } },
+    headers: cabecalhos(),
+    body: { oferta_id: ofertaId },
+  })
+  return { data: data?.data, membroId: data?.membro_id, error }
 }
 
 export async function alterarEstimativa(

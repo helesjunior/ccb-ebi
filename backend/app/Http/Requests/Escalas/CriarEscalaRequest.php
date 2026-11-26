@@ -16,6 +16,7 @@ class CriarEscalaRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'equipe_id' => ['required', 'string', 'max:26'],
             'estimativa_participantes' => ['required', 'integer', 'min:0', 'max:65535'],
             'membros' => ['sometimes', 'array'],
             'membros.*.usuario_id' => ['required', 'string', 'max:26'],

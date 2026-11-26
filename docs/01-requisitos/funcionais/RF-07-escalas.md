@@ -9,11 +9,23 @@
 4. Permitir confirmação e pedido de troca pela equipe.
 5. Notificar a equipe sobre novas escalas, alterações e lembretes, conforme preferências. *(pendente: não entra na E07)*
 6. Manter histórico de escala planejada versus cumprida: o relatório compara a escala aprovada com a presença registrada e o M-06 mostra a cobertura.
+7. Cada coordenadora monta e mantém a **própria equipe** de auxiliares; uma auxiliar pode servir a mais de uma coordenadora. A escala nasce de uma dessas equipes e pertence à equipe: a dona da equipe é a dona da escala ([ADR-0034](../../06-arquitetura/decisoes/ADR-0034-equipes-da-coordenadora-e-vaga-de-escala.md)).
+8. A escala cresce no dia: incluir membro depois de aprovada **preserva a aprovação**; retirar membro, mudar função ou estimativa faz voltar a `prevista`.
+9. Faltas: a dona abre uma **vaga**, visível a todos os auxiliares do EBI; cada um pode se oferecer, e **só a dona escolhe**. Quem é escolhida entra já `confirmado`. A chefe é avisada e não aprova a vaga.
+
+## Critérios de aceite novos
+- Toda escala tem uma equipe dona (`equipe_id` obrigatório); sem equipe da coordenadora, montar oferece o atalho "Criar minha equipe".
+- Montar pré-seleciona a dona como coordenadora e os membros vigentes da equipe como auxiliares, numa chamada só.
+- Incluir membro numa escala `aprovada` mantém `aprovada`, `aprovado_por`/`aprovado_em` e as trocas pendentes.
+- Só a dona abre, cancela e escolhe vaga (chefe e `adm_igreja` recebem `403 nao_e_dona_da_escala`).
+- A vaga aberta aparece em "Minhas escalas" de quem tem vínculo vigente no EBI/igreja da sessão e **não** está na escala; oferecer e retirar a própria oferta funcionam.
+- A pessoa escolhida entra `confirmado` sem nova confirmação; a vaga vira `preenchida` e as demais ofertas `descartada`.
+- A supervisão (`ministerio_local` e acima) vê a contagem de ofertas e quem foi escolhida, **nunca** os nomes de quem não foi escolhida.
 
 ## Relacionados
 - Fluxos: [FL-04](../fluxos/FL-04-escala.md)
 - Critérios de aceite: [CA-12](../criterios-de-aceite.md#ca-12), [CA-20](../criterios-de-aceite.md#ca-20)
 - Métricas: [M-06](../../02-regras-de-negocio/metricas-e-indicadores.md)
-- Dados: `escala`, `escala_membro`, `solicitacao_troca_escala`, `vinculo_acesso.chefe_de_ebi_id`
-- API: `GET /ebis/{id}/schedules`, `GET /schedules/{id}`, `POST /sessions/{id}/schedules`, `POST /schedules/{id}/approve`, `/schedule-swaps`, `GET /me/schedules`
-- Decisão: [ADR-0033](../../06-arquitetura/decisoes/ADR-0033-coordenadora-chefe-e-regras-da-escala.md)
+- Dados: `equipe`, `equipe_membro`, `escala`, `escala_membro`, `solicitacao_troca_escala`, `vaga_escala`, `oferta_vaga_escala`, `vinculo_acesso.chefe_de_ebi_id`
+- API: `GET /ebis/{id}/schedules`, `GET /schedules/{id}`, `POST /sessions/{id}/schedules`, `POST /schedules/{id}/approve`, `/schedule-swaps`, `GET /me/schedules`, `GET/POST /ebis/{id}/equipes`, `GET /equipes/{id}`, `POST/DELETE /equipes/{id}/members`, `/schedule-vacancies`, `GET /me/schedule-vacancies`, `/schedule-vacancy-offers/{id}`
+- Decisão: [ADR-0033](../../06-arquitetura/decisoes/ADR-0033-coordenadora-chefe-e-regras-da-escala.md), [ADR-0034](../../06-arquitetura/decisoes/ADR-0034-equipes-da-coordenadora-e-vaga-de-escala.md)

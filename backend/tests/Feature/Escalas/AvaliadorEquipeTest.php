@@ -10,6 +10,10 @@ use App\Domain\Sessoes\Contracts\ConsultarSessao;
 use App\Domain\Sessoes\Contracts\IntervaloSessao;
 use App\Domain\Sessoes\Models\Sessao;
 use App\Support\EquipeMinima\CalculadoraEquipeMinima;
+use Database\Seeders\PapelSeeder;
+
+// A escala nasce da equipe de uma coordenadora (E07, evolucao).
+beforeEach(fn () => $this->seed(PapelSeeder::class));
 
 beforeEach(function () {
     $this->igreja = Igreja::factory()->create(['timezone' => 'America/Sao_Paulo']);

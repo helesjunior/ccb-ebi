@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CentralController;
 use App\Http\Controllers\Api\V1\ChurchController;
 use App\Http\Controllers\Api\V1\EbiController;
+use App\Http\Controllers\Api\V1\EquipeController;
 use App\Http\Controllers\Api\V1\EquipeEbiController;
 use App\Http\Controllers\Api\V1\EscalaController;
 use App\Http\Controllers\Api\V1\EscalaMembroController;
@@ -23,6 +24,7 @@ use App\Http\Controllers\Api\V1\InvitationController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MfaController;
 use App\Http\Controllers\Api\V1\MinhasEscalasController;
+use App\Http\Controllers\Api\V1\OfertaVagaController;
 use App\Http\Controllers\Api\V1\ParticipantController;
 use App\Http\Controllers\Api\V1\ParticipantMergeController;
 use App\Http\Controllers\Api\V1\PasswordController;
@@ -38,6 +40,7 @@ use App\Http\Controllers\Api\V1\SessaoController;
 use App\Http\Controllers\Api\V1\SessionController;
 use App\Http\Controllers\Api\V1\TrocaEscalaController;
 use App\Http\Controllers\Api\V1\UserController;
+use App\Http\Controllers\Api\V1\VagaEscalaController;
 use App\Http\Middleware\IdempotenciaMiddleware;
 use Illuminate\Support\Facades\Route;
 
@@ -213,6 +216,20 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         Route::get('ebis/{id}/team', [EquipeEbiController::class, 'index'])
             ->name('ebis.team');
 
+        // Equipes de cada coordenadora (E07, evolucao): a dona monta o
+        // proprio quadro; a escala nasce de uma delas.
+        Route::get('ebis/{id}/equipes', [EquipeController::class, 'index'])
+            ->name('ebis.equipes.index');
+        Route::middleware(IdempotenciaMiddleware::class)->group(function (): void {
+            Route::post('ebis/{id}/equipes', [EquipeController::class, 'store'])
+                ->name('ebis.equipes.store');
+            Route::post('equipes/{id}/members', [EquipeController::class, 'incluirMembro'])
+                ->name('equipes.members.store');
+            Route::delete('equipes/{id}/members/{usuarioId}', [EquipeController::class, 'retirarMembro'])
+                ->name('equipes.members.destroy');
+        });
+        Route::get('equipes/{id}', [EquipeController::class, 'show'])->name('equipes.show');
+
         // Escalas (E07, RF-07): a autorizacao e feita no controller
         // (`AutorizacaoEscala`), que distingue 403 de 404 por territorio.
         Route::get('ebis/{id}/schedules', [EscalaController::class, 'index'])
@@ -236,6 +253,24 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
                 ->name('schedules.team-attendance');
         });
         Route::get('schedules/{id}', [EscalaController::class, 'show'])->name('schedules.show');
+
+        // Vagas de escala (E07, evolucao): a dona abre e escolhe; qualquer
+        // pessoa da equipe se oferece. A leitura decide a projecao no controller.
+        Route::get('schedule-vacancies', [VagaEscalaController::class, 'index'])->name('schedule-vacancies.index');
+        Route::get('me/schedule-vacancies', [VagaEscalaController::class, 'minhas'])->name('me.schedule-vacancies');
+        Route::get('schedule-vacancies/{id}', [VagaEscalaController::class, 'show'])->name('schedule-vacancies.show');
+        Route::middleware(IdempotenciaMiddleware::class)->group(function (): void {
+            Route::post('schedules/{id}/vacancies', [VagaEscalaController::class, 'store'])
+                ->name('schedules.vacancies.store');
+            Route::post('schedule-vacancies/{id}/cancel', [VagaEscalaController::class, 'cancelar'])
+                ->name('schedule-vacancies.cancel');
+            Route::post('schedule-vacancies/{id}/offers', [VagaEscalaController::class, 'oferecer'])
+                ->name('schedule-vacancies.offers.store');
+            Route::post('schedule-vacancies/{id}/choose', [VagaEscalaController::class, 'escolher'])
+                ->name('schedule-vacancies.choose');
+            Route::delete('schedule-vacancy-offers/{id}', [OfertaVagaController::class, 'destroy'])
+                ->name('schedule-vacancy-offers.destroy');
+        });
 
         // "Minhas escalas" (E07): as vagas da propria pessoa no periodo.
         Route::get('me/schedules', [MinhasEscalasController::class, 'index'])->name('me.schedules');

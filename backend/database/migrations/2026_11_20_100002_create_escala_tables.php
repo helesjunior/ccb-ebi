@@ -16,9 +16,34 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // E07 (evolucao): cada coordenadora tem a propria equipe de auxiliares e
+        // a escala nasce a partir da equipe de uma delas.
+        Schema::create('equipe', function (Blueprint $table): void {
+            $table->ulid('id')->primary();
+            $table->ulid('ebi_id')->index();
+            $table->ulid('igreja_id')->index();
+            // Sem FK: usuario e de outro modulo; a vigencia do papel e do vinculo.
+            $table->ulid('coordenadora_id')->index();
+            $table->ulid('criado_por')->nullable();
+            $table->timestamps();
+
+            $table->unique(['ebi_id', 'coordenadora_id']);
+        });
+
+        Schema::create('equipe_membro', function (Blueprint $table): void {
+            $table->ulid('id')->primary();
+            $table->foreignUlid('equipe_id')->constrained('equipe')->cascadeOnDelete();
+            $table->ulid('usuario_id')->index();
+            $table->ulid('incluido_por')->nullable();
+            $table->timestamps();
+
+            $table->unique(['equipe_id', 'usuario_id']);
+        });
+
         Schema::create('escala', function (Blueprint $table): void {
             $table->ulid('id')->primary();
             $table->foreignUlid('sessao_id')->unique()->constrained('sessao');
+            $table->foreignUlid('equipe_id')->index()->constrained('equipe');
             $table->ulid('ebi_id')->index();
             $table->ulid('igreja_id')->index();
             $table->unsignedSmallInteger('estimativa_participantes');
@@ -71,5 +96,8 @@ return new class extends Migration
         Schema::dropIfExists('solicitacao_troca_escala');
         Schema::dropIfExists('escala_membro');
         Schema::dropIfExists('escala');
+        // Mesma migration: sem isso um novo `migrate` falha com "ja existe".
+        Schema::dropIfExists('equipe_membro');
+        Schema::dropIfExists('equipe');
     }
 };

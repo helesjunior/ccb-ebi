@@ -35,13 +35,26 @@ class AutorizacaoEscala
     }
 
     /**
+     * O leitor alcanca este EBI com a operacao, sem lancar 403. A visao de
+     * leitura de um cartao de vaga nao pode recusar quem so ve a propria oferta.
+     */
+    public function alcanca(Request $request, string $operacao, string $ebiId): bool
+    {
+        $contexto = $request->attributes->get('contexto_atuacao');
+
+        return $contexto instanceof ContextoAtuacao
+            && $this->autorizar->permite($contexto, $operacao)
+            && $this->autorizar->permite($contexto, $operacao, 'ebi', $ebiId);
+    }
+
+    /**
      * Visao de leitura do conflito (CA-12): alem do EBI dono da escala, quais
      * outros EBIs o leitor alcanca com `escala.ler`. A propria pessoa ve o
      * proprio conflito mesmo fora deles.
      *
      * @param  array<int, string>  $outrosEbis  EBIs de sessoes em conflito
      */
-    public function visao(Request $request, array $outrosEbis): EscalaVisao
+    public function visao(Request $request, array $outrosEbis, string $ebiId): EscalaVisao
     {
         $contexto = $request->attributes->get('contexto_atuacao');
 
@@ -56,7 +69,14 @@ class AutorizacaoEscala
             }
         }
 
-        return new EscalaVisao($contexto->usuarioId, $visiveis);
+        return new EscalaVisao(
+            $contexto->usuarioId,
+            $visiveis,
+            contexto: $this->contexto($request),
+            // Membros da escala entram por excecao de propriedade, sem
+            // `escala.ler`: o que eles veem da vaga muda com isso.
+            temEscalaLer: $this->autorizar->permite($contexto, Operacoes::ESCALA_LER, 'ebi', $ebiId),
+        );
     }
 
     /**

@@ -106,10 +106,9 @@ export function Presenca({ sessaoId, onVoltar, papeis }: {
   }, [carregar])
 
   useEffect(() => {
-    if (!sessaoId) return
-    void carregarEquipeDaEscala()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessaoId])
+    if (sessao === null) return
+    void carregarEquipeDaEscala(sessao.escala_id ?? null)
+  }, [sessao])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -199,23 +198,35 @@ export function Presenca({ sessaoId, onVoltar, papeis }: {
   // A presença da equipe só faz sentido com a escala aprovada e a sessão
   // encerrada; a marcação parte do que foi confirmado antes da sessão.
   const vagasDaEquipe = (escala?.membros ?? []).filter((m) => m.id && m.status !== 'substituido')
+  // Quem lê sem gerir vê a equipe, mas não marca nem envia.
+  const podeEditarEquipe = escala?.pode_gerir === true
   const mostrarEquipe =
     sessao?.status === 'encerrada' && podeGerenciar && escala?.status === 'aprovada' && vagasDaEquipe.length > 0
   const pendenteEquipe = escala?.presenca_equipe_pendente === true
 
-  async function carregarEquipeDaEscala() {
-    if (!sessaoId) return
-    const { data } = await obterEscala(sessaoId)
-    setEscala(data ?? null)
-    const inicio: Record<string, boolean> = {}
-    for (const membro of data?.membros ?? []) {
-      if (membro.id) inicio[membro.id] = membro.status === 'confirmado' || membro.presente === true
+  async function carregarEquipeDaEscala(escalaId: string | null, manterMarcacoes = false) {
+    if (!escalaId) {
+      setEscala(null)
+      setPresencaEquipe({})
+      return
     }
-    setPresencaEquipe(inicio)
+    const { data } = await obterEscala(escalaId)
+    setEscala(data ?? null)
+    setPresencaEquipe((anteriores) => {
+      const inicio: Record<string, boolean> = {}
+      for (const membro of data?.membros ?? []) {
+        if (!membro.id) continue
+        // Depois de um 422 a vaga saiu: mantém o que a pessoa já marcou.
+        inicio[membro.id] = manterMarcacoes && membro.id in anteriores
+          ? anteriores[membro.id]
+          : membro.status === 'confirmado' || membro.presente === true
+      }
+      return inicio
+    })
   }
 
   async function enviarPresencaEquipe() {
-    if (!escala?.id || enviando) return
+    if (!escala?.id || enviando || !podeEditarEquipe) return
     setEnviando(true)
     setErroEquipe(null)
     const { data, error } = await registrarPresencaEquipe(
@@ -226,6 +237,11 @@ export function Presenca({ sessaoId, onVoltar, papeis }: {
     if (error) {
       // O formulário fica como está para a pessoa corrigir e reenviar.
       setErroEquipe(lerErro(error, 'Não foi possível registrar a presença da equipe.').detail)
+      // A vaga pode ter saído enquanto a tela estava aberta: recarrega a
+      // equipe mantendo o que já foi marcado.
+      if (lerErro(error, '').code === 'membro_invalido') {
+        await carregarEquipeDaEscala(escala.id, true)
+      }
       return
     }
     setEscala(data ?? null)
@@ -359,7 +375,7 @@ export function Presenca({ sessaoId, onVoltar, papeis }: {
                         className="size-4 accent-primary"
                         aria-label={`Esteve: ${membro.nome ?? 'membro da equipe'}`}
                         checked={presencaEquipe[membro.id!] === true}
-                        disabled={enviando}
+                        disabled={enviando || !podeEditarEquipe}
                         onChange={(e) => setPresencaEquipe({ ...presencaEquipe, [membro.id!]: e.target.checked })}
                       />
                     </TableCell>
@@ -367,9 +383,9 @@ export function Presenca({ sessaoId, onVoltar, papeis }: {
                 ))}
               </TableBody>
             </Table>
-            <Button type="button" className="self-start" disabled={enviando} onClick={() => void enviarPresencaEquipe()}>
+            {podeEditarEquipe && <Button type="button" className="self-start" disabled={enviando} onClick={() => void enviarPresencaEquipe()}>
               {enviando ? 'Registrando…' : 'Registrar presença da equipe'}
-            </Button>
+            </Button>}
           </CardContent>
         </Card>
       )}

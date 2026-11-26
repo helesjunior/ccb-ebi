@@ -141,6 +141,39 @@ export function primeiroNome(nome?: string | null): string {
   return (nome ?? '').trim().split(/\s+/)[0] ?? ''
 }
 
+const STATUS_VAGA: Record<string, string> = {
+  aberta: 'Aberta',
+  preenchida: 'Preenchida',
+  cancelada: 'Cancelada',
+}
+
+const TIPO_VAGA: Record<string, string> = {
+  acrescimo: 'Acréscimo',
+  substituicao: 'Substituição',
+}
+
+const STATUS_OFERTA: Record<string, string> = {
+  pendente: 'Pendente',
+  aceita: 'Aceita',
+  descartada: 'Descartada',
+  retirada: 'Retirada',
+}
+
+export function rotuloStatusVaga(codigo?: string | null): string {
+  if (!codigo) return '—'
+  return STATUS_VAGA[codigo] ?? codigo.replaceAll('_', ' ')
+}
+
+export function rotuloTipoVaga(codigo?: string | null): string {
+  if (!codigo) return '—'
+  return TIPO_VAGA[codigo] ?? codigo.replaceAll('_', ' ')
+}
+
+export function rotuloStatusOferta(codigo?: string | null): string {
+  if (!codigo) return '—'
+  return STATUS_OFERTA[codigo] ?? codigo.replaceAll('_', ' ')
+}
+
 /** Sugestões para o campo livre "tipo de relação" (o servidor aceita qualquer texto). */
 export const SUGESTOES_RELACAO: { valor: string; rotulo: string }[] = [
   { valor: 'mae', rotulo: 'Mãe' },

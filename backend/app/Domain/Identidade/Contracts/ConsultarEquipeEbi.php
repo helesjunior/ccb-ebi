@@ -21,6 +21,15 @@ interface ConsultarEquipeEbi
     public function equipe(string $ebiId, string $igrejaId): array;
 
     /**
+     * Papeis de equipe vigentes hoje (inicio <= hoje <= fim) de cada usuario,
+     * com escopo no EBI ou na igreja dele. Quem nao tem nenhum nao aparece.
+     *
+     * @param  array<int, string>  $usuarioIds
+     * @return array<string, array<int, string>>
+     */
+    public function papeisVigentesHoje(array $usuarioIds, string $ebiId, string $igrejaId): array;
+
+    /**
      * Historico de papeis dos usuarios dados, incluindo vinculos encerrados.
      *
      * @param  array<int, string>  $usuarioIds
@@ -36,4 +45,12 @@ interface ConsultarEquipeEbi
      * @return array<string, string>
      */
     public function nomes(array $usuarioIds): array;
+
+    /**
+     * Escopos em que a pessoa tem papel de equipe vigente hoje (fim nulo),
+     * um por EBI, com a igreja do vinculo. Alimenta o cartao `/me`.
+     *
+     * @return list<array{ebi_id: ?string, igreja_id: string}>
+     */
+    public function escoposDeEquipeVigentes(string $usuarioId): array;
 }

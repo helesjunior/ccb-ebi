@@ -68,7 +68,12 @@ it('exporta uma linha para o no e uma por filho, com valores iguais aos do json'
         ->and($linhas[0]['periodo_inicio'])->toBe($this->inicio)
         ->and($linhas[0]['periodo_fim'])->toBe($this->fim)
         ->and($linhas[0]['fuso'])->toBe($json['fuso'])
-        ->and($linhas[0]['gerado_em'])->toBe($json['gerado_em'])
+        // Duas requisicoes distintas: `gerado_em` e o instante da geracao e
+        // precisa cair entre elas (o fuso, nao o instante, e igual).
+        ->and(CarbonImmutable::parse($linhas[0]['gerado_em'])->between(
+            CarbonImmutable::parse($json['gerado_em'])->subSecond(),
+            CarbonImmutable::now('UTC')->addSecond(),
+        ))->toBeTrue()
         ->and($linhas[0]['criterios'])->toBe($json['criterios'])
         ->and($linhas[1]['nivel'])->toBe('ebi')
         ->and($linhas[1]['id'])->toBe($this->no['ebi']->id);

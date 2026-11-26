@@ -14,7 +14,7 @@ vi.mock('../api/client', () => ({
 
 import { Presenca } from './Presenca'
 
-const sessao = (status: string) => ({
+const sessao = (status: string, extras = {}) => ({
   id: 'ses-1',
   ebi_nome: 'EBI Central',
   inicio_previsto: '2026-11-20T23:00:00Z',
@@ -27,12 +27,14 @@ const sessao = (status: string) => ({
     auxiliares_informados: 22,
     alerta: false,
   },
+  ...extras,
 })
 
 const escala = (extras = {}) => ({
   id: 'esc-1',
   sessao_id: 'ses-1',
   status: 'aprovada',
+  pode_gerir: true,
   presenca_equipe_pendente: false,
   membros: [
     { id: 'm-1', nome: 'Ana', funcao: 'coordenadora', status: 'confirmado', presente: null },
@@ -41,9 +43,9 @@ const escala = (extras = {}) => ({
   ...extras,
 })
 
-function responder(status: string, dadosEscala: unknown) {
+function responder(status: string, dadosEscala: unknown, extrasSessao = {}) {
   get.mockImplementation((rota: string) => {
-    if (rota === '/sessions/{id}') return Promise.resolve({ data: sessao(status) })
+    if (rota === '/sessions/{id}') return Promise.resolve({ data: sessao(status, { escala_id: 'esc-1', ...extrasSessao }) })
     if (rota === '/sessions/{id}/attendance') return Promise.resolve({ data: { data: [] } })
     if (rota === '/schedules/{id}') return Promise.resolve({ data: { escala: dadosEscala } })
     return Promise.resolve({ error: { status: 404, detail: 'x' } })
@@ -95,5 +97,47 @@ describe('presenca da equipe', () => {
     fireEvent.click(await screen.findByRole('button', { name: /registrar presença da equipe/i }))
     expect(await screen.findByText('Vaga inválida.')).toBeInTheDocument()
     expect(screen.getByRole('checkbox', { name: /Esteve: Ana/i })).toBeInTheDocument()
+  })
+
+  it('busca a escala por sessao.escala_id', async () => {
+    responder('encerrada', escala())
+    render(<Presenca sessaoId="ses-1" onVoltar={() => {}} papeis={['coordenadora']} />)
+    await screen.findByRole('checkbox', { name: /Esteve: Ana/i })
+    const rotasDaEscala = get.mock.calls.filter(([rota]) => rota === '/schedules/{id}')
+    expect(rotasDaEscala.length).toBeGreaterThan(0)
+    for (const chamada of rotasDaEscala) {
+      expect(chamada[1].params.path.id).toBe('esc-1')
+    }
+  })
+
+  it('sem escala_id nao mostra o bloco da equipe', async () => {
+    responder('encerrada', escala(), { escala_id: null })
+    render(<Presenca sessaoId="ses-1" onVoltar={() => {}} papeis={['coordenadora']} />)
+    expect(await screen.findByText(/Presenças?/i)).toBeInTheDocument()
+    await waitFor(() => expect(get).toHaveBeenCalledWith('/sessions/{id}', expect.anything()))
+    expect(screen.queryByText('Presença da equipe')).not.toBeInTheDocument()
+    expect(get.mock.calls.some(([rota]) => rota === '/schedules/{id}')).toBe(false)
+  })
+
+  it('leitora nao dona ve a equipe so em leitura', async () => {
+    responder('encerrada', escala({ pode_gerir: false }))
+    render(<Presenca sessaoId="ses-1" onVoltar={() => {}} papeis={['coordenadora_chefe']} />)
+    expect(await screen.findByRole('checkbox', { name: /Esteve: Ana/i })).toBeDisabled()
+    expect(screen.queryByRole('button', { name: /registrar presença da equipe/i })).not.toBeInTheDocument()
+  })
+
+  it('recarrega a equipe apos 422 membro_invalido mantendo marcacoes', async () => {
+    responder('encerrada', escala())
+    put.mockResolvedValue({ error: { status: 422, code: 'membro_invalido', detail: 'Vaga inválida.' } })
+    render(<Presenca sessaoId="ses-1" onVoltar={() => {}} papeis={['coordenadora']} />)
+    fireEvent.click(await screen.findByRole('checkbox', { name: /Esteve: Bia/i }))
+    const antes = get.mock.calls.filter(([rota]) => rota === '/schedules/{id}').length
+    fireEvent.click(screen.getByRole('button', { name: /registrar presença da equipe/i }))
+    expect(await screen.findByText('Vaga inválida.')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(get.mock.calls.filter(([rota]) => rota === '/schedules/{id}').length).toBeGreaterThan(antes)
+    })
+    expect(screen.getByRole('checkbox', { name: /Esteve: Bia/i })).toBeChecked()
+    expect(screen.getByRole('checkbox', { name: /Esteve: Ana/i })).toBeChecked()
   })
 })

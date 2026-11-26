@@ -67,5 +67,9 @@ final class Operacoes
 
     public const TROCA_DECIDIR = 'troca.decidir';
 
+    // E07 (evolucao) - Equipe da coordenadora: cada coordenadora monta a propria
+    // equipe de auxiliares. A coordenadora so mexe na propria (regra no servico).
+    public const EQUIPE_GERENCIAR = 'equipe.gerenciar';
+
     private function __construct() {}
 }

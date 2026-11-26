@@ -108,7 +108,39 @@ stateDiagram-v2
   confirmado --> substituido: troca aprovada
 ```
 
-`escalado` e `confirmado` são os membros que contam; `substituido` sai da equipe efetiva. A presença (`presente` sim/não) é registrada na sessão `encerrada`, depois da equipe — não muda o `status`.
+`escalado` e `confirmado` são os membros que contam; `substituido` sai da equipe efetiva. A presença (`presente` sim/não) é registrada na sessão `encerrada`, depois da equipe — não muda o `status`. Membro criado pela escolha de uma vaga entra já `confirmado` ([ADR-0034](../06-arquitetura/decisoes/ADR-0034-equipes-da-coordenadora-e-vaga-de-escala.md)).
+
+## Vaga de escala
+
+```mermaid
+stateDiagram-v2
+  [*] --> aberta: a dona abre (acréscimo ou substituição)
+  aberta --> preenchida: a dona escolhe uma oferta
+  aberta --> cancelada: a dona cancela, o membro substituído sai<br/>ou a troca dele é aprovada
+  preenchida --> [*]
+  cancelada --> [*]
+```
+
+A vaga nasce `aberta` com as ofertas `pendente`. Escolher uma oferta leva a vaga a `preenchida` e as demais ofertas a `descartada`; a vaga não volta a abrir. O `motivo_encerramento` (`cancelada_pela_gestao`, `membro_retirado`, `membro_trocado`) diz por que uma vaga aberta foi cancelada. Conflito de horário não fica na máquina de estados: é informação do cartão ([ADR-0034](../06-arquitetura/decisoes/ADR-0034-equipes-da-coordenadora-e-vaga-de-escala.md)).
+
+## Oferta para vaga
+
+```mermaid
+stateDiagram-v2
+  [*] --> pendente: a pessoa se oferece
+  pendente --> aceita: a dona escolhe
+  pendente --> retirada: a própria pessoa retira
+  pendente --> descartada: a vaga foi preenchida ou cancelada
+  aceita --> [*]
+  retirada --> [*]
+  descartada --> [*]
+```
+
+`aceita` é terminal e carrega `membro_criado_id`: apagar esse membro depois deixa a oferta `aceita` com `membro_criado_id` nulo, e a vaga continua `preenchida` — quem preencheu vem de `oferta.usuario_id`. A oferta aceita nasce do membro já `confirmado`; as ofertas não escolhidas só existem para a dona (a supervisão vê a contagem).
+
+## Equipe da coordenadora
+
+Não há máquina de estados: a equipe existe desde que é criada e não é excluída. Incluir e retirar membro mexem em `equipe_membro` (retirar apaga a linha); a vigência de cada pessoa vem do vínculo de acesso vigente hoje, não do quadro.
 
 ## Troca
 

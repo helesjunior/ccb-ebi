@@ -3,11 +3,14 @@
 namespace App\Domain\Escalas\Services;
 
 use App\Domain\Escalas\Contracts\ConsultarEscala;
+use App\Domain\Escalas\Contracts\ConsultarVagaEscala;
 use App\Domain\Escalas\Contracts\EscalaRef;
 use App\Domain\Escalas\Contracts\EscalaVisao;
+use App\Domain\Escalas\Contracts\ProjecaoVaga;
 use App\Domain\Escalas\Models\Escala;
 use App\Domain\Escalas\Models\EscalaMembro;
 use App\Domain\Escalas\Models\SolicitacaoTrocaEscala;
+use App\Domain\Escalas\Models\VagaEscala;
 use App\Domain\Identidade\Contracts\ConsultarEquipeEbi;
 use App\Domain\Sessoes\Contracts\ConsultarSessao;
 use App\Domain\Sessoes\Contracts\IntervaloSessao;
@@ -36,6 +39,8 @@ class ConsultaEscala implements ConsultarEscala
         private readonly ConsultarEquipeEbi $equipe,
         private readonly AvaliadorEquipe $avaliador,
         private readonly DetectorConflito $conflitos,
+        private readonly DonaDaEscala $dona,
+        private readonly ConsultarVagaEscala $vagas,
     ) {}
 
     public function detalhe(string $escalaId, EscalaVisao $visao): ?array
@@ -64,6 +69,13 @@ class ConsultaEscala implements ConsultarEscala
         $membroId = (string) SolicitacaoTrocaEscala::query()->whereKey($trocaId)->value('escala_membro_id');
 
         return $membroId === '' ? null : $this->referenciaDoMembro($membroId);
+    }
+
+    public function referenciaDaVaga(string $vagaId): ?EscalaRef
+    {
+        $escalaId = (string) VagaEscala::query()->whereKey($vagaId)->value('escala_id');
+
+        return $escalaId === '' ? null : $this->referencia($escalaId);
     }
 
     public function ebisEmConflito(string $escalaId): array
@@ -98,10 +110,12 @@ class ConsultaEscala implements ConsultarEscala
         $usuarioIds = $membros->pluck('usuario_id')->map(fn ($id): string => (string) $id)->unique()->values()->all();
         $nomes = $this->equipe->nomes($usuarioIds);
         $conflitos = $this->conflitos->conflitos($usuarioIds, $sessao, (string) $escala->id);
+        $podeGerir = $visao->contexto !== null && $this->dona->podeGerir((string) $escala->id, $visao->contexto);
 
         return [
             'id' => (string) $escala->id,
             'sessao_id' => (string) $escala->sessao_id,
+            'equipe_id' => (string) $escala->equipe_id,
             'ebi_id' => (string) $escala->ebi_id,
             'igreja_id' => (string) $escala->igreja_id,
             'status' => $this->statusDaEscala($escala, $sessao),
@@ -134,6 +148,35 @@ class ConsultaEscala implements ConsultarEscala
             // Presenca da equipe pendente: sessao encerrada e vaga ativa sem resposta.
             'presenca_equipe_pendente' => $sessao->status === 'encerrada'
                 && $membros->contains(fn (EscalaMembro $membro): bool => $membro->status !== EscalaMembro::STATUS_SUBSTITUIDO && $membro->presente === null),
+            'equipe' => $this->equipeDaEscala($escala),
+            // Sem contexto resolvido os booleanos sao falsos.
+            'pode_gerir' => $podeGerir,
+            'pode_escolher_oferta' => $visao->contexto !== null && $this->dona->podeEscolherOferta((string) $escala->id, $visao->contexto),
+            // A dona e a supervisao veem os nomes de quem se ofereceu; quem tem
+            // `escala.ler` ve contagem e quem foi escolhido; quem entrou so pela
+            // excecao de membro da escala recebe o cartao publico (decisao 9).
+            'vagas' => $this->vagas->daEscala(
+                (string) $escala->id,
+                match (true) {
+                    $podeGerir => ProjecaoVaga::Gestao,
+                    $visao->temEscalaLer => ProjecaoVaga::Leitor,
+                    default => ProjecaoVaga::Publica,
+                },
+                $visao->leitorId,
+            ),
+        ];
+    }
+
+    /** @return array{id: string, coordenadora_id: string, coordenadora_nome: string} */
+    private function equipeDaEscala(Escala $escala): array
+    {
+        $equipe = $escala->equipe;
+        $coordenadoraId = $equipe === null ? '' : (string) $equipe->coordenadora_id;
+
+        return [
+            'id' => (string) $escala->equipe_id,
+            'coordenadora_id' => $coordenadoraId,
+            'coordenadora_nome' => $coordenadoraId === '' ? '' : ($this->equipe->nomes([$coordenadoraId])[$coordenadoraId] ?? ''),
         ];
     }
 
