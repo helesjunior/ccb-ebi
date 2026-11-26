@@ -20,6 +20,8 @@
 - [ ] PHPStan sem erros (`docker compose run --rm app composer phpstan`)
 - [ ] Frontend: lint e build (`npm run lint` e `npm run build` em `frontend/`)
 - [ ] Documentação atualizada quando o comportamento mudou (docs, OpenAPI, CHANGELOG)
+- [ ] Manual do usuário atualizado em `docs/wiki/` quando houver funcionalidade nova ou fluxo
+      alterado, com captura de tela nova (veja `docs/wiki/Manutencao-do-wiki.md`)
 - [ ] Sem segredos no código ou em arquivos versionados
 
 ## PR de infraestrutura
