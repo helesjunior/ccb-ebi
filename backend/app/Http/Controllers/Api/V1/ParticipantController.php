@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\V1;
 use App\Domain\Auditoria\Contracts\RegistrarEvento;
 use App\Domain\Identidade\Services\ContextoAtuacao;
 use App\Domain\Participantes\Contracts\GerirParticipante;
-use App\Domain\Participantes\Models\Participante;
 use App\Http\Requests\Participantes\CadastrarAssistidoRequest;
 use App\Http\Requests\Participantes\CadastrarParticipanteRequest;
 use App\Http\Requests\Participantes\CorrigirParticipanteRequest;
@@ -139,7 +138,9 @@ class ParticipantController
 
         $dados = array_filter(
             $request->safe()->except('motivo'),
-            fn (mixed $valor, string $campo): bool => $this->mudou($participante, $campo, $valor),
+            fn (mixed $valor, string $campo): bool => $campo === 'data_nascimento'
+                ? $participante->data_nascimento->toDateString() !== Carbon::parse((string) $valor)->toDateString()
+                : $participante->getAttribute($campo) !== $valor,
             ARRAY_FILTER_USE_BOTH,
         );
 
@@ -161,15 +162,6 @@ class ParticipantController
         );
 
         return (new ParticipanteResource($participante))->response();
-    }
-
-    private function mudou(Participante $participante, string $campo, mixed $valor): bool
-    {
-        if ($campo === 'data_nascimento') {
-            return $participante->data_nascimento?->toDateString() !== Carbon::parse((string) $valor)->toDateString();
-        }
-
-        return $participante->getAttribute($campo) !== $valor;
     }
 
     private function contexto(Request $request): ?ContextoAtuacao

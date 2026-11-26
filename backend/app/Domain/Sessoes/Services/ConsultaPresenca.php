@@ -64,6 +64,7 @@ class ConsultaPresenca implements ConsultarPresenca
             ->where('presenca.id', $presencaId)->value('sessao.ebi_id');
     }
 
+    /** @return array<int, string> */
     public function ebisComPresencaValida(string $participanteId): array
     {
         return Presenca::query()->join('sessao', 'sessao.id', '=', 'presenca.sessao_id')

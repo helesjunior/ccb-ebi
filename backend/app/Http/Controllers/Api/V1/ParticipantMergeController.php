@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\V1;
 use App\Domain\Identidade\Services\ContextoAtuacao;
 use App\Domain\Participantes\Contracts\GerirMesclagem;
 use App\Domain\Participantes\Contracts\GerirParticipante;
-use App\Domain\Participantes\Models\Participante;
 use App\Http\Requests\Participantes\MesclarParticipanteRequest;
 use App\Http\Resources\ParticipanteResource;
 use App\Support\Participantes\AutorizacaoParticipante;
@@ -34,11 +33,10 @@ class ParticipantMergeController
         $usuarioId = (string) $request->user()?->getAuthIdentifier();
         $duplicadoId = (string) $request->validated('duplicado_id');
 
-        $this->autorizacao->exigirLigados(
-            $this->contexto($request),
-            [$this->encontrar($id), $this->encontrar($duplicadoId)],
-            'participante.mesclar',
-        );
+        $principal = $this->participantes->encontrar($id) ?? $this->naoEncontrado();
+        $duplicado = $this->participantes->encontrar($duplicadoId) ?? $this->naoEncontrado();
+
+        $this->autorizacao->exigirLigados($this->contexto($request), [$principal, $duplicado], 'participante.mesclar');
 
         $principal = $this->mesclagem->mesclar($usuarioId, $id, $duplicadoId);
 
@@ -47,7 +45,7 @@ class ParticipantMergeController
 
     public function undo(Request $request, string $id): JsonResponse
     {
-        $principal = $this->encontrar($id);
+        $principal = $this->participantes->encontrar($id) ?? $this->naoEncontrado();
         $duplicadoId = $principal->snapshot_mesclagem['duplicado']['id'] ?? null;
         $duplicado = is_string($duplicadoId) ? $this->participantes->encontrar($duplicadoId) : null;
 
@@ -66,10 +64,9 @@ class ParticipantMergeController
         return (new ParticipanteResource($principal))->response();
     }
 
-    private function encontrar(string $participanteId): Participante
+    private function naoEncontrado(): never
     {
-        return $this->participantes->encontrar($participanteId)
-            ?? throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Participante não encontrado.');
+        throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Participante não encontrado.');
     }
 
     private function contexto(Request $request): ?ContextoAtuacao
