@@ -74,6 +74,12 @@ final class Suporte
                 'TESTE_PGSQL' => '1',
                 'DB_CONNECTION' => 'pgsql',
                 'DB_DATABASE' => 'ebi_teste',
+                // O subprocesso nao le o phpunit.xml: herdar do processo pai e`
+                // o que mantem o host do banco (CI, compose) o mesmo dos testes.
+                'DB_HOST' => (string) config('database.connections.pgsql.host'),
+                'DB_PORT' => (string) config('database.connections.pgsql.port'),
+                'DB_USERNAME' => (string) config('database.connections.pgsql.username'),
+                'DB_PASSWORD' => (string) config('database.connections.pgsql.password'),
             ],
             null,
             180,

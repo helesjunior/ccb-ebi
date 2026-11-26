@@ -65,10 +65,6 @@ jobs:
         run: |
           cp .env.example .env
           php artisan key:generate
-          # `.env.example` aponta para a rede do compose; no CI o PostgreSQL e`
-          # um service container que so` responde em 127.0.0.1 (inclusive para
-          # os subprocessos da suite de concorrencia).
-          sed -i 's/^DB_HOST=.*/DB_HOST=127.0.0.1/; s/^REDIS_HOST=.*/REDIS_HOST=127.0.0.1/' .env
 
       - name: Pint (somente conferência)
         run: vendor/bin/pint --test
