@@ -219,3 +219,15 @@ it('reproduz a resposta com a mesma chave de idempotencia', function () {
     $this->postJson($url, ['participante_id' => $p->id], $auth)->assertCreated()->assertExactJson($primeira);
     expect(EventoAuditoria::query()->where('acao', 'presenca.registrada')->count())->toBe(1);
 });
+
+it('lista os ebis com presenca valida do participante', function () {
+    ['igreja' => $igrejaB, 'ebi' => $ebiB] = igrejaComEbi();
+    $p = Participante::factory()->create(['data_nascimento' => '2016-01-01']);
+    $outraA = Sessao::factory()->create(['ebi_id' => $this->ebi->id, 'igreja_id' => $this->igreja->id]);
+    $sessaoB = Sessao::factory()->create(['ebi_id' => $ebiB->id, 'igreja_id' => $igrejaB->id]);
+    foreach ([[$this->sessao, Presenca::STATUS_VALIDA], [$outraA, Presenca::STATUS_VALIDA], [$sessaoB, Presenca::STATUS_ESTORNADA]] as [$s, $status]) {
+        Presenca::factory()->create(['sessao_id' => $s->id, 'participante_id' => $p->id, 'registrado_por' => $this->coord->id, 'status' => $status]);
+    }
+
+    expect(app(ConsultarPresenca::class)->ebisComPresencaValida($p->id))->toBe([(string) $this->ebi->id]);
+});
