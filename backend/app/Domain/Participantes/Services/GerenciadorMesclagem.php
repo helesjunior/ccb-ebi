@@ -17,9 +17,9 @@ use Illuminate\Support\Facades\DB;
  * do estado anterior na coluna `snapshot_mesclagem` do principal). Desfazer
  * restaura o snapshot e devolve o duplicado a `ativo`.
  *
- * Escopo (nesta etapa): a coordenadora so mescla cadastros cuja igreja de
- * referencia esteja sob sua atuacao; senao a operacao cabe a um escopo maior
- * (a coordenadora chefe/super_admin). A checagem territorial fina fica no gate.
+ * Escopo (ADR-0027): conferido no controller por
+ * `AutorizacaoParticipante::exigirLigados` (igreja de referencia, ou presenca
+ * valida quando nao ha igreja; a chefe precisa de um dos dois cadastros).
  */
 class GerenciadorMesclagem implements GerirMesclagem
 {

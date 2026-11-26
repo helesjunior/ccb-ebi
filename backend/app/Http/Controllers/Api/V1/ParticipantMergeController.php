@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Domain\Identidade\Services\ContextoAtuacao;
 use App\Domain\Participantes\Contracts\GerirMesclagem;
 use App\Domain\Participantes\Contracts\GerirParticipante;
+use App\Domain\Participantes\Models\Participante;
 use App\Http\Requests\Participantes\MesclarParticipanteRequest;
 use App\Http\Resources\ParticipanteResource;
 use App\Support\Participantes\AutorizacaoParticipante;
@@ -16,10 +17,9 @@ use Illuminate\Http\Request;
  * Mesclagem de duplicados (CA-27): funde e desfaz, sempre auditado e reversivel.
  * Rotas sob `can:participante.mesclar`.
  *
- * M6 (design §6.7): a igreja de referencia gateia a mesclagem — a coordenadora so
- * funde cadastros sob sua atuacao. O gate HTTP (`can:participante.mesclar`) faz o
- * RBAC; aqui aplica-se o ABAC territorial sobre **ambos** os cadastros (principal
- * e duplicado), via `AutorizacaoParticipante`.
+ * O gate HTTP (`can:participante.mesclar`) faz o RBAC; aqui aplica-se o escopo
+ * do ADR-0027 via `AutorizacaoParticipante::exigirLigados`: a coordenadora precisa
+ * dos dois cadastros ligados a um EBI dela; a coordenadora chefe, de um.
  */
 class ParticipantMergeController
 {
@@ -33,11 +33,12 @@ class ParticipantMergeController
     {
         $usuarioId = (string) $request->user()?->getAuthIdentifier();
         $duplicadoId = (string) $request->validated('duplicado_id');
-        $contexto = $this->contexto($request);
 
-        // MB: ambos os cadastros precisam estar sob a atuacao do ator.
-        $this->exigirEscopo($contexto, $usuarioId, $id);
-        $this->exigirEscopo($contexto, $usuarioId, $duplicadoId);
+        $this->autorizacao->exigirLigados(
+            $this->contexto($request),
+            [$this->encontrar($id), $this->encontrar($duplicadoId)],
+            'participante.mesclar',
+        );
 
         $principal = $this->mesclagem->mesclar($usuarioId, $id, $duplicadoId);
 
@@ -46,7 +47,16 @@ class ParticipantMergeController
 
     public function undo(Request $request, string $id): JsonResponse
     {
-        $this->exigirEscopo($this->contexto($request), (string) $request->user()?->getAuthIdentifier(), $id);
+        $principal = $this->encontrar($id);
+        $duplicadoId = $principal->snapshot_mesclagem['duplicado']['id'] ?? null;
+        $duplicado = is_string($duplicadoId) ? $this->participantes->encontrar($duplicadoId) : null;
+
+        // Desfazer altera os dois cadastros: confere os dois.
+        $this->autorizacao->exigirLigados(
+            $this->contexto($request),
+            $duplicado !== null ? [$principal, $duplicado] : [$principal],
+            'participante.mesclar',
+        );
 
         $principal = $this->mesclagem->desfazer(
             (string) $request->user()?->getAuthIdentifier(),
@@ -56,12 +66,10 @@ class ParticipantMergeController
         return (new ParticipanteResource($principal))->response();
     }
 
-    private function exigirEscopo(?ContextoAtuacao $contexto, string $usuarioId, string $participanteId): void
+    private function encontrar(string $participanteId): Participante
     {
-        $participante = $this->participantes->encontrar($participanteId)
+        return $this->participantes->encontrar($participanteId)
             ?? throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Participante não encontrado.');
-
-        $this->autorizacao->exigir($contexto, $usuarioId, $participante, 'participante.mesclar');
     }
 
     private function contexto(Request $request): ?ContextoAtuacao
