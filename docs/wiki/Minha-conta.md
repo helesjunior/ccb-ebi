@@ -73,7 +73,7 @@ solicitação.
 
 ## Responsável: o que muda
 
-O responsável não tem outras telas do portal, mas tem as duas mais importantes para ele:
+Além deste grupo, o responsável tem as duas telas mais importantes para ele:
 
 - [Meus dependentes e frequência](Fluxo-do-responsavel)
 - [Pedidos de vínculo](Fluxo-do-responsavel)

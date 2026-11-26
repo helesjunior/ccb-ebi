@@ -16,7 +16,7 @@ vê o item — e, mesmo com o endereço da tela, o servidor recusa a ação.
 | Participantes | **Exceção inclusiva** | Pedir ou decidir exceção de faixa etária | Os mesmos de **Participantes** |
 | Participantes | **Mesclagem** | Juntar cadastros duplicados (reversível) | Super Admin, Coordenação |
 | Administração | **Equipe** | Usuários do escopo e convites | Super Admin, Admin regional, Admin de setor, Admin de igreja |
-| Administração | **Vínculos** | Pedidos de vínculo entre responsável e participante | Todos |
+| Administração | **Vínculos** | Pedidos de vínculo entre responsável e participante | Todos (o responsável vê os próprios pedidos) |
 | Administração | **Auditoria** | Trilha de eventos do sistema | Super Admin, Admin regional, Admin de setor |
 | Administração | **Relatórios** | Totais de presença e participantes por unidade | Administradores, Ministérios, Coordenação |
 | Minha conta | **Meu perfil** | Nome, e-mail, senha e verificação em duas etapas | Todos |
