@@ -78,7 +78,7 @@ jobs:
       - name: Concorrencia (Pest em PostgreSQL)
         run: |
           PGPASSWORD=ebi createdb -h 127.0.0.1 -U ebi ebi_teste
-          TESTE_PGSQL=1 vendor/bin/pest --testsuite=Concorrencia
+          TESTE_PGSQL=1 DB_HOST=127.0.0.1 vendor/bin/pest --testsuite=Concorrencia
 
   frontend:
     name: Frontend (lint, build)
