@@ -15,7 +15,6 @@ import {
   type Equipe,
   type EquipeResumo,
 } from '../api/escalas'
-import { EstadoTabela } from '../components/EstadoTabela'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -24,7 +23,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 
-type Usuario = components['schemas']['UsuarioDetalhe']
+type Usuario = components['schemas']['Usuario']
 
 /**
  * Equipes de escala: cada coordenadora tem a própria equipe de auxiliares e a
@@ -52,7 +51,7 @@ export function EquipesEscala({
 
   const eu = usuario?.id ?? ''
   const papeisEfetivos = usuario?.papeis ?? papeis
-  const podeGerir = papeisEfetivos.some((p) => ['coordenadora', 'coordenadora_chefe', 'adm_igreja'].includes(p))
+  const podeGerir = papeisEfetivos.some((p: string) => ['coordenadora', 'coordenadora_chefe', 'adm_igreja'].includes(p))
   const ebiDoContexto = contexto?.tipo_escopo === 'ebi' ? contexto.escopo_id : ''
 
   useEffect(() => {
@@ -183,7 +182,7 @@ export function EquipesEscala({
           {carregando ? (
             <p className="text-sm text-muted-foreground">Carregando…</p>
           ) : equipes.length === 0 ? (
-            <EstadoTabela vazio="Nenhuma equipe criada neste EBI." />
+            <p className="text-sm text-muted-foreground">Nenhuma equipe criada neste EBI.</p>
           ) : (
             <ul className="flex flex-col gap-2">
               {equipes.map((item) => (
@@ -228,7 +227,7 @@ export function EquipesEscala({
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             {(equipe.membros ?? []).length === 0 ? (
-              <EstadoTabela vazio="Equipe ainda sem membros." />
+              <p className="text-sm text-muted-foreground">Equipe ainda sem membros.</p>
             ) : (
               <Table>
                 <TableHeader>

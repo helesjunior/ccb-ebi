@@ -49,6 +49,7 @@ const ROTULOS: Record<Tela, string> = {
   sessoes: 'Sessões',
   presenca: 'Presença',
   escalas: 'Escalas',
+  'equipes-escala': 'Equipes de escala',
   'minhas-escalas': 'Minhas escalas',
   'cadastro-assistido': 'Cadastro assistido',
   vinculos: 'Vínculos',

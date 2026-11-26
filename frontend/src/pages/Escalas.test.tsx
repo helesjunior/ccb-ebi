@@ -19,6 +19,7 @@ import { Escalas } from './Escalas'
 import type { ContextoAtuacao } from '../api/sessao'
 
 const contexto: ContextoAtuacao = { papel: 'coordenadora', tipo_escopo: 'ebi', escopo_id: 'ebi-1' }
+const usuario = { id: 'u-coord' }
 
 const resumo = (situacao: string, extras = {}) => ({
   sessao_id: 'ses-1',
@@ -104,24 +105,24 @@ function responderResumo(situacao: string) {
 describe('tela de escalas', () => {
   it('mostra a situacao de cada sessao', async () => {
     responderResumo('sem_escala')
-    render(<Escalas contexto={contexto} papeis={['coordenadora']} />)
+    render(<Escalas contexto={contexto} papeis={['coordenadora']} usuario={usuario} />)
     expect(await screen.findByText('Sem escala')).toBeInTheDocument()
   })
 
   it('mostra abaixo do minimo e aguardando aprovacao', async () => {
     responderResumo('abaixo_do_minimo')
-    const { unmount } = render(<Escalas contexto={contexto} papeis={['coordenadora']} />)
+    const { unmount } = render(<Escalas contexto={contexto} papeis={['coordenadora']} usuario={usuario} />)
     expect(await screen.findByText('Abaixo do mínimo')).toBeInTheDocument()
     unmount()
 
     responderResumo('aguardando_aprovacao')
-    render(<Escalas contexto={contexto} papeis={['coordenadora']} />)
+    render(<Escalas contexto={contexto} papeis={['coordenadora']} usuario={usuario} />)
     expect(await screen.findByText('Aguardando aprovação')).toBeInTheDocument()
   })
 
   it('Aprovar so aparece para a chefe', async () => {
     responderResumo('aguardando_aprovacao')
-    render(<Escalas contexto={contexto} papeis={['coordenadora']} />)
+    render(<Escalas contexto={contexto} papeis={['coordenadora']} usuario={usuario} />)
     expect(await screen.findByText('Aguardando aprovação')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /detalhe/i }))
     await screen.findByText('Ana')
@@ -131,7 +132,7 @@ describe('tela de escalas', () => {
   it('a chefe aprova pelo detalhe', async () => {
     responderResumo('aguardando_aprovacao')
     post.mockResolvedValue({ data: { escala: detalhe({ status: 'aprovada', situacao: 'aprovada' }) } })
-    render(<Escalas contexto={contexto} papeis={['coordenadora_chefe']} />)
+    render(<Escalas contexto={contexto} papeis={['coordenadora_chefe']} usuario={usuario} />)
     fireEvent.click(await screen.findByRole('button', { name: /detalhe/i }))
     const aprovar = await screen.findByRole('button', { name: /^aprovar$/i })
     fireEvent.click(aprovar)
@@ -140,7 +141,7 @@ describe('tela de escalas', () => {
 
   it('conflito fora do territorio aparece como outra igreja', async () => {
     responderResumo('abaixo_do_minimo')
-    render(<Escalas contexto={contexto} papeis={['coordenadora']} />)
+    render(<Escalas contexto={contexto} papeis={['coordenadora']} usuario={usuario} />)
     fireEvent.click(await screen.findByRole('button', { name: /detalhe/i }))
     expect(await screen.findByText(/outra igreja/i)).toBeInTheDocument()
   })
@@ -149,7 +150,7 @@ describe('tela de escalas', () => {
   it('montar pre-seleciona a dona e os membros vigentes da equipe', async () => {
     responderResumo('sem_escala')
     post.mockResolvedValue({ data: { escala: detalhe({ status: 'prevista', situacao: 'em_montagem' }) } })
-    render(<Escalas contexto={contexto} papeis={['coordenadora']} />)
+    render(<Escalas contexto={contexto} papeis={['coordenadora']} usuario={usuario} />)
 
     fireEvent.click(await screen.findByRole('button', { name: /^montar$/i }))
     fireEvent.change(await screen.findByLabelText(/estimativa de participantes/i), { target: { value: '8' } })

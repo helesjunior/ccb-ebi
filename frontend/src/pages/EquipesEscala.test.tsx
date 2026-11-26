@@ -16,7 +16,7 @@ vi.mock('../api/client', () => ({
 import { EquipesEscala } from './EquipesEscala'
 
 const coordenadora = { id: 'u-coord', nome: 'Ana', papeis: ['coordenadora'] }
-const contexto = { papel: 'coordenadora', tipo_escopo: 'ebi', escopo_id: 'ebi-1' }
+const contexto = { papel: 'coordenadora', tipo_escopo: 'ebi', escopo_id: 'ebi-1' } as const
 
 const membro = (usuario_id: string, nome: string, sem_vinculo = false) => ({ usuario_id, nome, sem_vinculo })
 

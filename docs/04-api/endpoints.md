@@ -81,7 +81,8 @@ Proposta inicial, prefixo `/api/v1`. Rotas marcadas *novo* não existiam na vers
 | GET | `/ebis/{id}/team` | Equipe do EBI para a escala *novo (E07)* (`no OpenAPI`) | RF-07 |
 | GET/POST | `/ebis/{id}/equipes` | Equipes de escala do EBI e criacao da equipe de uma coordenadora *novo (E07, evolucao)* (`no OpenAPI`) | RF-07 |
 | GET | `/equipes/{id}` | Detalhe da equipe da coordenadora *novo (E07, evolucao)* (`no OpenAPI`) | RF-07 |
-| POST/DELETE | `/equipes/{id}/members/{usuarioId}` | Incluir e retirar auxiliar da equipe *novo (E07, evolucao)* (`no OpenAPI`) | RF-07 |
+| POST | `/equipes/{id}/members` | Incluir auxiliar na equipe da coordenadora *novo (E07, evolucao)* (`no OpenAPI`) | RF-07 |
+| DELETE | `/equipes/{id}/members/{usuarioId}` | Retirar auxiliar da equipe da coordenadora *novo (E07, evolucao)* (`no OpenAPI`) | RF-07 |
 | GET | `/ebis/{id}/schedules` | Consultar escala (era `/roster`) *novo (E07)* (`no OpenAPI`) | RF-07 |
 | POST | `/sessions/{id}/schedules` | Criar escala, a partir da equipe da coordenadora (`equipe_id` obrigatório) *novo (E07)* (`no OpenAPI`) | RF-07 |
 | GET/PATCH | `/schedules/{id}` | Detalhe (com `equipe`, `pode_gerir`, `pode_escolher_oferta`) e estimativa da escala *novo (E07)* (`no OpenAPI`) | RF-07 |
