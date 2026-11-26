@@ -122,7 +122,7 @@ it('lista presencas com nome e matricula e audita apenas o primeiro registro', f
         ->assertJsonPath('presenca.participante.nome', $p->nome)
         ->assertJsonPath('presenca.participante.matricula', $p->matricula)->json('presenca.id');
     $this->postJson($url, ['participante_id' => $p->id], $this->auth)->assertOk();
-    $this->getJson($url, $this->auth)->assertOk()->assertJsonCount(1, 'data')
+    $this->getJson($url.'?finalidade=teste', $this->auth)->assertOk()->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.id', $id)->assertJsonPath('data.0.participante_nome', $p->nome)
         ->assertJsonPath('data.0.participante.nome', $p->nome)
         ->assertJsonPath('data.0.matricula', $p->matricula);

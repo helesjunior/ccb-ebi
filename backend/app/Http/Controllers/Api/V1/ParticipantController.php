@@ -11,6 +11,7 @@ use App\Http\Requests\Participantes\CadastrarParticipanteRequest;
 use App\Http\Requests\Participantes\CorrigirParticipanteRequest;
 use App\Http\Resources\ParticipanteResource;
 use App\Support\Arquivo\Contracts\ArmazenarArquivo;
+use App\Support\FinalidadeLeitura;
 use App\Support\Participantes\AutorizacaoParticipante;
 use App\Support\ProblemException;
 use App\Support\Relatorios\VisibilidadeIgreja;
@@ -60,7 +61,7 @@ class ParticipantController
     /** Busca candidatos por nome normalizado + data (dedup, CA-27). */
     public function index(Request $request): JsonResponse
     {
-        $finalidade = $this->finalidade($request);
+        $finalidade = FinalidadeLeitura::exigir($request);
 
         $candidatos = $this->participantes->buscar(
             (string) $request->query('q', ''),
@@ -105,7 +106,7 @@ class ParticipantController
     {
         // Leitura por operador: a policy cobre `participante.ler` (territorial).
         // O caminho do responsavel (dependentes) e tratado em `/me/participants`.
-        $finalidade = $this->finalidade($request);
+        $finalidade = FinalidadeLeitura::exigir($request);
 
         $participante = $this->participantes->encontrar($id)
             ?? throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Participante não encontrado.');
@@ -181,26 +182,6 @@ class ParticipantController
     private function usuarioId(Request $request): string
     {
         return (string) ($request->user()?->getAuthIdentifier() ?? '');
-    }
-
-    /**
-     * Leitura identificavel exige finalidade declarada (matriz `*`): sem ela, a
-     * leitura e recusada. Nao reusa a finalidade do termo de consentimento.
-     */
-    private function finalidade(Request $request): string
-    {
-        $finalidade = trim((string) ($request->query('finalidade', $request->header('X-Finalidade', ''))));
-
-        if ($finalidade === '') {
-            throw new ProblemException(
-                'finalidade_obrigatoria',
-                'Dados inválidos',
-                422,
-                'A leitura de dado identificável exige a finalidade declarada.',
-            );
-        }
-
-        return $finalidade;
     }
 
     /**

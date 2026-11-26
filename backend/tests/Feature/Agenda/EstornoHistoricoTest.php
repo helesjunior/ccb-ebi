@@ -76,7 +76,7 @@ it('aceita motivo de 500 caracteres e rejeita 501', function () {
 it('autoriza historico pela igreja do participante e nao pela sessao frequentada', function () {
     $outra = igrejaComEbi();
     $this->sessao->update(['ebi_id' => $outra['ebi']->id, 'igreja_id' => $outra['igreja']->id]);
-    $url = "/api/v1/participants/{$this->participante->id}/attendance";
+    $url = "/api/v1/participants/{$this->participante->id}/attendance?finalidade=teste";
 
     $this->getJson($url, $this->auth)->assertOk()
         ->assertJsonCount(1, 'data')->assertJsonPath('data.0.ebi.id', $outra['ebi']->id);
@@ -90,7 +90,7 @@ it('autoriza historico pela igreja do participante e nao pela sessao frequentada
 });
 
 it('historico do operador respeita o escopo e lista EBI e data', function () {
-    $this->getJson("/api/v1/participants/{$this->participante->id}/attendance", $this->auth)
+    $this->getJson("/api/v1/participants/{$this->participante->id}/attendance?finalidade=teste", $this->auth)
         ->assertOk()
         ->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.ebi.nome', $this->ebi->nome);
@@ -154,7 +154,7 @@ it('resolve inexistentes e restringe estorno ao escopo da presenca', function ()
 
 it('sem igreja de referencia permite historico apenas ao super admin', function () {
     $this->participante->update(['igreja_referencia_id' => null]);
-    $url = "/api/v1/participants/{$this->participante->id}/attendance";
+    $url = "/api/v1/participants/{$this->participante->id}/attendance?finalidade=teste";
     $this->getJson($url, $this->auth)->assertForbidden();
     $admin = criarUsuarioComPapel('super_admin');
     app('auth')->forgetGuards();
@@ -167,20 +167,20 @@ it('ordena historico e filtra pelo registro incluindo estornadas', function () {
         'sessao_id' => $this->sessao->id, 'participante_id' => $this->participante->id,
         'status' => Presenca::STATUS_ESTORNADA, 'registrado_em' => '2026-11-18 10:00:00',
     ]);
-    $url = "/api/v1/participants/{$this->participante->id}/attendance";
+    $url = "/api/v1/participants/{$this->participante->id}/attendance?finalidade=teste";
     $this->getJson($url, $this->auth)->assertOk()->assertJsonCount(2, 'data')
         ->assertJsonPath('data.0.id', $this->presenca->id)
         ->assertJsonPath('data.1.id', $antiga->id)
         ->assertJsonPath('data.1.status', 'estornada')
         ->assertJsonPath('data.0.inicio_previsto', $this->sessao->inicio_previsto->toIso8601String());
-    $this->getJson($url.'?de=2026-11-19', $this->auth)->assertOk()->assertJsonCount(1, 'data')
+    $this->getJson($url.'&de=2026-11-19', $this->auth)->assertOk()->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.id', $this->presenca->id);
-    $this->getJson($url.'?de=2026-11-19T09:00:00', $this->auth)->assertOk()->assertJsonCount(1, 'data');
-    $this->getJson($url.'?ate=2026-11-19T09:00:00', $this->auth)->assertOk()->assertJsonCount(1, 'data');
-    $this->getJson($url.'?ate=2026-11-18T10:00:00', $this->auth)->assertOk()->assertJsonCount(1, 'data')
+    $this->getJson($url.'&de=2026-11-19T09:00:00', $this->auth)->assertOk()->assertJsonCount(1, 'data');
+    $this->getJson($url.'&ate=2026-11-19T09:00:00', $this->auth)->assertOk()->assertJsonCount(1, 'data');
+    $this->getJson($url.'&ate=2026-11-18T10:00:00', $this->auth)->assertOk()->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.id', $antiga->id);
-    $this->getJson($url.'?de=2026-11-18&ate=2026-11-19T10:00:00', $this->auth)
+    $this->getJson($url.'&de=2026-11-18&ate=2026-11-19T10:00:00', $this->auth)
         ->assertOk()->assertJsonCount(2, 'data');
-    $this->getJson($url.'?de=invalida', $this->auth)->assertUnprocessable();
-    $this->getJson($url.'?de=2026-11-19&ate=2026-11-18', $this->auth)->assertUnprocessable();
+    $this->getJson($url.'&de=invalida', $this->auth)->assertUnprocessable();
+    $this->getJson($url.'&de=2026-11-19&ate=2026-11-18', $this->auth)->assertUnprocessable();
 });

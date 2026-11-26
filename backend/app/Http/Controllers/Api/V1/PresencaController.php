@@ -18,6 +18,7 @@ use App\Http\Requests\Agenda\ContingenciaPresencaRequest;
 use App\Http\Requests\Agenda\EstornarPresencaRequest;
 use App\Http\Requests\Agenda\RegistrarPresencaRequest;
 use App\Http\Resources\PresencaResource;
+use App\Support\FinalidadeLeitura;
 use App\Support\ProblemException;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -45,7 +46,7 @@ class PresencaController
         if (! Gate::any([Operacoes::PRESENCA_REGISTRAR, Operacoes::PRESENCA_LER], ['ebi', $sessao->ebiId])) {
             throw new AuthorizationException;
         }
-        $finalidade = $this->finalidade($request);
+        $finalidade = FinalidadeLeitura::exigir($request);
         $termo = trim((string) $request->query('busca', ''));
         if (mb_strlen($termo) < 3) {
             throw new ProblemException('busca_curta', 'Dados inválidos', 422);
@@ -100,8 +101,16 @@ class PresencaController
     {
         $sessao = $this->sessao($id);
         Gate::authorize(Operacoes::PRESENCA_LER, ['ebi', $sessao->ebiId]);
+        $finalidade = FinalidadeLeitura::exigir($request);
+        $lista = $this->consulta->daSessao($id);
+        $this->auditoria->registrar([
+            'acao' => 'presenca.lida', 'recurso' => 'presenca', 'ator_id' => (string) $request->user()?->getAuthIdentifier(),
+            'origem' => 'api', 'escopo' => "ebi:{$sessao->ebiId}", 'motivo' => $finalidade,
+            'metadados_minimizados' => ['sessao_id' => $id, 'participante_ids' => array_values(array_unique(array_map(fn ($p) => $p->participanteId, $lista)))],
+            'ocorrido_em' => now(),
+        ]);
 
-        return response()->json(['data' => PresencaResource::collection($this->consulta->daSessao($id))->resolve($request)]);
+        return response()->json(['data' => PresencaResource::collection($lista)->resolve($request)]);
     }
 
     public function estornar(EstornarPresencaRequest $request, string $id): JsonResponse
@@ -117,21 +126,5 @@ class PresencaController
     private function sessao(string $id): SessaoEbi
     {
         return $this->sessoes->detalhe($id) ?? throw new ProblemException('not_found', 'Recurso não encontrado', 404);
-    }
-
-    private function finalidade(Request $request): string
-    {
-        $finalidade = trim((string) ($request->query('finalidade', $request->header('X-Finalidade', ''))));
-
-        if ($finalidade === '') {
-            throw new ProblemException(
-                'finalidade_obrigatoria',
-                'Dados inválidos',
-                422,
-                'A leitura de dado identificável exige a finalidade declarada.',
-            );
-        }
-
-        return $finalidade;
     }
 }
