@@ -210,38 +210,59 @@ class GerenciadorParticipante implements GerirParticipante
         });
     }
 
-    public function corrigir(string $usuarioId, string $id, array $dados): Participante
+    public function corrigir(string $usuarioId, string $id, array $dados, string $motivo, ?string $escopo): Participante
     {
         $participante = $this->encontrar($id)
             ?? throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Participante não encontrado.');
+
+        if ($participante->status === 'mesclado') {
+            throw new ProblemException('participante_mesclado', 'Conflito', 409, 'Cadastro mesclado não pode ser corrigido; desfaça a mesclagem.');
+        }
 
         if (array_key_exists('data_nascimento', $dados)) {
             $this->validarNascimento($dados['data_nascimento']);
         }
 
         $antes = $participante->only(['nome', 'nome_social', 'data_nascimento', 'igreja_referencia_id']);
-
-        $participante->fill(array_intersect_key($dados, array_flip([
+        $aplicados = array_intersect_key($dados, array_flip([
             'nome', 'nome_social', 'data_nascimento', 'igreja_referencia_id',
-        ])))->save();
+        ]));
 
-        $this->auditoria->registrar([
-            'acao' => 'participante.corrigido',
-            'recurso' => 'participante',
-            'ator_id' => $usuarioId,
-            'origem' => 'api',
-            'escopo' => null,
-            'motivo' => null,
-            'metadados_minimizados' => [
-                'participante_id' => (string) $participante->id,
-                'campos' => array_keys($dados),
-                // Estado anterior para reversao (ADR-0007): dado minimo, sem PII nova.
-                'antes' => $antes,
-            ],
-            'ocorrido_em' => now(),
-        ]);
+        return DB::transaction(function () use ($participante, $aplicados, $antes, $usuarioId, $motivo, $escopo): Participante {
+            $participante->fill($aplicados);
 
-        return $participante;
+            // Mesclagem pendente: o desfazer restaura `snapshot['principal']`;
+            // a correcao vai junto para nao ser apagada (decisao do produto).
+            $snapshot = $participante->snapshot_mesclagem;
+            if (is_array($snapshot) && is_array($snapshot['principal'] ?? null)) {
+                foreach ($aplicados as $campo => $valor) {
+                    $snapshot['principal'][$campo] = $campo === 'data_nascimento'
+                        ? Carbon::parse($valor)->toDateString()
+                        : $valor;
+                }
+                $participante->snapshot_mesclagem = $snapshot;
+            }
+
+            $participante->save();
+
+            $this->auditoria->registrar([
+                'acao' => 'participante.corrigido',
+                'recurso' => 'participante',
+                'ator_id' => $usuarioId,
+                'origem' => 'api',
+                'escopo' => $escopo,
+                'motivo' => $motivo,
+                'metadados_minimizados' => [
+                    'participante_id' => (string) $participante->id,
+                    'campos' => array_keys($aplicados),
+                    // Estado anterior para reversao (ADR-0007): dado minimo, sem PII nova.
+                    'antes' => $antes,
+                ],
+                'ocorrido_em' => now(),
+            ]);
+
+            return $participante;
+        });
     }
 
     private function validarNascimento(mixed $data): void

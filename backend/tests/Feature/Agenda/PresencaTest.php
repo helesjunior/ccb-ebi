@@ -122,7 +122,7 @@ it('lista presencas com nome e matricula e audita apenas o primeiro registro', f
         ->assertJsonPath('presenca.participante.nome', $p->nome)
         ->assertJsonPath('presenca.participante.matricula', $p->matricula)->json('presenca.id');
     $this->postJson($url, ['participante_id' => $p->id], $this->auth)->assertOk();
-    $this->getJson($url, $this->auth)->assertOk()->assertJsonCount(1, 'data')
+    $this->getJson($url.'?finalidade=teste', $this->auth)->assertOk()->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.id', $id)->assertJsonPath('data.0.participante_nome', $p->nome)
         ->assertJsonPath('data.0.participante.nome', $p->nome)
         ->assertJsonPath('data.0.matricula', $p->matricula);
@@ -218,4 +218,16 @@ it('reproduz a resposta com a mesma chave de idempotencia', function () {
     $primeira = $this->postJson($url, ['participante_id' => $p->id], $auth)->assertCreated()->json();
     $this->postJson($url, ['participante_id' => $p->id], $auth)->assertCreated()->assertExactJson($primeira);
     expect(EventoAuditoria::query()->where('acao', 'presenca.registrada')->count())->toBe(1);
+});
+
+it('lista os ebis com presenca valida do participante', function () {
+    ['igreja' => $igrejaB, 'ebi' => $ebiB] = igrejaComEbi();
+    $p = Participante::factory()->create(['data_nascimento' => '2016-01-01']);
+    $outraA = Sessao::factory()->create(['ebi_id' => $this->ebi->id, 'igreja_id' => $this->igreja->id]);
+    $sessaoB = Sessao::factory()->create(['ebi_id' => $ebiB->id, 'igreja_id' => $igrejaB->id]);
+    foreach ([[$this->sessao, Presenca::STATUS_VALIDA], [$outraA, Presenca::STATUS_VALIDA], [$sessaoB, Presenca::STATUS_ESTORNADA]] as [$s, $status]) {
+        Presenca::factory()->create(['sessao_id' => $s->id, 'participante_id' => $p->id, 'registrado_por' => $this->coord->id, 'status' => $status]);
+    }
+
+    expect(app(ConsultarPresenca::class)->ebisComPresencaValida($p->id))->toBe([(string) $this->ebi->id]);
 });

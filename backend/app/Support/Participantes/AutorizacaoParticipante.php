@@ -7,6 +7,7 @@ use App\Domain\Identidade\Services\ContextoAtuacao;
 use App\Domain\Organizacao\Contracts\ConsultarHierarquia;
 use App\Domain\Participantes\Models\Participante;
 use App\Domain\Participantes\Services\VerificadorPropriedadeParticipante;
+use App\Domain\Sessoes\Contracts\ConsultarPresenca;
 use App\Support\ProblemException;
 
 /**
@@ -33,6 +34,7 @@ class AutorizacaoParticipante
         private readonly VerificadorPropriedadeParticipante $propriedade,
         private readonly AutorizarOperacao $autorizar,
         private readonly ConsultarHierarquia $hierarquia,
+        private readonly ConsultarPresenca $presencas,
     ) {}
 
     /**
@@ -78,23 +80,84 @@ class AutorizacaoParticipante
         Participante $participante,
         string $operacaoTerritorial,
     ): bool {
-        if (! $contexto instanceof ContextoAtuacao) {
-            return false;
-        }
-
         $igrejaId = $participante->igreja_referencia_id;
 
         if ($igrejaId === null || $igrejaId === '') {
             return false;
         }
 
-        $ebiId = $this->hierarquia->ebiDaigreja((string) $igrejaId);
+        return $this->cobreIgreja($contexto, (string) $igrejaId, $operacaoTerritorial);
+    }
+
+    /** O escopo do ator cobre esta igreja (resolvida a EBI quando ha uma)? */
+    public function cobreIgreja(?ContextoAtuacao $contexto, string $igrejaId, string $operacao): bool
+    {
+        if (! $contexto instanceof ContextoAtuacao) {
+            return false;
+        }
+
+        $ebiId = $this->hierarquia->ebiDaigreja($igrejaId);
 
         [$tipoRecurso, $recursoId] = $ebiId !== null
             ? ['ebi', $ebiId]
-            : ['igreja', (string) $igrejaId];
+            : ['igreja', $igrejaId];
 
-        return $this->autorizar->permite($contexto, $operacaoTerritorial, $tipoRecurso, $recursoId);
+        return $this->autorizar->permite($contexto, $operacao, $tipoRecurso, $recursoId);
+    }
+
+    /**
+     * CA-27 (ADR-0027): o participante esta ligado ao escopo do ator para
+     * mesclar/corrigir? Com igreja de referencia, so ela conta. Sem igreja, conta
+     * a presenca `valida` em EBI do escopo — a presenca nao liga cadastro de outra
+     * igreja, porque a busca da sessao encontra qualquer cadastro do pais.
+     */
+    public function ligado(?ContextoAtuacao $contexto, Participante $participante, string $operacao): bool
+    {
+        if (! $contexto instanceof ContextoAtuacao) {
+            return false;
+        }
+
+        if ($contexto->papelCodigo === 'super_admin') {
+            return $this->autorizar->permite($contexto, $operacao);
+        }
+
+        $igrejaId = $participante->igreja_referencia_id;
+
+        if ($igrejaId !== null && $igrejaId !== '') {
+            return $this->cobreIgreja($contexto, (string) $igrejaId, $operacao);
+        }
+
+        foreach ($this->presencas->ebisComPresencaValida((string) $participante->id) as $ebiId) {
+            if ($this->autorizar->permite($contexto, $operacao, 'ebi', $ebiId)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * A coordenadora (e os demais papeis) precisa de TODOS ligados; a
+     * coordenadora chefe, de AO MENOS UM. Lanca 403 quando falha.
+     *
+     * @param  array<int, Participante>  $participantes
+     */
+    public function exigirLigados(?ContextoAtuacao $contexto, array $participantes, string $operacao): void
+    {
+        $ligados = array_filter($participantes, fn (Participante $p): bool => $this->ligado($contexto, $p, $operacao));
+
+        $ok = $contexto?->papelCodigo === 'coordenadora_chefe'
+            ? $ligados !== []
+            : $participantes !== [] && count($ligados) === count($participantes);
+
+        if (! $ok) {
+            throw new ProblemException(
+                'acesso_negado',
+                'Acesso negado',
+                403,
+                'O participante não está ligado a um EBI onde você atua.',
+            );
+        }
     }
 
     /**

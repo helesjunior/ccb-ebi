@@ -50,10 +50,10 @@ interface GerirParticipante
     public function cortarVisiveis(array $candidatos, bool $suprimir = true): array;
 
     /**
-     * Corrige dados cadastrais permitidos. Registra auditoria com o estado
-     * anterior para reversao (ADR-0007).
+     * Corrige dados cadastrais permitidos. Registra auditoria com motivo, escopo
+     * e o estado anterior para reversao (ADR-0007). Cadastro `mesclado`: 409.
      *
      * @param  array<string, mixed>  $dados
      */
-    public function corrigir(string $usuarioId, string $id, array $dados): Participante;
+    public function corrigir(string $usuarioId, string $id, array $dados, string $motivo, ?string $escopo): Participante;
 }

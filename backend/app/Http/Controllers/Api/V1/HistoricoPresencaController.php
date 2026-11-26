@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Auditoria\Contracts\RegistrarEvento;
 use App\Domain\Participantes\Contracts\ConsultarParticipante;
 use App\Domain\Sessoes\Contracts\ConsultarPresenca;
 use App\Domain\Sessoes\Contracts\HistoricoPresenca;
+use App\Support\FinalidadeLeitura;
 use App\Support\Presenca\AutorizacaoHistoricoPresenca;
 use App\Support\ProblemException;
 use Illuminate\Http\JsonResponse;
@@ -16,6 +18,7 @@ class HistoricoPresencaController
         private readonly ConsultarParticipante $participantes,
         private readonly ConsultarPresenca $consulta,
         private readonly AutorizacaoHistoricoPresenca $autorizacao,
+        private readonly RegistrarEvento $auditoria,
     ) {}
 
     public function operador(Request $request, string $id): JsonResponse
@@ -23,8 +26,16 @@ class HistoricoPresencaController
         $participante = $this->participantes->encontrar($id)
             ?? throw new ProblemException('not_found', 'Recurso não encontrado', 404);
         $this->autorizacao->exigirOperador($request->attributes->get('contexto_atuacao'), $id, $participante->igrejaReferenciaId);
+        $finalidade = FinalidadeLeitura::exigir($request);
+        $resposta = $this->historico($request, $id);
+        $this->auditoria->registrar([
+            'acao' => 'presenca.lida', 'recurso' => 'presenca', 'ator_id' => (string) $request->user()?->getAuthIdentifier(),
+            'origem' => 'api', 'escopo' => $participante->igrejaReferenciaId !== null ? "igreja:{$participante->igrejaReferenciaId}" : null,
+            'motivo' => $finalidade, 'metadados_minimizados' => ['participante_id' => $id],
+            'ocorrido_em' => now(),
+        ]);
 
-        return $this->historico($request, $id);
+        return $resposta;
     }
 
     public function responsavel(Request $request, string $id): JsonResponse
