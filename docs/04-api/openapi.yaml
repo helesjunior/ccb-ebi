@@ -559,11 +559,13 @@ paths:
     get:
       tags: [sessions]
       summary: Presenças da sessão
+      description: Exige a finalidade declarada (até 255 caracteres), registrada na auditoria como `presenca.lida`.
       security:
         - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/XActingScope'
         - $ref: '#/components/parameters/SessaoId'
+        - $ref: '#/components/parameters/FinalidadeLeitura'
       responses:
         '200':
           description: Presenças da sessão
@@ -578,6 +580,7 @@ paths:
         '401': { $ref: '#/components/responses/Problem' }
         '403': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
   /churches:
     get:
       tags: [organization]
@@ -2487,16 +2490,51 @@ paths:
         '403': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/Problem' }
-  /participants/{id}/attendance:
-    get:
+    patch:
       tags: [participants]
-      summary: Histórico de presenças (operador)
-      description: Histórico de presenças do participante, do mais recente ao mais antigo.
+      summary: Corrigir cadastro do participante (CA-27)
+      description: >-
+        Exige `participante.corrigir` e participante ligado ao escopo do ator
+        (igreja de referência no escopo; sem igreja, presença válida em EBI do
+        escopo). Motivo obrigatório, auditado em `participante.corrigido`.
+        `422 nada_a_corrigir` quando nenhum campo muda; `422 igreja_fora_do_escopo`
+        quando a nova igreja não está no escopo; `409 participante_mesclado`.
       security:
         - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/XActingScope'
         - $ref: '#/components/parameters/ParticipanteId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CorrecaoParticipanteInput' }
+      responses:
+        '200':
+          description: Participante corrigido
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Participante' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /participants/{id}/attendance:
+    get:
+      tags: [participants]
+      summary: Histórico de presenças (operador)
+      description: >-
+        Histórico de presenças do participante, do mais recente ao mais antigo.
+        Exige a finalidade declarada (até 255 caracteres), registrada na
+        auditoria como `presenca.lida`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/ParticipanteId'
+        - $ref: '#/components/parameters/FinalidadeLeitura'
       responses:
         '200':
           description: Histórico de presenças do participante
@@ -2511,6 +2549,7 @@ paths:
         '401': { $ref: '#/components/responses/Problem' }
         '403': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
   /participants/{id}/guardians:
     post:
       tags: [participants]
@@ -2972,7 +3011,7 @@ components:
       description: >-
         Finalidade declarada da leitura identificável (matriz `*` da leitura),
         registrada na auditoria. Não reusa a finalidade do termo de consentimento.
-      schema: { type: string }
+      schema: { type: string, maxLength: 255 }
   responses:
     Problem:
       description: Erro no formato RFC 9457
@@ -3381,6 +3420,15 @@ components:
         nome_social: { type: [string, 'null'], maxLength: 255 }
         data_nascimento: { type: string, format: date }
         igreja_referencia_id: { type: [string, 'null'] }
+    CorrecaoParticipanteInput:
+      type: object
+      required: [motivo]
+      properties:
+        nome: { type: string, maxLength: 255 }
+        nome_social: { type: [string, 'null'], maxLength: 255 }
+        data_nascimento: { type: string, format: date }
+        igreja_referencia_id: { type: [string, 'null'] }
+        motivo: { type: string, minLength: 3, maxLength: 255 }
     CadastroAssistidoInput:
       type: object
       required: [nome, data_nascimento, responsavel_nome, tipo_relacao, evidencia]

@@ -1178,10 +1178,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Presenças da sessão */
+        /**
+         * Presenças da sessão
+         * @description Exige a finalidade declarada (até 255 caracteres), registrada na auditoria como `presenca.lida`.
+         */
         get: {
             parameters: {
-                query?: never;
+                query: {
+                    /** @description Finalidade declarada da leitura identificável (matriz `*` da leitura), registrada na auditoria. Não reusa a finalidade do termo de consentimento. */
+                    finalidade: components["parameters"]["FinalidadeLeitura"];
+                };
                 header?: {
                     /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
                     "X-Acting-Scope"?: components["parameters"]["XActingScope"];
@@ -1207,6 +1213,7 @@ export interface paths {
                 401: components["responses"]["Problem"];
                 403: components["responses"]["Problem"];
                 404: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
             };
         };
         put?: never;
@@ -4535,7 +4542,45 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * Corrigir cadastro do participante (CA-27)
+         * @description Exige `participante.corrigir` e participante ligado ao escopo do ator (igreja de referência no escopo; sem igreja, presença válida em EBI do escopo). Motivo obrigatório, auditado em `participante.corrigido`. `422 nada_a_corrigir` quando nenhum campo muda; `422 igreja_fora_do_escopo` quando a nova igreja não está no escopo; `409 participante_mesclado`.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: components["parameters"]["ParticipanteId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CorrecaoParticipanteInput"];
+                };
+            };
+            responses: {
+                /** @description Participante corrigido */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Participante"];
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                409: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
         trace?: never;
     };
     "/participants/{id}/attendance": {
@@ -4547,11 +4592,14 @@ export interface paths {
         };
         /**
          * Histórico de presenças (operador)
-         * @description Histórico de presenças do participante, do mais recente ao mais antigo.
+         * @description Histórico de presenças do participante, do mais recente ao mais antigo. Exige a finalidade declarada (até 255 caracteres), registrada na auditoria como `presenca.lida`.
          */
         get: {
             parameters: {
-                query?: never;
+                query: {
+                    /** @description Finalidade declarada da leitura identificável (matriz `*` da leitura), registrada na auditoria. Não reusa a finalidade do termo de consentimento. */
+                    finalidade: components["parameters"]["FinalidadeLeitura"];
+                };
                 header?: {
                     /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
                     "X-Acting-Scope"?: components["parameters"]["XActingScope"];
@@ -4577,6 +4625,7 @@ export interface paths {
                 401: components["responses"]["Problem"];
                 403: components["responses"]["Problem"];
                 404: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
             };
         };
         put?: never;
@@ -5497,6 +5546,14 @@ export interface components {
             /** Format: date */
             data_nascimento: string;
             igreja_referencia_id?: string | null;
+        };
+        CorrecaoParticipanteInput: {
+            nome?: string;
+            nome_social?: string | null;
+            /** Format: date */
+            data_nascimento?: string;
+            igreja_referencia_id?: string | null;
+            motivo: string;
         };
         CadastroAssistidoInput: {
             nome: string;
