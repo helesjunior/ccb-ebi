@@ -188,6 +188,8 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
                 ->middleware('can:participante.mesclar')->name('participants.merge');
             Route::post('participants/{id}/merge/undo', [ParticipantMergeController::class, 'undo'])
                 ->middleware('can:participante.mesclar')->name('participants.merge.undo');
+            Route::patch('participants/{id}', [ParticipantController::class, 'update'])
+                ->middleware('can:participante.corrigir')->name('participants.update');
         });
 
         // Vinculos do responsavel (RF-03). A solicitacao parte do responsavel

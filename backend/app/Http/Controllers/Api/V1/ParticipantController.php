@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api\V1;
 use App\Domain\Auditoria\Contracts\RegistrarEvento;
 use App\Domain\Identidade\Services\ContextoAtuacao;
 use App\Domain\Participantes\Contracts\GerirParticipante;
+use App\Domain\Participantes\Models\Participante;
 use App\Http\Requests\Participantes\CadastrarAssistidoRequest;
 use App\Http\Requests\Participantes\CadastrarParticipanteRequest;
+use App\Http\Requests\Participantes\CorrigirParticipanteRequest;
 use App\Http\Resources\ParticipanteResource;
 use App\Support\Arquivo\Contracts\ArmazenarArquivo;
 use App\Support\Participantes\AutorizacaoParticipante;
@@ -14,6 +16,7 @@ use App\Support\ProblemException;
 use App\Support\Relatorios\VisibilidadeIgreja;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 class ParticipantController
 {
@@ -120,6 +123,52 @@ class ParticipantController
         $this->auditarLeitura($request, $finalidade, [(string) $participante->id]);
 
         return (new ParticipanteResource($participante))->response();
+    }
+
+    /** Correcao de cadastro (CA-27): participante ligado ao escopo e motivo obrigatorio. */
+    public function update(CorrigirParticipanteRequest $request, string $id): JsonResponse
+    {
+        $contexto = $this->contexto($request)
+            ?? throw new ProblemException('acesso_negado', 'Acesso negado', 403, 'Contexto de atuação ausente.');
+
+        $participante = $this->participantes->encontrar($id)
+            ?? throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Participante não encontrado.');
+
+        $this->autorizacao->exigirLigados($contexto, [$participante], 'participante.corrigir');
+
+        $dados = array_filter(
+            $request->safe()->except('motivo'),
+            fn (mixed $valor, string $campo): bool => $this->mudou($participante, $campo, $valor),
+            ARRAY_FILTER_USE_BOTH,
+        );
+
+        if ($dados === []) {
+            throw new ProblemException('nada_a_corrigir', 'Dados inválidos', 422, 'Nenhum campo difere do cadastro atual.');
+        }
+
+        $novaIgreja = $dados['igreja_referencia_id'] ?? null;
+        if (is_string($novaIgreja) && ! $this->autorizacao->cobreIgreja($contexto, $novaIgreja, 'participante.corrigir')) {
+            throw new ProblemException('igreja_fora_do_escopo', 'Dados inválidos', 422, 'A nova igreja de referência não está no seu escopo.');
+        }
+
+        $participante = $this->participantes->corrigir(
+            $this->usuarioId($request),
+            $id,
+            $dados,
+            (string) $request->validated('motivo'),
+            "{$contexto->tipoEscopo}:{$contexto->escopoId}",
+        );
+
+        return (new ParticipanteResource($participante))->response();
+    }
+
+    private function mudou(Participante $participante, string $campo, mixed $valor): bool
+    {
+        if ($campo === 'data_nascimento') {
+            return $participante->data_nascimento?->toDateString() !== Carbon::parse((string) $valor)->toDateString();
+        }
+
+        return $participante->getAttribute($campo) !== $valor;
     }
 
     private function contexto(Request $request): ?ContextoAtuacao
