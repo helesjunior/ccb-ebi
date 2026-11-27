@@ -56,6 +56,21 @@ Use a auditoria para responder perguntas que vão aparecer:
 - **Quando esta escala foi aprovada?**
 - **Quem mexeu no papel desta pessoa?**
 
+**O que cada nível vê dos participantes**
+
+Desde a versão 2.22, os eventos de participante (cadastro, consulta, mesclagem, correção, vínculo e
+exceção) ficam registrados no território **onde a ação foi feita**: o EBI ou a igreja de quem agiu.
+
+Pedido de vínculo, pedido de exceção e cadastro com igreja de referência ficam no território **da
+igreja da criança**.
+
+O Admin de setor e o Admin regional veem os eventos do próprio território. **Não** aparecem para
+eles: ações feitas pelo Super Admin; pedidos e cadastros de criança sem igreja de referência; e
+eventos anteriores à 2.22. Esses só o Super Admin vê.
+
+Se um evento não aparece para você, isso não quer dizer que ele não aconteceu. Peça ao Super Admin
+para consultar.
+
 ## 4. Relatórios de território
 
 Menu **Administração → Relatórios**. Escolha o período e navegue pela unidade. A supressão

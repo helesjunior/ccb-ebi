@@ -10,9 +10,36 @@ Sem exceção, o sistema recusaria a presença da criança e ela ficaria de fora
 a inclusão é uma **decisão registrada** da coordenação, com o responsável, e não uma brecha no
 cadastro.
 
+## Aviso dos 12 anos
+
+Aos 12 anos, sem exceção aprovada vigente, a presença da criança fica bloqueada. O sistema avisa
+30 dias antes.
+
+**Coordenação** (coordenadora ou coordenadora chefe atuando no EBI): ao abrir o **Início**, aparece
+o bloco "Fazem 12 anos nos próximos 30 dias", com nome, matrícula e data de cada criança, e o botão
+**Exceção inclusiva**, que abre esta tela.
+
+Entram na lista os participantes ativos cuja **igreja de referência** é a igreja do EBI e que não
+têm exceção aprovada vigente na data. Uma exceção apenas pedida não tira a criança da lista.
+
+A criança **sem igreja de referência** não aparece em nenhum Início. Se ela frequenta o seu EBI,
+preencha a igreja dela ([Participantes](Participantes)). A criança de outra igreja aparece para a
+coordenação de lá.
+
+- Lista vazia: "Ninguém faz 12 anos nos próximos 30 dias."
+- Falha: "Não foi possível carregar os aniversários.", e o resto do Início continua funcionando.
+
+Abrir o Início registra a consulta na auditoria. O aviso aparece só na tela, sem e-mail.
+
+**Responsável:** vê o aviso em **Meus dependentes**; veja
+[Fluxo do responsável](Fluxo-do-responsavel).
+
 ## Pedir a exceção
 
 Menu **Participantes → Exceção inclusiva**, cartão **Solicitar (responsável)**.
+
+Apesar do nome, o responsável não tem esta tela no menu: ele pede à coordenação do EBI, que
+registra o pedido aqui.
 
 ![Exceção inclusiva](images/22-excecao.png)
 
@@ -20,8 +47,6 @@ Menu **Participantes → Exceção inclusiva**, cartão **Solicitar (responsáve
 2. Escolha o **tipo de necessidade** (ex.: `neurodivergencia`).
 3. Descreva os **apoios necessários** (opcional) — o que a equipe precisa saber para acolher bem.
 4. Toque em **Solicitar exceção**.
-
-A coordenação também pode pedir a exceção no lugar do responsável.
 
 > **Cuidado com o texto.** Os **apoios necessários** descrevem *o que ajuda a criança a
 > participar*, não um diagnóstico. "Precisa de um adulto por perto na hora do lanche" é útil;
@@ -42,6 +67,9 @@ No mesmo menu, cartão **Decidir (coordenadora)**:
 | **Recusar** | Não é o caso; explique o motivo |
 | **Suspender** | Valeu, mas foi interrompida temporariamente |
 | **Revogar** | Deixa de valer em definitivo |
+
+Você só decide exceções de crianças do seu EBI. Fora dele, aparece "Exceção não encontrada." e
+nada muda. O Super Admin decide qualquer exceção.
 
 A decisão é da **coordenação do EBI** — é ela quem conhece o dia a dia —, em conjunto com o
 responsável. Não é uma fila de aprovação administrativa.

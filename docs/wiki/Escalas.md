@@ -98,6 +98,9 @@ Depois de aprovada, a escala pode mudar por **troca**: a auxiliar pede troca em 
 indicando o motivo; a pessoa substituta aceita; a coordenação chefe **decide**. O histórico da
 troca aparece em **Trocas pendentes** enquanto não for decidida.
 
+Enquanto a troca está pendente, quem pediu pode desistir em **Minhas escalas**; veja
+[Fluxo do auxiliar](Fluxo-do-auxiliar).
+
 ## Próximo passo
 
 Auxiliares acompanham a própria agenda em [Fluxo do auxiliar](Fluxo-do-auxiliar).

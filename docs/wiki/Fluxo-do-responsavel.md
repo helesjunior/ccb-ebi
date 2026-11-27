@@ -9,15 +9,10 @@ tratamento dos dados, acompanha a frequência e pede inclusão quando precisa.
 
 Ninguém vê uma criança só por saber o nome dela. O primeiro passo é o **vínculo**.
 
-1. Entre em **Administração → Vínculos** e abra **Solicitar**.
-2. Informe o participante e a sua relação com ele.
-3. Envie o pedido.
+Peça o vínculo à coordenação do EBI, informando a criança e a sua relação com ela. A coordenação
+registra o pedido e decide: pode aprovar, recusar ou pedir um documento que comprove a relação.
 
-O pedido vai para a coordenação do EBI, que pode **Aprovar**, **Recusar** ou **Pedir documento**.
-
-![Vínculos](images/23-vinculos.png)
-
-Se pedirem documento, anexe a comprovação no próprio pedido. Sem vínculo aprovado, a criança **não
+Se pedirem documento, leve a comprovação à coordenação. Sem vínculo aprovado, a criança **não
 aparece** em Meus dependentes.
 
 ## 2. Meus dependentes
@@ -28,6 +23,12 @@ Menu **Participantes → Meus dependentes**.
 
 Aqui ficam as crianças vinculadas. Para cada uma você acompanha a **frequência** (presenças
 registradas nas sessões) e os dados do cadastro.
+
+Quando uma criança está para fazer 12 anos, aparece o aviso:
+
+> ‹nome› faz 12 anos em ‹data›. Sem exceção inclusiva aprovada, a presença fica bloqueada a partir dessa data. Se for o caso, peça a exceção à coordenação do EBI.
+
+Se a criança precisa continuar, procure a coordenação do EBI antes dessa data.
 
 ## 3. Consentimento e privacidade
 
@@ -42,15 +43,10 @@ Veja [Minha conta](Minha-conta).
 
 ## 4. Quando a criança precisa de acolhimento especial
 
-Se a criança está fora da faixa etária ou precisa de apoio para participar, use
-**Exceção inclusiva**.
+Se a criança está fora da faixa etária ou precisa de apoio para participar, procure a coordenação
+do EBI. Ela registra o pedido de **exceção inclusiva** e decide.
 
-![Exceção inclusiva](images/22-excecao.png)
-
-1. Informe o **ID do participante**.
-2. Escolha o **tipo de necessidade**.
-3. Descreva os **apoios necessários** — o que ajuda a criança, não diagnóstico.
-4. Envie. A coordenação decide.
+Leve a descrição dos apoios de que a criança precisa para participar, não um diagnóstico.
 
 Veja [Exceção inclusiva](Excecao-inclusiva).
 
@@ -62,11 +58,12 @@ fica guardado cifrado no sistema.
 
 ## Dúvidas frequentes
 
-**"Meu filho não aparece em Meus dependentes."** O vínculo ainda não foi aprovado. Veja o estado do
-pedido em **Vínculos**.
+**"Meu filho não aparece em Meus dependentes."** O vínculo da criança com a sua conta ainda não foi aprovado. Fale com a coordenação do EBI.
 
 **"Quero apagar os dados do meu filho."** Use **Privacidade → Solicitação**. A exclusão é tratada
 pelo encarregado de dados, com o histórico que a lei exige manter.
 
-**"Posso cadastrar meu filho sozinho?"** Sim: **Participantes → Cadastrar participante** e, depois,
-o pedido de vínculo. Busque pelo nome antes — ele pode já ter ficha feita pela coordenação.
+**"Apareceu que meu filho faz 12 anos."** Sem exceção inclusiva aprovada, a presença fica
+bloqueada a partir dessa data. Fale com a coordenação do EBI.
+
+**"Posso cadastrar meu filho sozinho?"** Não pelo portal. Peça à coordenação do EBI, que faz o cadastro com você; veja [Se você não tem conta no portal](#5-se-você-não-tem-conta-no-portal).

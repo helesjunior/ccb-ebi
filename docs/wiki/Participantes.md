@@ -30,8 +30,13 @@ No mesmo formulário:
 - **Data de nascimento** (obrigatório) — define a faixa etária e a regra de EBI
 - **Igreja de referência** (opcional)
 
-Toque em **Cadastrar participante**. O cadastro nasce ligado a quem cadastrou (a coordenação ou o
-próprio responsável).
+Toque em **Cadastrar participante**. O cadastro nasce ligado a quem cadastrou.
+
+A **igreja de referência** precisa existir no cadastro de igrejas e estar no seu escopo. Fora dele,
+aparece "A igreja de referência não está no seu escopo." e nada é gravado.
+
+O campo recebe o **identificador** da igreja, não o nome. Se não souber qual é, deixe em branco. Se
+o identificador não existir, aparece um aviso de dado inválido, em inglês; confira o identificador.
 
 ## Cadastro assistido
 
@@ -70,11 +75,43 @@ enquanto a janela de desfazer estiver aberta.
 
 Quem mescla: coordenação e Super Admin. A ação fica na auditoria com os dois cadastros.
 
+## Corrigir um cadastro
+
+Use para corrigir um dado errado (nome, nome social, data de nascimento ou igreja) sem criar outra
+ficha.
+
+1. Busque o participante.
+2. Na linha dele, toque em **Corrigir**.
+3. Altere só o que estiver errado nos campos **Nome completo**, **Nome social (opcional)**,
+   **Data de nascimento** e **Igreja de referência (opcional)**. Este último recebe o
+   identificador da igreja, como no cadastro.
+4. Informe o **Motivo da correção**, de 3 a 255 caracteres.
+5. Toque em **Salvar correção**.
+
+Ao final, a linha mostra o dado novo e aparece "Cadastro corrigido.".
+
+O botão **Salvar correção** fica desabilitado enquanto nada mudou ou o motivo está fora do limite.
+
+### Se aparecer uma mensagem
+
+A janela de correção continua aberta em todos os casos.
+
+- "O participante não está ligado a um EBI onde você atua." — a criança é de outro EBI; peça à
+  coordenação de lá.
+- "Cadastro mesclado não pode ser corrigido; desfaça a mesclagem." — desfaça a mesclagem ou
+  corrija o cadastro principal.
+- "Nenhum campo difere do cadastro atual." — altere algum campo.
+- "A nova igreja de referência não está no seu escopo." — use uma igreja do seu escopo.
+- Um aviso de dado inválido, em inglês — o identificador da igreja não existe; confira.
+
+Quem corrige: a coordenação, só no cadastro ligado ao seu EBI, e o Super Admin. Os outros perfis
+não veem o botão. A correção fica na auditoria com o motivo e o estado anterior.
+
 ## Vínculo com o responsável
 
 O responsável não vê uma criança só por saber o nome dela: precisa de **vínculo** aprovado. O
-fluxo é: o responsável pede → a coordenação aprova (ou pede documento, recusa e, depois, pode
-revogar).
+fluxo é: o responsável pede à coordenação do EBI → a coordenação registra e decide (aprova, pede
+documento ou recusa, e depois pode revogar).
 
 ![Vínculos](images/23-vinculos.png)
 
@@ -85,10 +122,11 @@ Veja também [Fluxo do responsável](Fluxo-do-responsavel).
 | Ação | Quem |
 |---|---|
 | Buscar participante | Administradores, coordenação, auxiliar, ministério local |
-| Cadastrar | Administradores, coordenação, auxiliar, responsável |
+| Cadastrar | Administradores, coordenação, auxiliar |
 | Cadastro assistido | Coordenação, auxiliar, Admin da igreja, responsável |
+| Corrigir cadastro | Coordenação, Super Admin |
 | Mesclar / desfazer mesclagem | Coordenação, Super Admin |
-| Pedir exceção inclusiva | Coordenação, responsável |
+| Pedir exceção inclusiva | Coordenação (o responsável pede à coordenação) |
 | Decidir exceção inclusiva | Coordenação |
 
 ## O que nunca fazer
