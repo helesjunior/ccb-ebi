@@ -2,7 +2,20 @@
 
 Formato: versão, data, autor e mudanças. Itens mais recentes primeiro.
 
-## 2.21 — 26/11/2026
+## 2.22 - 27/11/2026
+
+Dívidas acumuladas da 2.16 a 2.21: telas que faltavam, aviso dos 12 anos, contingência em lote e escopo na auditoria.
+
+- **Tela de correção de cadastro (CA-27):** botão "Corrigir" na busca de Participantes para coordenadora, coordenadora chefe e `super_admin` (pelo papel do contexto de atuação). O diálogo manda só os campos alterados, com motivo obrigatório, e os erros da API ficam no próprio diálogo.
+- **Aviso dos 12 anos (RF-15):** quem faz 12 anos nos próximos 30 dias (fuso da igreja), sem exceção inclusiva aprovada vigente na data, é avisado na tela. O responsável vê o aviso em "Meus dependentes" (`faz_12_em` em `GET /me/participants`). A coordenadora e a chefe com escopo `ebi` veem o bloco "Fazem 12 anos nos próximos 30 dias" no Início (`GET /ebis/{id}/age-alerts`, com finalidade obrigatória e `participante.lido` auditado).
+- **Contingência em lote (RNF-03):** `POST /sessions/{id}/contingency-attendance/batch` lança até 100 participantes com um único motivo. Cada linha falha sozinha (`inelegivel`, `not_found` para inexistente ou mesclado), e uma sessão que não está `encerrada` barra o lote todo (409). Na tela, a contingência passa a ter multisseleção e o botão "Lançar N presenças". Teste de concorrência novo no PostgreSQL.
+- **`escopo` nos eventos de participante:** cadastro, cadastro assistido, leitura, mesclagem e desfazer, vínculo (pedido, decisão, listagem) e exceção (pedido, decisão) gravam o escopo territorial (`EscopoAuditoria`), e a auditoria por território (`GET /audit-events`) passa a encontrá-los. O pedido do responsável usa o território da criança. Os eventos antigos continuam com `escopo = null`, sem migração.
+- **"Desistir da troca" em Minhas escalas:** `GET /me/schedules` expõe `troca_id` da troca pendente, e a tela cancela o pedido com confirmação.
+- **Território na decisão de exceção:** `PATCH /age-exceptions/{id}` exige que a exceção esteja no território do ator; fora dele, responde 404.
+- **Quebras de contrato:** motivo limitado a 255 caracteres (contingência, estorno, cancelamento e correção de sessão, `reason` da transferência de igreja); motivo da exceção de agenda de 3 a 247; `igreja_referencia_id` precisa existir no cadastro, e o operador só cadastra em igreja do próprio escopo (`422 igreja_fora_do_escopo`, também no cadastro assistido); `404` fora do território na decisão de exceção.
+- **Fora desta versão:** notificação da equipe e da chefia, conflito sem bloqueio opcional e cancelamento ou cópia de escala (2.19); e-mail, push e preferências do RF-15 (E12); mesclar presenças; remover a rota individual de contingência; restringir ao território a presença devolvida pela contingência; seletor de igreja no formulário de correção.
+
+## 2.21 - 26/11/2026
 
 Dívidas da Etapa 6: escopo de mesclagem/correção (CA-27) e finalidade nas leituras de presença.
 
