@@ -73,6 +73,8 @@ Use quando a presença ficou numa lista em papel. Só vale para sessão **Encerr
    etiquetas, e o **×** remove.
 5. Toque em **Lançar ‹N› presenças**, onde ‹N› é o número de marcados.
 
+![Contingência em lote](images/28-contingencia-lote.png)
+
 O resultado aparece como "‹n› lançadas, ‹m› já existiam". Quem já tinha presença não é duplicado.
 Quem não pôde ser lançado aparece em "Não lançadas: ‹nomes›", e os demais são gravados. Quem
 aparece como **Bloqueado** não pode ser marcado.
