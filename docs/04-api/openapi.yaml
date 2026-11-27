@@ -2604,7 +2604,7 @@ paths:
                 properties:
                   data:
                     type: array
-                    items: { $ref: '#/components/schemas/Participante' }
+                    items: { $ref: '#/components/schemas/Dependente' }
         '401': { $ref: '#/components/responses/Problem' }
   /me/participants/{id}/attendance:
     get:
@@ -3407,6 +3407,19 @@ components:
           type: object
           properties:
             proximo_cursor: { type: [string, 'null'] }
+    Dependente:
+      allOf:
+        - $ref: '#/components/schemas/Participante'
+        - type: object
+          required: [faz_12_em]
+          properties:
+            faz_12_em:
+              type: [string, 'null']
+              format: date
+              description: >-
+                Data local do 12o aniversário quando cai nos próximos 30 dias
+                (fuso da igreja de referência) e não há exceção inclusiva
+                aprovada vigente nessa data; `null` nos demais casos.
     Participante:
       type: object
       required: [id, nome, data_nascimento]
