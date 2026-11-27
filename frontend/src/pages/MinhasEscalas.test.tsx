@@ -13,6 +13,9 @@ vi.mock('../api/client', () => ({
   },
 }))
 
+vi.mock('sonner', () => ({ toast: { success: vi.fn() } }))
+
+import { toast } from 'sonner'
 import { MinhasEscalas } from './MinhasEscalas'
 
 const minha = (extras = {}) => ({
@@ -26,6 +29,7 @@ const minha = (extras = {}) => ({
   funcao: 'auxiliar',
   status: 'escalado',
   presente: null,
+  troca_id: null,
   conflitos: [],
   ...extras,
 })
@@ -73,6 +77,45 @@ describe('minhas escalas', () => {
     render(<MinhasEscalas />)
     fireEvent.click(await screen.findByRole('button', { name: /^confirmar$/i }))
     await waitFor(() => expect(post).toHaveBeenCalledWith('/schedule-members/{id}/confirm', expect.anything()))
+  })
+
+  const comTroca = (trocaId: string | null) => minha({ escala_status: 'aprovada', status: 'troca_solicitada', troca_id: trocaId })
+  const chamadasMinhas = () => get.mock.calls.filter(([rota]) => rota === '/me/schedules').length
+
+  it('desiste da troca pendente depois de confirmar', async () => {
+    responder([comTroca('T1')])
+    post.mockResolvedValue({ data: { troca: { id: 'T1', status: 'cancelada' } } })
+    render(<MinhasEscalas />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Desistir da troca' }))
+    const confirmar = await screen.findAllByRole('button', { name: 'Desistir da troca' })
+    fireEvent.click(confirmar[confirmar.length - 1])
+
+    await waitFor(() => expect(post).toHaveBeenCalledWith('/schedule-swaps/{id}/cancel', expect.objectContaining({
+      params: { path: { id: 'T1' } },
+    })))
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith('Pedido de troca cancelado.'))
+    await waitFor(() => expect(chamadasMinhas()).toBe(2))
+  })
+
+  it('sem troca_id nao mostra Desistir', async () => {
+    responder([comTroca(null)])
+    render(<MinhasEscalas />)
+    expect(await screen.findByText(/troca pedida/i)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Desistir da troca' })).not.toBeInTheDocument()
+  })
+
+  it('troca ja decidida mostra o detail e recarrega', async () => {
+    responder([comTroca('T1')])
+    post.mockResolvedValue({ error: { status: 409, code: 'troca_ja_decidida', detail: 'Esta troca já foi decidida.' } })
+    render(<MinhasEscalas />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Desistir da troca' }))
+    const confirmar = await screen.findAllByRole('button', { name: 'Desistir da troca' })
+    fireEvent.click(confirmar[confirmar.length - 1])
+
+    expect(await screen.findByText('Esta troca já foi decidida.')).toBeInTheDocument()
+    await waitFor(() => expect(chamadasMinhas()).toBe(2))
   })
 
   const vagaAberta = (extras = {}) => ({

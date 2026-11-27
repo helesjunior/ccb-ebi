@@ -3,7 +3,9 @@ import { toast } from 'sonner'
 
 import { lerErro } from '../api/erro'
 import type { components } from '../api/schema'
+import { ConfirmarAcao } from '../components/ConfirmarAcao'
 import {
+  cancelarTroca,
   confirmarVaga,
   minhasEscalas,
   minhasVagas,
@@ -90,6 +92,21 @@ export function MinhasEscalas() {
     toast.success('Pedido de troca registrado; aguardando aprovação.')
     setPedindoTroca(null)
     setMotivo('')
+    await carregar()
+  }
+
+  async function desistir(trocaId: string) {
+    setEnviando(true)
+    setErro(null)
+    const { error } = await cancelarTroca(trocaId)
+    setEnviando(false)
+    if (error) {
+      // A troca pode ter sido decidida por outra pessoa: recarrega (que limpa o erro) e depois avisa.
+      await carregar()
+      setErro(lerErro(error, 'Não foi possível desistir da troca.').detail)
+      return
+    }
+    toast.success('Pedido de troca cancelado.')
     await carregar()
   }
 
@@ -279,6 +296,16 @@ export function MinhasEscalas() {
                       {linha.status === 'confirmado' && <span className="text-xs text-muted-foreground">Presença confirmada.</span>}
                       {linha.status === 'troca_solicitada' && (
                         <span className="text-xs text-muted-foreground">Troca pedida; aguardando aprovação.</span>
+                      )}
+                      {linha.status === 'troca_solicitada' && linha.troca_id && (
+                        <ConfirmarAcao
+                          titulo="Desistir da troca?"
+                          descricao="Você continua escalada nesta sessão."
+                          rotuloConfirmar="Desistir da troca"
+                          onConfirmar={() => desistir(linha.troca_id!)}
+                        >
+                          <Button type="button" variant="outline" size="sm" disabled={enviando}>Desistir da troca</Button>
+                        </ConfirmarAcao>
                       )}
                     </div>
                   )}

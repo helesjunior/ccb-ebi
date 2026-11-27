@@ -5911,6 +5911,8 @@ export interface components {
             /** @enum {string} */
             status?: "escalado" | "confirmado" | "troca_solicitada";
             presente?: boolean | null;
+            /** @description Troca pendente aberta pela propria pessoa; null nos demais casos. */
+            troca_id?: string | null;
             conflitos?: components["schemas"]["ConflitoEscala"][];
         };
         TrocaEscalaEnvelope: {
