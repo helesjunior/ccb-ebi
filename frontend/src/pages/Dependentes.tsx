@@ -25,7 +25,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 
-type Participante = components['schemas']['Participante']
+type Participante = components['schemas']['Dependente']
 
 /**
  * Dependentes: participantes que o usuário representa (autorização por
@@ -67,6 +67,17 @@ export function Dependentes() {
               <AlertDescription>{erro}</AlertDescription>
             </Alert>
           )}
+          {dependentes
+            .filter((p) => p.faz_12_em)
+            .map((p) => (
+              <Alert key={p.id} role="status" data-testid="aviso-12-anos">
+                <AlertDescription>
+                  {p.nome} faz 12 anos em {formatarData(p.faz_12_em)}. Sem exceção inclusiva
+                  aprovada, a presença fica bloqueada a partir dessa data. Se for o caso, peça a
+                  exceção à coordenação do EBI.
+                </AlertDescription>
+              </Alert>
+            ))}
           {dependentes.length === 0 && !erro && !carregando ? (
             <div
               data-testid="sem-dependentes"
