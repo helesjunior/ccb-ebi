@@ -9,15 +9,10 @@ tratamento dos dados, acompanha a frequência e pede inclusão quando precisa.
 
 Ninguém vê uma criança só por saber o nome dela. O primeiro passo é o **vínculo**.
 
-1. Entre em **Administração → Vínculos** e abra **Solicitar**.
-2. Informe o participante e a sua relação com ele.
-3. Envie o pedido.
+Peça o vínculo à coordenação do EBI, informando a criança e a sua relação com ela. A coordenação
+registra o pedido e decide: pode aprovar, recusar ou pedir um documento que comprove a relação.
 
-O pedido vai para a coordenação do EBI, que pode **Aprovar**, **Recusar** ou **Pedir documento**.
-
-![Vínculos](images/23-vinculos.png)
-
-Se pedirem documento, anexe a comprovação no próprio pedido. Sem vínculo aprovado, a criança **não
+Se pedirem documento, leve a comprovação à coordenação. Sem vínculo aprovado, a criança **não
 aparece** em Meus dependentes.
 
 ## 2. Meus dependentes
@@ -63,8 +58,7 @@ fica guardado cifrado no sistema.
 
 ## Dúvidas frequentes
 
-**"Meu filho não aparece em Meus dependentes."** O vínculo ainda não foi aprovado. Veja o estado do
-pedido em **Vínculos**.
+**"Meu filho não aparece em Meus dependentes."** O vínculo da criança com a sua conta ainda não foi aprovado. Fale com a coordenação do EBI.
 
 **"Quero apagar os dados do meu filho."** Use **Privacidade → Solicitação**. A exclusão é tratada
 pelo encarregado de dados, com o histórico que a lei exige manter.
