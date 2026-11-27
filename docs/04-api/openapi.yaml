@@ -2420,7 +2420,9 @@ paths:
         O responsável cadastra um participante. Gera a matrícula nacional e
         registra auditoria. Exige a operação `participante.cadastrar`; escrita
         idempotente (`Idempotency-Key`). `igreja_referencia_id`, quando
-        informada, precisa existir (senão 422).
+        informada, precisa existir (senão 422). O responsável escolhe qualquer
+        igreja; os demais papéis só uma do próprio escopo (senão 422
+        `igreja_fora_do_escopo`).
       security:
         - bearerAuth: []
       parameters:
@@ -2448,7 +2450,8 @@ paths:
         A coordenadora cadastra um participante presencialmente com a evidência
         de aceite obrigatória (arquivo, que passa pelo pipeline de storage). O
         responsável pode existir sem conta. Exige `participante.cadastrar`. `igreja_referencia_id`,
-        quando informada, precisa existir (senão 422).
+        quando informada, precisa existir e estar no escopo de quem cadastra
+        (senão 422; fora do escopo, `igreja_fora_do_escopo`).
       security:
         - bearerAuth: []
       parameters:

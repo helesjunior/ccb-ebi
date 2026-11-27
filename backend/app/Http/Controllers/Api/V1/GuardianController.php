@@ -11,6 +11,7 @@ use App\Http\Requests\Participantes\SolicitarVinculoRequest;
 use App\Http\Resources\ParticipanteResource;
 use App\Http\Resources\ResponsavelParticipanteResource;
 use App\Support\Participantes\AutorizacaoParticipante;
+use App\Support\Participantes\EscopoAuditoria;
 use App\Support\Participantes\VisibilidadeVinculoResponsavel;
 use App\Support\ProblemException;
 use Illuminate\Http\JsonResponse;
@@ -26,6 +27,7 @@ class GuardianController
         private readonly GerirVinculoResponsavel $vinculos,
         private readonly GerirParticipante $participantes,
         private readonly AutorizacaoParticipante $autorizacao,
+        private readonly EscopoAuditoria $escopos,
         private readonly VisibilidadeVinculoResponsavel $visibilidade,
         private readonly RegistrarEvento $auditoria,
     ) {}
@@ -48,6 +50,7 @@ class GuardianController
             $usuarioId,
             $participantId,
             $request->validated(),
+            $this->escopos->daIgreja($participante->igreja_referencia_id),
         );
 
         return (new ResponsavelParticipanteResource($vinculo))->response()->setStatusCode(201);
@@ -83,7 +86,7 @@ class GuardianController
             'recurso' => 'vinculo',
             'ator_id' => (string) $request->user()?->getAuthIdentifier(),
             'origem' => 'api',
-            'escopo' => null,
+            'escopo' => EscopoAuditoria::doContexto($this->contexto($request)),
             'motivo' => $finalidade,
             'metadados_minimizados' => [
                 'vinculo_ids' => array_map(static fn ($v): string => (string) $v->id, $vinculos),

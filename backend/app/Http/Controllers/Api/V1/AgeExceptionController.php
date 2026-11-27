@@ -10,6 +10,7 @@ use App\Http\Requests\Participantes\DecidirExcecaoRequest;
 use App\Http\Requests\Participantes\SolicitarExcecaoRequest;
 use App\Http\Resources\ExcecaoEtariaResource;
 use App\Support\Participantes\AutorizacaoParticipante;
+use App\Support\Participantes\EscopoAuditoria;
 use App\Support\ProblemException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,6 +25,7 @@ class AgeExceptionController
         private readonly GerirExcecaoEtaria $excecoes,
         private readonly GerirParticipante $participantes,
         private readonly AutorizacaoParticipante $autorizacao,
+        private readonly EscopoAuditoria $escopos,
     ) {}
 
     public function store(SolicitarExcecaoRequest $request, string $participantId): JsonResponse
@@ -46,6 +48,7 @@ class AgeExceptionController
             $usuarioId,
             $participantId,
             $request->validated(),
+            $this->escopos->daIgreja($participante->igreja_referencia_id),
         );
 
         return (new ExcecaoEtariaResource($excecao))->response()->setStatusCode(201);
@@ -71,6 +74,7 @@ class AgeExceptionController
             $id,
             (string) $validado['decisao'],
             $validado,
+            EscopoAuditoria::doContexto($this->contexto($request)),
         );
 
         return (new ExcecaoEtariaResource($excecao))->response();
