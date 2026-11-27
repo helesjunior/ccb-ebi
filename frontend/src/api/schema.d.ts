@@ -2160,6 +2160,59 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/ebis/{id}/age-alerts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Quem faz 12 anos nos próximos 30 dias (CA4)
+         * @description Participantes ativos da igreja do EBI cujo 12o aniversário cai de hoje a 30 dias (fuso da igreja) e que não têm exceção inclusiva aprovada vigente nessa data, ordenados por data e nome. Exige `excecao.decidir` no EBI (coordenadora, coordenadora chefe, super_admin); fora do escopo responde 403. Leitura identificável: exige `finalidade` e grava `participante.lido` com escopo `ebi:<id>`.
+         */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Finalidade declarada da leitura identificável (matriz `*` da leitura), registrada na auditoria. Não reusa a finalidade do termo de consentimento. */
+                    finalidade: components["parameters"]["FinalidadeLeitura"];
+                };
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                };
+                path: {
+                    id: components["parameters"]["EbiId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Avisos */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data: components["schemas"]["AlertaDozeAnos"][];
+                        };
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/ebis/{id}/equipes": {
         parameters: {
             query?: never;
@@ -4005,6 +4058,67 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sessions/{id}/contingency-attendance/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Lançar a lista em papel de uma vez (CA6, CA7)
+         * @description Até 100 participantes distintos com um único motivo. Cada linha roda como a contingência individual, na própria transação, e falha sozinha (`inelegivel`, `not_found` para inexistente ou mesclado, `sessao_em_estado_invalido` se a sessão mudar no meio). Sessão não `encerrada` responde 409 e não grava nada. Exige `sessao.gerenciar`. Escrita idempotente (`Idempotency-Key`).
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: components["parameters"]["SessaoId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PresencaContingenciaLoteInput"];
+                };
+            };
+            responses: {
+                /** @description Resultado por linha e resumo */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data: components["schemas"]["ResultadoContingenciaLote"][];
+                            resumo: {
+                                criadas: number;
+                                ja_existiam: number;
+                                erros: number;
+                            };
+                        };
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                409: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/attendance/{id}/reversal": {
         parameters: {
             query?: never;
@@ -4405,7 +4519,7 @@ export interface paths {
         put?: never;
         /**
          * Cadastrar participante (RF-02)
-         * @description O responsável cadastra um participante. Gera a matrícula nacional e registra auditoria. Exige a operação `participante.cadastrar`; escrita idempotente (`Idempotency-Key`).
+         * @description O responsável cadastra um participante. Gera a matrícula nacional e registra auditoria. Exige a operação `participante.cadastrar`; escrita idempotente (`Idempotency-Key`). `igreja_referencia_id`, quando informada, precisa existir (senão 422). O responsável escolhe qualquer igreja; os demais papéis só uma do próprio escopo (senão 422 `igreja_fora_do_escopo`).
          */
         post: {
             parameters: {
@@ -4455,7 +4569,7 @@ export interface paths {
         put?: never;
         /**
          * Cadastro assistido com evidência (FL-01, CA-16)
-         * @description A coordenadora cadastra um participante presencialmente com a evidência de aceite obrigatória (arquivo, que passa pelo pipeline de storage). O responsável pode existir sem conta. Exige `participante.cadastrar`.
+         * @description A coordenadora cadastra um participante presencialmente com a evidência de aceite obrigatória (arquivo, que passa pelo pipeline de storage). O responsável pode existir sem conta. Exige `participante.cadastrar`. `igreja_referencia_id`, quando informada, precisa existir e estar no escopo de quem cadastra (senão 422; fora do escopo, `igreja_fora_do_escopo`).
          */
         post: {
             parameters: {
@@ -4718,7 +4832,7 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
-                            data?: components["schemas"]["Participante"][];
+                            data?: components["schemas"]["Dependente"][];
                         };
                     };
                 };
@@ -4949,7 +5063,7 @@ export interface paths {
         head?: never;
         /**
          * Decidir exceção inclusiva (FL-06, CA-17)
-         * @description A coordenadora aprova, recusa, suspende ou revoga a exceção. Exige a operação `excecao.decidir`.
+         * @description A coordenadora aprova, recusa, suspende ou revoga a exceção. Exige a operação `excecao.decidir` e o participante ligado ao escopo (igreja de referência ou, sem igreja, presença válida num EBI do escopo). Fora do território responde 404, como se a exceção não existisse.
          */
         patch: {
             parameters: {
@@ -5527,6 +5641,20 @@ export interface components {
                 proximo_cursor?: string | null;
             };
         };
+        AlertaDozeAnos: {
+            participante_id: string;
+            nome: string;
+            matricula: string;
+            /** Format: date */
+            faz_12_em: string;
+        };
+        Dependente: components["schemas"]["Participante"] & {
+            /**
+             * Format: date
+             * @description Data local do 12o aniversário quando cai nos próximos 30 dias (fuso da igreja de referência) e não há exceção inclusiva aprovada vigente nessa data; `null` nos demais casos.
+             */
+            faz_12_em: string | null;
+        };
         Participante: {
             id: string;
             /** @description 8 caracteres Crockford + dígito verificador. */
@@ -5911,6 +6039,8 @@ export interface components {
             /** @enum {string} */
             status?: "escalado" | "confirmado" | "troca_solicitada";
             presente?: boolean | null;
+            /** @description Troca pendente aberta pela propria pessoa; null nos demais casos. */
+            troca_id?: string | null;
             conflitos?: components["schemas"]["ConflitoEscala"][];
         };
         TrocaEscalaEnvelope: {
@@ -6049,6 +6179,19 @@ export interface components {
              * @enum {string}
              */
             origem?: "web" | "app";
+        };
+        PresencaContingenciaLoteInput: {
+            participante_ids: string[];
+            motivo: string;
+        };
+        ResultadoContingenciaLote: {
+            participante_id: string;
+            /** @enum {string} */
+            resultado: "criada" | "ja_existia" | "erro";
+            /** @description inelegivel | not_found (inexistente ou mesclado) | sessao_em_estado_invalido */
+            erro?: string;
+            motivo_bloqueio?: string | null;
+            presenca?: components["schemas"]["Presenca"];
         };
         PresencaContingenciaInput: {
             participante_id: string;

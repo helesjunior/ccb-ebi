@@ -12,6 +12,7 @@ use App\Http\Resources\ParticipanteResource;
 use App\Support\Arquivo\Contracts\ArmazenarArquivo;
 use App\Support\FinalidadeLeitura;
 use App\Support\Participantes\AutorizacaoParticipante;
+use App\Support\Participantes\EscopoAuditoria;
 use App\Support\ProblemException;
 use App\Support\Relatorios\VisibilidadeIgreja;
 use Illuminate\Http\JsonResponse;
@@ -25,6 +26,7 @@ class ParticipantController
         private readonly ArmazenarArquivo $arquivos,
         private readonly RegistrarEvento $auditoria,
         private readonly AutorizacaoParticipante $autorizacao,
+        private readonly EscopoAuditoria $escopos,
     ) {}
 
     public function store(CadastrarParticipanteRequest $request): JsonResponse
@@ -32,6 +34,7 @@ class ParticipantController
         $participante = $this->participantes->cadastrar(
             $this->usuarioId($request),
             $request->validated(),
+            $this->escopoDoCadastro($request),
         );
 
         return (new ParticipanteResource($participante))->response()->setStatusCode(201);
@@ -40,6 +43,9 @@ class ParticipantController
     /** Cadastro assistido (FL-01): dados + evidencia obrigatoria (arquivo). */
     public function storeAssisted(CadastrarAssistidoRequest $request): JsonResponse
     {
+        // Antes do upload: igreja fora do escopo nao deixa arquivo orfao.
+        $escopo = $this->escopoDoCadastro($request);
+
         $arquivo = $this->arquivos->enfileirar(
             $request->file('evidencia'),
             'evidencia_consentimento',
@@ -52,6 +58,7 @@ class ParticipantController
             $this->usuarioId($request),
             $dados,
             (string) $arquivo->id,
+            $escopo,
         );
 
         return (new ParticipanteResource($participante))->response()->setStatusCode(201);
@@ -164,6 +171,33 @@ class ParticipantController
         return (new ParticipanteResource($participante))->response();
     }
 
+    /**
+     * Escopo do evento `participante.cadastrado` (CA8). O responsavel escolhe a
+     * igreja livremente (o escopo dele e central): vale o territorio da crianca.
+     * O operador so cadastra em igreja do proprio escopo; sem igreja, vale o
+     * contexto dele.
+     */
+    private function escopoDoCadastro(Request $request): ?string
+    {
+        $contexto = $this->contexto($request);
+        $igreja = $request->input('igreja_referencia_id');
+        $igreja = is_string($igreja) && $igreja !== '' ? $igreja : null;
+
+        if ($contexto?->papelCodigo === 'responsavel') {
+            return $this->escopos->daIgreja($igreja);
+        }
+
+        if ($igreja === null) {
+            return EscopoAuditoria::doContexto($contexto);
+        }
+
+        if (! $this->autorizacao->cobreIgreja($contexto, $igreja, 'participante.cadastrar')) {
+            throw new ProblemException('igreja_fora_do_escopo', 'Dados inválidos', 422, 'A igreja de referência não está no seu escopo.');
+        }
+
+        return $this->escopos->daIgreja($igreja);
+    }
+
     private function contexto(Request $request): ?ContextoAtuacao
     {
         $contexto = $request->attributes->get('contexto_atuacao');
@@ -186,7 +220,7 @@ class ParticipantController
             'recurso' => 'participante',
             'ator_id' => $this->usuarioId($request),
             'origem' => 'api',
-            'escopo' => null,
+            'escopo' => EscopoAuditoria::doContexto($this->contexto($request)),
             'motivo' => $finalidade,
             'metadados_minimizados' => ['participante_ids' => $participanteIds],
             'ocorrido_em' => now(),

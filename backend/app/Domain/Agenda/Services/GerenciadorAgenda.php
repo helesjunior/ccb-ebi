@@ -39,7 +39,7 @@ class GerenciadorAgenda implements GerirAgenda
         $dados = Validator::make($dados, [
             'tipo' => ['required', Rule::in([AgendaExcecao::TIPO_FERIADO, AgendaExcecao::TIPO_CANCELAMENTO, AgendaExcecao::TIPO_HORARIO_ESPECIAL])],
             'data' => ['required', 'date_format:Y-m-d'],
-            'motivo' => ['required', 'string'],
+            'motivo' => ['required', 'string', 'min:3', 'max:247'], // evento_auditoria.motivo e varchar(255), com o prefixo "agenda: ".
             'agenda_ebi_id' => $especial
                 ? ['required', 'ulid', Rule::exists('agenda_ebi', 'id')->where('ebi_id', $ebiId)]
                 : ['nullable', Rule::in([null])],

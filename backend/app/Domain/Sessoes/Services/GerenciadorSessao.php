@@ -56,7 +56,7 @@ class GerenciadorSessao implements GerirSessaoEbi
         return DB::transaction(function () use ($sessaoId, $motivo, $autorId): SessaoEbi {
             $sessao = $this->bloquear($sessaoId);
             $this->exigirEstado($sessao, Sessao::STATUS_PREVISTA);
-            Validator::make(compact('motivo'), ['motivo' => ['required', 'string', 'min:3', 'max:500']])->validate();
+            Validator::make(compact('motivo'), ['motivo' => ['required', 'string', 'min:3', 'max:255']])->validate(); // evento_auditoria.motivo e varchar(255).
             $sessao->update(['status' => Sessao::STATUS_CANCELADA, 'motivo_cancelamento' => $motivo, 'cancelada_por' => $autorId]);
             $this->auditar($sessao, 'sessao.cancelada', $autorId, $motivo);
 
@@ -82,7 +82,7 @@ class GerenciadorSessao implements GerirSessaoEbi
                 'fim_real' => ['sometimes', 'nullable', 'date'],
                 'realizada' => ['sometimes', 'nullable', 'boolean'],
                 'auxiliares_escalados' => ['sometimes', 'nullable', 'integer', 'min:0'],
-                'motivo' => ['nullable', 'string', 'min:3', 'max:500'],
+                'motivo' => ['nullable', 'string', 'min:3', 'max:255'], // evento_auditoria.motivo e varchar(255).
             ])->validate();
             $campos = ['tema', 'passagem_biblica', 'inicio_real', 'fim_real', 'realizada', 'auxiliares_escalados'];
             $original = $sessao->toArray();

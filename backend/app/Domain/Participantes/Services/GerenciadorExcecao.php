@@ -18,7 +18,7 @@ class GerenciadorExcecao implements GerirExcecaoEtaria
 {
     public function __construct(private readonly RegistrarEvento $auditoria) {}
 
-    public function solicitar(string $solicitanteId, string $participanteId, array $dados): ExcecaoEtaria
+    public function solicitar(string $solicitanteId, string $participanteId, array $dados, ?string $escopo = null): ExcecaoEtaria
     {
         if (! Participante::query()->whereKey($participanteId)->exists()) {
             throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Participante não encontrado.');
@@ -33,12 +33,17 @@ class GerenciadorExcecao implements GerirExcecaoEtaria
             'solicitado_por' => $solicitanteId,
         ]);
 
-        $this->registrar('excecao.solicitada', $solicitanteId, $excecao);
+        $this->registrar('excecao.solicitada', $solicitanteId, $excecao, [], $escopo);
 
         return $excecao;
     }
 
-    public function decidir(string $decidorId, string $excecaoId, string $decisao, array $dados = []): ExcecaoEtaria
+    public function encontrar(string $excecaoId): ?ExcecaoEtaria
+    {
+        return ExcecaoEtaria::query()->find($excecaoId);
+    }
+
+    public function decidir(string $decidorId, string $excecaoId, string $decisao, array $dados = [], ?string $escopo = null): ExcecaoEtaria
     {
         $status = match ($decisao) {
             'aprovar' => ExcecaoEtaria::STATUS_APROVADA,
@@ -48,7 +53,7 @@ class GerenciadorExcecao implements GerirExcecaoEtaria
             default => throw new ProblemException('decisao_invalida', 'Dados inválidos', 422, 'Decisão de exceção inválida.'),
         };
 
-        return DB::transaction(function () use ($decidorId, $excecaoId, $decisao, $status, $dados): ExcecaoEtaria {
+        return DB::transaction(function () use ($decidorId, $excecaoId, $decisao, $status, $dados, $escopo): ExcecaoEtaria {
             $excecao = ExcecaoEtaria::query()->find($excecaoId)
                 ?? throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Exceção não encontrada.');
 
@@ -63,7 +68,7 @@ class GerenciadorExcecao implements GerirExcecaoEtaria
                 'revogado_em' => $decisao === 'revogar' ? now() : $excecao->revogado_em,
             ])->save();
 
-            $this->registrar('excecao.decidida', $decidorId, $excecao, ['decisao' => $decisao]);
+            $this->registrar('excecao.decidida', $decidorId, $excecao, ['decisao' => $decisao], $escopo);
 
             return $excecao;
         });
@@ -72,14 +77,14 @@ class GerenciadorExcecao implements GerirExcecaoEtaria
     /**
      * @param  array<string, mixed>  $metadados
      */
-    private function registrar(string $acao, string $atorId, ExcecaoEtaria $excecao, array $metadados = []): void
+    private function registrar(string $acao, string $atorId, ExcecaoEtaria $excecao, array $metadados = [], ?string $escopo = null): void
     {
         $this->auditoria->registrar([
             'acao' => $acao,
             'recurso' => 'excecao_etaria',
             'ator_id' => $atorId,
             'origem' => 'api',
-            'escopo' => null,
+            'escopo' => $escopo,
             'motivo' => null,
             'metadados_minimizados' => [
                 'excecao_id' => (string) $excecao->id,

@@ -30,7 +30,7 @@ class GerenciadorParticipante implements GerirParticipante
         private readonly GerirTermos $termos,
     ) {}
 
-    public function cadastrar(string $usuarioId, array $dados): Participante
+    public function cadastrar(string $usuarioId, array $dados, ?string $escopo = null): Participante
     {
         $this->validarNascimento($dados['data_nascimento'] ?? null);
 
@@ -49,7 +49,7 @@ class GerenciadorParticipante implements GerirParticipante
             'recurso' => 'participante',
             'ator_id' => $usuarioId,
             'origem' => 'api',
-            'escopo' => null,
+            'escopo' => $escopo,
             'motivo' => null,
             'metadados_minimizados' => [
                 'participante_id' => (string) $participante->id,
@@ -133,7 +133,7 @@ class GerenciadorParticipante implements GerirParticipante
         return [$restantes, $suprimiu];
     }
 
-    public function cadastrarAssistido(string $usuarioId, array $dados, string $evidenciaArquivoId): Participante
+    public function cadastrarAssistido(string $usuarioId, array $dados, string $evidenciaArquivoId, ?string $escopo = null): Participante
     {
         if ($evidenciaArquivoId === '') {
             throw new ProblemException('evidencia_obrigatoria', 'Dados inválidos', 422, 'A evidência do cadastro assistido é obrigatória.');
@@ -147,7 +147,7 @@ class GerenciadorParticipante implements GerirParticipante
             throw new ProblemException('termo_indisponivel', 'Termo indisponível', 422, 'Não há termo de cadastro vigente.');
         }
 
-        return DB::transaction(function () use ($usuarioId, $dados, $evidenciaArquivoId, $termo): Participante {
+        return DB::transaction(function () use ($usuarioId, $dados, $evidenciaArquivoId, $termo, $escopo): Participante {
             $participante = Participante::criarComMatricula([
                 'nome' => (string) $dados['nome'],
                 'nome_social' => $dados['nome_social'] ?? null,
@@ -196,7 +196,7 @@ class GerenciadorParticipante implements GerirParticipante
                 'recurso' => 'participante',
                 'ator_id' => $usuarioId,
                 'origem' => 'api',
-                'escopo' => null,
+                'escopo' => $escopo,
                 'motivo' => null,
                 'metadados_minimizados' => [
                     'participante_id' => (string) $participante->id,

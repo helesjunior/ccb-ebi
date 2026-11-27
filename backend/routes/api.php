@@ -213,6 +213,7 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         });
         Route::patch('age-exceptions/{id}', [AgeExceptionController::class, 'update'])
             ->middleware('can:excecao.decidir')->name('age-exceptions.update');
+        Route::get('ebis/{id}/age-alerts', [AgeExceptionController::class, 'alertas'])->name('ebis.age-alerts');
 
         // Equipe do EBI para montar a escala (E07): quem pode ser escalado.
         Route::get('ebis/{id}/team', [EquipeEbiController::class, 'index'])
@@ -314,6 +315,8 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
             ->middleware(IdempotenciaMiddleware::class)->name('sessions.attendance.store');
         Route::post('sessions/{id}/contingency-attendance', [PresencaController::class, 'contingencia'])
             ->middleware(IdempotenciaMiddleware::class)->name('sessions.attendance.contingency');
+        Route::post('sessions/{id}/contingency-attendance/batch', [PresencaController::class, 'contingenciaLote'])
+            ->middleware(IdempotenciaMiddleware::class)->name('sessions.attendance.contingency.batch');
         Route::post('attendance/{id}/reversal', [PresencaController::class, 'estornar'])
             ->middleware(IdempotenciaMiddleware::class)->name('attendance.reversal');
         Route::get('participants/{id}/attendance', [HistoricoPresencaController::class, 'operador'])

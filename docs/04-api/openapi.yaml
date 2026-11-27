@@ -670,7 +670,7 @@ paths:
               properties:
                 sector_id: { type: string }
                 date: { type: string, format: date }
-                reason: { type: string }
+                reason: { type: string, maxLength: 255 }
       responses:
         '201':
           description: Igreja transferida
@@ -998,6 +998,39 @@ paths:
         '401': { $ref: '#/components/responses/Problem' }
         '403': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
+  /ebis/{id}/age-alerts:
+    get:
+      tags: [participants]
+      summary: Quem faz 12 anos nos próximos 30 dias (CA4)
+      description: >-
+        Participantes ativos da igreja do EBI cujo 12o aniversário cai de hoje
+        a 30 dias (fuso da igreja) e que não têm exceção inclusiva aprovada
+        vigente nessa data, ordenados por data e nome. Exige `excecao.decidir`
+        no EBI (coordenadora, coordenadora chefe, super_admin); fora do escopo
+        responde 403. Leitura identificável: exige `finalidade` e grava
+        `participante.lido` com escopo `ebi:<id>`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/EbiId'
+        - $ref: '#/components/parameters/FinalidadeLeitura'
+      responses:
+        '200':
+          description: Avisos
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/AlertaDozeAnos' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
   /ebis/{id}/equipes:
     get:
       tags: [escalas]
@@ -2165,6 +2198,52 @@ paths:
         '404': { $ref: '#/components/responses/Problem' }
         '409': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/Problem' }
+  /sessions/{id}/contingency-attendance/batch:
+    post:
+      tags: [sessions]
+      summary: Lançar a lista em papel de uma vez (CA6, CA7)
+      description: >-
+        Até 100 participantes distintos com um único motivo. Cada linha roda como
+        a contingência individual, na própria transação, e falha sozinha
+        (`inelegivel`, `not_found` para inexistente ou mesclado,
+        `sessao_em_estado_invalido` se a sessão mudar no meio). Sessão não
+        `encerrada` responde 409 e não grava nada. Exige `sessao.gerenciar`.
+        Escrita idempotente (`Idempotency-Key`).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/SessaoId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PresencaContingenciaLoteInput' }
+      responses:
+        '200':
+          description: Resultado por linha e resumo
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, resumo]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ResultadoContingenciaLote' }
+                  resumo:
+                    type: object
+                    required: [criadas, ja_existiam, erros]
+                    properties:
+                      criadas: { type: integer }
+                      ja_existiam: { type: integer }
+                      erros: { type: integer }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
   /attendance/{id}/reversal:
     post:
       tags: [sessions]
@@ -2419,7 +2498,10 @@ paths:
       description: >-
         O responsável cadastra um participante. Gera a matrícula nacional e
         registra auditoria. Exige a operação `participante.cadastrar`; escrita
-        idempotente (`Idempotency-Key`).
+        idempotente (`Idempotency-Key`). `igreja_referencia_id`, quando
+        informada, precisa existir (senão 422). O responsável escolhe qualquer
+        igreja; os demais papéis só uma do próprio escopo (senão 422
+        `igreja_fora_do_escopo`).
       security:
         - bearerAuth: []
       parameters:
@@ -2446,7 +2528,9 @@ paths:
       description: >-
         A coordenadora cadastra um participante presencialmente com a evidência
         de aceite obrigatória (arquivo, que passa pelo pipeline de storage). O
-        responsável pode existir sem conta. Exige `participante.cadastrar`.
+        responsável pode existir sem conta. Exige `participante.cadastrar`. `igreja_referencia_id`,
+        quando informada, precisa existir e estar no escopo de quem cadastra
+        (senão 422; fora do escopo, `igreja_fora_do_escopo`).
       security:
         - bearerAuth: []
       parameters:
@@ -2599,7 +2683,7 @@ paths:
                 properties:
                   data:
                     type: array
-                    items: { $ref: '#/components/schemas/Participante' }
+                    items: { $ref: '#/components/schemas/Dependente' }
         '401': { $ref: '#/components/responses/Problem' }
   /me/participants/{id}/attendance:
     get:
@@ -2726,7 +2810,9 @@ paths:
       summary: Decidir exceção inclusiva (FL-06, CA-17)
       description: >-
         A coordenadora aprova, recusa, suspende ou revoga a exceção. Exige a
-        operação `excecao.decidir`.
+        operação `excecao.decidir` e o participante ligado ao escopo (igreja
+        de referência ou, sem igreja, presença válida num EBI do escopo).
+        Fora do território responde 404, como se a exceção não existisse.
       security:
         - bearerAuth: []
       parameters:
@@ -3400,6 +3486,27 @@ components:
           type: object
           properties:
             proximo_cursor: { type: [string, 'null'] }
+    AlertaDozeAnos:
+      type: object
+      required: [participante_id, nome, matricula, faz_12_em]
+      properties:
+        participante_id: { type: string }
+        nome: { type: string }
+        matricula: { type: string }
+        faz_12_em: { type: string, format: date }
+    Dependente:
+      allOf:
+        - $ref: '#/components/schemas/Participante'
+        - type: object
+          required: [faz_12_em]
+          properties:
+            faz_12_em:
+              type: [string, 'null']
+              format: date
+              description: >-
+                Data local do 12o aniversário quando cai nos próximos 30 dias
+                (fuso da igreja de referência) e não há exceção inclusiva
+                aprovada vigente nessa data; `null` nos demais casos.
     Participante:
       type: object
       required: [id, nome, data_nascimento]
@@ -3573,7 +3680,7 @@ components:
         agenda_ebi_id: { type: [string, 'null'] }
         hora_inicio: { type: [string, 'null'] }
         hora_fim: { type: [string, 'null'] }
-        motivo: { type: string, minLength: 3, maxLength: 500 }
+        motivo: { type: string, minLength: 3, maxLength: 247 }
     MembroEquipe:
       type: object
       required: [usuario_id, nome, papeis]
@@ -3845,6 +3952,7 @@ components:
         funcao: { type: string, enum: [coordenadora, auxiliar] }
         status: { type: string, enum: [escalado, confirmado, troca_solicitada] }
         presente: { type: [boolean, 'null'] }
+        troca_id: { type: [string, 'null'], description: 'Troca pendente aberta pela propria pessoa; null nos demais casos.' }
         conflitos:
           type: array
           items: { $ref: '#/components/schemas/ConflitoEscala' }
@@ -3929,7 +4037,7 @@ components:
       type: object
       required: [motivo]
       properties:
-        motivo: { type: string, minLength: 3, maxLength: 500 }
+        motivo: { type: string, minLength: 3, maxLength: 255 }
     SessaoCorrecaoInput:
       type: object
       properties:
@@ -3939,7 +4047,7 @@ components:
         fim_real: { type: [string, 'null'], format: date-time }
         realizada: { type: [boolean, 'null'] }
         auxiliares_escalados: { type: [integer, 'null'], minimum: 0 }
-        motivo: { type: [string, 'null'], minLength: 3, maxLength: 500 }
+        motivo: { type: [string, 'null'], minLength: 3, maxLength: 255 }
     GeracaoSessoes:
       type: object
       properties:
@@ -3985,17 +4093,37 @@ components:
       properties:
         participante_id: { type: string }
         origem: { type: string, enum: [web, app], description: 'Padrão: web' }
+    PresencaContingenciaLoteInput:
+      type: object
+      required: [participante_ids, motivo]
+      properties:
+        participante_ids:
+          type: array
+          minItems: 1
+          maxItems: 100
+          uniqueItems: true
+          items: { type: string }
+        motivo: { type: string, minLength: 3, maxLength: 255 }
+    ResultadoContingenciaLote:
+      type: object
+      required: [participante_id, resultado]
+      properties:
+        participante_id: { type: string }
+        resultado: { type: string, enum: [criada, ja_existia, erro] }
+        erro: { type: string, description: 'inelegivel | not_found (inexistente ou mesclado) | sessao_em_estado_invalido' }
+        motivo_bloqueio: { type: [string, 'null'] }
+        presenca: { $ref: '#/components/schemas/Presenca' }
     PresencaContingenciaInput:
       type: object
       required: [participante_id, motivo]
       properties:
         participante_id: { type: string }
-        motivo: { type: string, minLength: 3, maxLength: 500 }
+        motivo: { type: string, minLength: 3, maxLength: 255 }
     EstornoInput:
       type: object
       required: [motivo]
       properties:
-        motivo: { type: string, minLength: 3, maxLength: 500 }
+        motivo: { type: string, minLength: 3, maxLength: 255 }
     HistoricoPresenca:
       type: object
       properties:

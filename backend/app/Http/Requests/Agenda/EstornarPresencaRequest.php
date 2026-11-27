@@ -14,6 +14,6 @@ class EstornarPresencaRequest extends FormRequest
     /** @return array<string, mixed> */
     public function rules(): array
     {
-        return ['motivo' => ['required', 'string', 'min:3', 'max:500']];
+        return ['motivo' => ['required', 'string', 'min:3', 'max:255']]; // evento_auditoria.motivo e varchar(255).
     }
 }

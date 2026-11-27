@@ -60,6 +60,67 @@ class AvaliadorElegibilidade implements AvaliarElegibilidade
         return ResultadoElegibilidade::permitido('excecao_aprovada');
     }
 
+    public function aviso12Anos(Participante $participante, DateTimeInterface $agora, string $fuso, int $dias = 30): ?string
+    {
+        if ($participante->status !== Participante::STATUS_ATIVO) {
+            return null;
+        }
+
+        $hoje = DateTimeImmutable::createFromInterface($agora)->setTimezone(new DateTimeZone($fuso))->setTime(0, 0);
+        $n = DateTimeImmutable::createFromInterface($participante->data_nascimento);
+        $ano = (int) $n->format('Y') + 12;
+        [$mes, $dia] = [(int) $n->format('m'), (int) $n->format('d')];
+
+        if ($mes === 2 && $dia === 29 && ! $this->bissexto($ano)) {
+            [$mes, $dia] = [3, 1];
+        }
+
+        $aniversario = sprintf('%04d-%02d-%02d', $ano, $mes, $dia);
+
+        if ($aniversario < $hoje->format('Y-m-d') || $aniversario > $hoje->modify("+{$dias} days")->format('Y-m-d')) {
+            return null;
+        }
+
+        $excecao = $participante->excecaoVigente();
+        $naData = new DateTimeImmutable($aniversario, $hoje->getTimezone());
+
+        if ($excecao !== null && $this->excecaoVigente($excecao, $naData)) {
+            return null;
+        }
+
+        return $aniversario;
+    }
+
+    public function aviso12AnosDaIgreja(string $igrejaId, DateTimeInterface $agora, string $fuso, int $dias = 30): array
+    {
+        $hoje = DateTimeImmutable::createFromInterface($agora)->setTimezone(new DateTimeZone($fuso))->setTime(0, 0);
+
+        // Pre-filtro no SQL com um dia de folga de cada lado (29/02); o corte exato e o de aviso12Anos.
+        // ponytail: excecaoVigente() e uma consulta por candidato (N+1); a janela de 30 dias de uma
+        // igreja da poucas linhas. Carregar as excecoes em lote se a lista crescer.
+        $candidatos = Participante::query()
+            ->where('igreja_referencia_id', $igrejaId)
+            ->where('status', Participante::STATUS_ATIVO)
+            ->whereBetween('data_nascimento', [
+                $hoje->modify('-12 years')->modify('-1 day')->format('Y-m-d'),
+                $hoje->modify("+{$dias} days")->modify('-12 years')->modify('+1 day')->format('Y-m-d'),
+            ])
+            ->get();
+
+        $linhas = [];
+
+        foreach ($candidatos as $participante) {
+            $data = $this->aviso12Anos($participante, $agora, $fuso, $dias);
+            if ($data !== null) {
+                $linhas[] = ['participante' => $participante, 'faz_12_em' => $data];
+            }
+        }
+
+        usort($linhas, fn (array $a, array $b): int => [$a['faz_12_em'], $a['participante']->nome] <=> [$b['faz_12_em'], $b['participante']->nome]);
+
+        return $linhas;
+    }
+
     /** Idade em anos completos na data local, tratando 29/02 (RN-16). */
     private function idadeEm(DateTimeInterface $nascimento, DateTimeImmutable $local): int
     {

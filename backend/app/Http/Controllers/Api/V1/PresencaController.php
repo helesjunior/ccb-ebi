@@ -14,6 +14,7 @@ use App\Domain\Sessoes\Contracts\ConsultarSessao;
 use App\Domain\Sessoes\Contracts\EstornarPresenca;
 use App\Domain\Sessoes\Contracts\RegistrarPresenca;
 use App\Domain\Sessoes\Contracts\SessaoEbi;
+use App\Http\Requests\Agenda\ContingenciaLotePresencaRequest;
 use App\Http\Requests\Agenda\ContingenciaPresencaRequest;
 use App\Http\Requests\Agenda\EstornarPresencaRequest;
 use App\Http\Requests\Agenda\RegistrarPresencaRequest;
@@ -95,6 +96,24 @@ class PresencaController
         return response()->json([
             'presenca' => (new PresencaResource($resultado->presenca))->resolve($request),
         ], $resultado->nova ? 201 : 200);
+    }
+
+    public function contingenciaLote(ContingenciaLotePresencaRequest $request, string $id): JsonResponse
+    {
+        $sessao = $this->sessao($id);
+        Gate::authorize(Operacoes::SESSAO_GERENCIAR, ['ebi', $sessao->ebiId]);
+        $dados = $request->validated();
+        $linhas = $this->registrador->registrarContingenciaLote($id, $dados['participante_ids'], $dados['motivo'], (string) $request->user()?->getAuthIdentifier());
+
+        $data = array_map(fn (array $l): array => isset($l['presenca'])
+            ? array_merge($l, ['presenca' => (new PresencaResource($l['presenca']))->resolve($request)])
+            : $l, $linhas);
+        $contar = fn (string $resultado): int => count(array_filter($linhas, fn (array $l): bool => $l['resultado'] === $resultado));
+
+        return response()->json([
+            'data' => $data,
+            'resumo' => ['criadas' => $contar('criada'), 'ja_existiam' => $contar('ja_existia'), 'erros' => $contar('erro')],
+        ]);
     }
 
     public function index(Request $request, string $id): JsonResponse

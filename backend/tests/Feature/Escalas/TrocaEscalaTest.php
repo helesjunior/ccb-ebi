@@ -200,6 +200,30 @@ function trocaPendente(array $c, ?string $solicitanteId = null): SolicitacaoTroc
     ]);
 }
 
+it('minhas escalas traz o troca_id so da troca pendente da propria pessoa', function () {
+    $c = cenarioTroca();
+    $troca = trocaPendente($c);
+
+    $this->getJson('/api/v1/me/schedules?inicio=2026-12-01&fim=2026-12-31', authEscala($c['auxi']))
+        ->assertOk()
+        ->assertJsonPath('data.0.troca_id', (string) $troca->id);
+
+    foreach ([SolicitacaoTrocaEscala::STATUS_APROVADA, SolicitacaoTrocaEscala::STATUS_RECUSADA, SolicitacaoTrocaEscala::STATUS_CANCELADA] as $status) {
+        $troca->forceFill(['status' => $status])->save();
+        $this->getJson('/api/v1/me/schedules?inicio=2026-12-01&fim=2026-12-31', authEscala($c['auxi']))
+            ->assertOk()
+            ->assertJsonPath('data.0.troca_id', null);
+    }
+});
+
+it('minhas escalas: vaga sem troca vem com troca_id null', function () {
+    $c = cenarioTroca();
+
+    $this->getJson('/api/v1/me/schedules?inicio=2026-12-01&fim=2026-12-31', authEscala($c['auxi']))
+        ->assertOk()
+        ->assertJsonPath('data.0.troca_id', null);
+});
+
 it('a chefe aprova com substituto: original substituido e membro novo escalado', function () {
     $c = cenarioTroca();
     $troca = trocaPendente($c);

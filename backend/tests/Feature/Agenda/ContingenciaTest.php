@@ -63,16 +63,17 @@ it('respeita a elegibilidade e a unicidade', function () {
     expect(Presenca::query()->where('sessao_id', $this->sessao->id)->count())->toBe(1);
 });
 
-it('valida o limite de tamanho do motivo e aceita 500 caracteres', function () {
-    foreach ([str_repeat('a', 2), str_repeat('a', 501)] as $motivo) {
+it('valida o limite de tamanho do motivo e aceita 255 caracteres', function () {
+    foreach ([str_repeat('a', 2), str_repeat('a', 256)] as $motivo) {
         $this->postJson("/api/v1/sessions/{$this->sessao->id}/contingency-attendance", [
             'participante_id' => $this->participante->id, 'motivo' => $motivo,
         ], $this->auth)->assertStatus(422);
     }
 
     $this->postJson("/api/v1/sessions/{$this->sessao->id}/contingency-attendance", [
-        'participante_id' => $this->participante->id, 'motivo' => str_repeat('a', 500),
+        'participante_id' => $this->participante->id, 'motivo' => str_repeat('a', 255),
     ], $this->auth)->assertCreated();
+    expect(EventoAuditoria::query()->where('acao', 'presenca.contingencia')->value('motivo'))->toBe(str_repeat('a', 255));
 });
 
 it('auxiliar nao lanca contingencia', function () {

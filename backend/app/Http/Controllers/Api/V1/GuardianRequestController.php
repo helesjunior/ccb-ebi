@@ -9,6 +9,7 @@ use App\Domain\Participantes\Contracts\GerirVinculoResponsavel;
 use App\Http\Requests\Participantes\DecidirVinculoRequest;
 use App\Http\Resources\ResponsavelParticipanteResource;
 use App\Support\Participantes\AutorizacaoParticipante;
+use App\Support\Participantes\EscopoAuditoria;
 use App\Support\ProblemException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -47,6 +48,7 @@ class GuardianRequestController
             $id,
             (string) $request->validated('decisao'),
             $request->validated('motivo'),
+            EscopoAuditoria::doContexto($this->contexto($request)),
         );
 
         return (new ResponsavelParticipanteResource($vinculo))->response();

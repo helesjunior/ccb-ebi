@@ -50,6 +50,8 @@ export function Presenca({ sessaoId, onVoltar, papeis }: {
   const [selecionado, setSelecionado] = useState<Candidato | null>(null)
   const [modoContingencia, setModoContingencia] = useState(false)
   const [motivoContingencia, setMotivoContingencia] = useState('')
+  // A seleção da lista em papel sobrevive a novas buscas; só a troca de modo e o envio a limpam.
+  const [marcados, setMarcados] = useState<Candidato[]>([])
   const [estorno, setEstorno] = useState<Registro | null>(null)
   const [motivoEstorno, setMotivoEstorno] = useState('')
   const [escala, setEscala] = useState<Escala | null>(null)
@@ -63,8 +65,8 @@ export function Presenca({ sessaoId, onVoltar, papeis }: {
   const emContingencia = modoContingencia && podeContingencia
   const podeConfirmar = emContingencia || (sessao?.status === 'aberta' && podeRegistrar)
   const mostrarBusca = sessao?.status === 'aberta' || emContingencia
-  const motivoContingenciaValido = motivoContingencia.trim().length >= 3 && motivoContingencia.trim().length <= 500
-  const motivoEstornoValido = motivoEstorno.trim().length >= 3 && motivoEstorno.trim().length <= 500
+  const motivoContingenciaValido = motivoContingencia.trim().length >= 3 && motivoContingencia.trim().length <= 255
+  const motivoEstornoValido = motivoEstorno.trim().length >= 3 && motivoEstorno.trim().length <= 255
 
   const carregar = useCallback(async () => {
     consulta.current?.abort()
@@ -100,6 +102,7 @@ export function Presenca({ sessaoId, onVoltar, papeis }: {
     setSelecionado(null)
     setModoContingencia(false)
     setMotivoContingencia('')
+    setMarcados([])
     setEstorno(null)
     setEscala(null)
     setPresencaEquipe({})
@@ -145,20 +148,47 @@ export function Presenca({ sessaoId, onVoltar, papeis }: {
     setBuscando(false)
   }
 
+  function alternarMarcado(candidato: Candidato) {
+    setMarcados((atuais) => atuais.some((m) => m.id === candidato.id)
+      ? atuais.filter((m) => m.id !== candidato.id)
+      : [...atuais, candidato])
+  }
+
+  async function lancarLote() {
+    if (enviando || carregando || !emContingencia || marcados.length === 0 || !motivoContingenciaValido) return
+    setEnviando(true)
+    setErro(null)
+    try {
+      const { data, error } = await api.POST('/sessions/{id}/contingency-attendance/batch', {
+        params: { path: { id: sessaoId } }, headers: cabecalhos(),
+        body: { participante_ids: marcados.map((m) => m.id!), motivo: motivoContingencia.trim() },
+      })
+      if (error || !data) throw error
+      toast.success(`${data.resumo.criadas} lançadas, ${data.resumo.ja_existiam} já existiam`)
+      const falhas = data.data.filter((l) => l.resultado === 'erro')
+        .map((l) => marcados.find((m) => m.id === l.participante_id)?.nome ?? l.participante_id)
+      setMarcados([])
+      setMotivoContingencia('')
+      limparBusca()
+      setTermo('')
+      await carregar() // zera o erro; por isso as falhas vêm depois
+      if (falhas.length > 0) setErro(`Não lançadas: ${falhas.join(', ')}`)
+    } catch (error) {
+      setErro(lerErro(error, 'Não foi possível lançar a lista.').detail)
+    } finally {
+      setEnviando(false)
+    }
+  }
+
   async function confirmar() {
-    if (enviando || carregando || !podeConfirmar || !selecionado?.id || !selecionado.elegivel) return
-    if (emContingencia && !motivoContingenciaValido) return
+    if (enviando || carregando || !podeConfirmar || emContingencia || !selecionado?.id || !selecionado.elegivel) return
     setEnviando(true)
     setErro(null)
     const options = { params: { path: { id: sessaoId } }, headers: cabecalhos() }
     try {
-      const resposta = emContingencia
-        ? await api.POST('/sessions/{id}/contingency-attendance', {
-          ...options, body: { participante_id: selecionado.id, motivo: motivoContingencia.trim() },
-        })
-        : await api.POST('/sessions/{id}/attendance', {
-          ...options, body: { participante_id: selecionado.id, origem: 'web' },
-        })
+      const resposta = await api.POST('/sessions/{id}/attendance', {
+        ...options, body: { participante_id: selecionado.id, origem: 'web' },
+      })
       if (resposta.error) throw resposta.error
       toast.success('Presença confirmada.')
       limparBusca()
@@ -273,13 +303,22 @@ export function Presenca({ sessaoId, onVoltar, papeis }: {
         limparBusca()
         setTermo('')
         setMotivoContingencia('')
+        setMarcados([])
         setModoContingencia(!modoContingencia)
       }}>{emContingencia ? 'Sair da contingência' : 'Lançar lista em papel'}</Button>}
       {emContingencia && <Alert role="status" className="border-amber-500">
         <AlertDescription className="flex flex-col gap-3">
-          <p>Modo contingência: lançando lista em papel de uma sessão encerrada. Informe o motivo de cada presença.</p>
-          <Label htmlFor="contingencia-motivo">Motivo da contingência (3 a 500 caracteres)</Label>
-          <Input id="contingencia-motivo" value={motivoContingencia} onChange={(e) => setMotivoContingencia(e.target.value)} minLength={3} maxLength={500} required disabled={enviando} />
+          <p>Modo contingência: lançando lista em papel de uma sessão encerrada. Marque todos da lista e informe o motivo uma vez.</p>
+          <Label htmlFor="contingencia-motivo">Motivo da contingência (3 a 255 caracteres)</Label>
+          <Input id="contingencia-motivo" value={motivoContingencia} onChange={(e) => setMotivoContingencia(e.target.value)} minLength={3} maxLength={255} required disabled={enviando} />
+          {marcados.length > 0 && <ul data-testid="contingencia-marcados" className="flex flex-wrap gap-2">
+            {marcados.map((m) => <li key={m.id}>
+              <Badge variant="secondary" className="gap-1">
+                {m.nome}
+                <button type="button" className="ml-1 underline" aria-label={`Remover ${m.nome}`} disabled={enviando} onClick={() => alternarMarcado(m)}>×</button>
+              </Badge>
+            </li>)}
+          </ul>}
         </AlertDescription>
       </Alert>}
       {mostrarBusca && <Card>
@@ -309,9 +348,11 @@ export function Presenca({ sessaoId, onVoltar, papeis }: {
               <TableHeader><TableRow><TableHead>Nome</TableHead><TableHead>Matrícula</TableHead><TableHead>Igreja de referência</TableHead><TableHead>Elegibilidade</TableHead></TableRow></TableHeader>
               <TableBody>
                 <EstadoTabela colunas={4} carregando={buscando} vazio={resultados.length === 0} mensagemVazio={termo.trim().length < 3 ? 'Digite pelo menos 3 caracteres para buscar.' : 'Nenhum participante encontrado.'} />
-                {!buscando && resultados.map((candidato) => <TableRow key={candidato.id} data-state={selecionado?.id === candidato.id ? 'selected' : undefined}>
+                {!buscando && resultados.map((candidato) => {
+                  const ativo = emContingencia ? marcados.some((m) => m.id === candidato.id) : selecionado?.id === candidato.id
+                  return <TableRow key={candidato.id} data-state={ativo ? 'selected' : undefined}>
                   <TableCell colSpan={4} className="p-0">
-                    <button type="button" className="grid min-h-14 w-full grid-cols-4 items-center gap-3 p-3 text-left break-words whitespace-normal hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-70" disabled={enviando || carregando || !candidato.elegivel || !candidato.id || !podeConfirmar} aria-pressed={selecionado?.id === candidato.id} onClick={() => setSelecionado(candidato)}>
+                    <button type="button" className="grid min-h-14 w-full grid-cols-4 items-center gap-3 p-3 text-left break-words whitespace-normal hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-70" disabled={enviando || carregando || !candidato.elegivel || !candidato.id || !podeConfirmar} aria-pressed={ativo} onClick={() => emContingencia ? alternarMarcado(candidato) : setSelecionado(candidato)}>
                       <span className="font-medium">{candidato.nome}</span>
                       <span>{candidato.matricula}</span>
                       <span>{candidato.igreja_referencia?.nome ?? '—'}</span>
@@ -320,7 +361,8 @@ export function Presenca({ sessaoId, onVoltar, papeis }: {
                         : <Badge variant="destructive" className="whitespace-normal">Bloqueado: {candidato.motivo_bloqueio ?? 'Motivo não informado'}</Badge>}</span>
                     </button>
                   </TableCell>
-                </TableRow>)}
+                </TableRow>
+                })}
               </TableBody>
             </Table>
           </div>
@@ -392,9 +434,15 @@ export function Presenca({ sessaoId, onVoltar, papeis }: {
           </CardContent>
         </Card>
       )}
-      {selecionado && mostrarBusca && podeConfirmar && <div className="fixed inset-x-0 bottom-0 z-30 flex flex-wrap items-center justify-center gap-3 border-t bg-background p-4 shadow-lg">
+      {emContingencia && marcados.length > 0 && <div className="fixed inset-x-0 bottom-0 z-30 flex flex-wrap items-center justify-center gap-3 border-t bg-background p-4 shadow-lg">
+        <Button type="button" variant="outline" disabled={enviando} onClick={() => setMarcados([])}>Limpar seleção</Button>
+        <Button type="button" className="h-auto min-h-11 whitespace-normal" disabled={enviando || carregando || !motivoContingenciaValido} onClick={() => void lancarLote()}>
+          {enviando ? 'Registrando…' : `Lançar ${marcados.length} presenças`}
+        </Button>
+      </div>}
+      {!emContingencia && selecionado && mostrarBusca && podeConfirmar && <div className="fixed inset-x-0 bottom-0 z-30 flex flex-wrap items-center justify-center gap-3 border-t bg-background p-4 shadow-lg">
         <Button type="button" variant="outline" disabled={enviando} onClick={() => setSelecionado(null)}>Cancelar seleção</Button>
-        <Button type="button" className="h-auto min-h-11 whitespace-normal" disabled={enviando || carregando || (emContingencia && !motivoContingenciaValido)} onClick={() => void confirmar()}>
+        <Button type="button" className="h-auto min-h-11 whitespace-normal" disabled={enviando || carregando} onClick={() => void confirmar()}>
           {enviando ? 'Registrando…' : `Confirmar presença de ${selecionado.nome}`}
         </Button>
       </div>}
@@ -403,8 +451,8 @@ export function Presenca({ sessaoId, onVoltar, papeis }: {
           <DialogHeader><DialogTitle>Estornar presença</DialogTitle><DialogDescription>Informe o motivo para estornar a presença de {estorno?.participante?.nome}.</DialogDescription></DialogHeader>
           {erro && <Alert variant="destructive" role="alert"><AlertDescription>{erro}</AlertDescription></Alert>}
           <form onSubmit={estornar} className="flex flex-col gap-4">
-            <Label htmlFor="estorno-motivo">Motivo (3 a 500 caracteres)</Label>
-            <Input id="estorno-motivo" value={motivoEstorno} onChange={(e) => setMotivoEstorno(e.target.value)} minLength={3} maxLength={500} required disabled={enviando} />
+            <Label htmlFor="estorno-motivo">Motivo (3 a 255 caracteres)</Label>
+            <Input id="estorno-motivo" value={motivoEstorno} onChange={(e) => setMotivoEstorno(e.target.value)} minLength={3} maxLength={255} required disabled={enviando} />
             <DialogFooter>
               <Button type="button" variant="outline" disabled={enviando} onClick={() => setEstorno(null)}>Voltar</Button>
               <Button type="submit" variant="destructive" disabled={enviando || !motivoEstornoValido}>{enviando ? 'Estornando…' : 'Confirmar estorno'}</Button>

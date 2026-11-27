@@ -24,8 +24,8 @@ interface GerirMesclagem
     public function detectar(array $dados): array;
 
     /** Mescla `duplicado` no `principal`, guardando o snapshot para desfazer. */
-    public function mesclar(string $atorId, string $principalId, string $duplicadoId): Participante;
+    public function mesclar(string $atorId, string $principalId, string $duplicadoId, ?string $escopo = null): Participante;
 
     /** Desfaz a ultima mesclagem do participante, restaurando o snapshot. */
-    public function desfazer(string $atorId, string $principalId): Participante;
+    public function desfazer(string $atorId, string $principalId, ?string $escopo = null): Participante;
 }

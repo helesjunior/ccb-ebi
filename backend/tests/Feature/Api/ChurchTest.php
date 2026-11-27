@@ -44,6 +44,16 @@ it('transfere igreja e devolve o setor novo na leitura', function () {
         ->assertOk()->assertJsonPath('setor.id', $setor->id);
 });
 
+it('limita o motivo da transferencia a 255 caracteres', function () {
+    $igreja = Igreja::factory()->create();
+    $setor = Setor::factory()->create();
+    $url = "/api/v1/churches/{$igreja->id}/transfers";
+    $this->postJson($url, ['sector_id' => $setor->id, 'date' => now()->toDateString(), 'reason' => str_repeat('a', 256)], $this->auth)
+        ->assertStatus(422);
+    $this->postJson($url, ['sector_id' => $setor->id, 'date' => now()->toDateString(), 'reason' => str_repeat('a', 255)], $this->auth)
+        ->assertStatus(201);
+});
+
 it('atualiza igreja', function () {
     $igreja = Igreja::factory()->create();
     $this->patchJson("/api/v1/churches/{$igreja->id}", ['nome' => 'Novo Nome'], $this->auth)

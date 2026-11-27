@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Auditoria\Contracts\RegistrarEvento;
 use App\Domain\Identidade\Services\ContextoAtuacao;
+use App\Domain\Organizacao\Contracts\ConsultarOrganizacao;
+use App\Domain\Participantes\Contracts\AvaliarElegibilidade;
 use App\Domain\Participantes\Contracts\GerirParticipante;
 use App\Domain\Participantes\Contracts\GerirVinculoResponsavel;
 use App\Http\Requests\Participantes\ListarVinculosRequest;
@@ -11,6 +13,7 @@ use App\Http\Requests\Participantes\SolicitarVinculoRequest;
 use App\Http\Resources\ParticipanteResource;
 use App\Http\Resources\ResponsavelParticipanteResource;
 use App\Support\Participantes\AutorizacaoParticipante;
+use App\Support\Participantes\EscopoAuditoria;
 use App\Support\Participantes\VisibilidadeVinculoResponsavel;
 use App\Support\ProblemException;
 use Illuminate\Http\JsonResponse;
@@ -26,8 +29,11 @@ class GuardianController
         private readonly GerirVinculoResponsavel $vinculos,
         private readonly GerirParticipante $participantes,
         private readonly AutorizacaoParticipante $autorizacao,
+        private readonly EscopoAuditoria $escopos,
         private readonly VisibilidadeVinculoResponsavel $visibilidade,
         private readonly RegistrarEvento $auditoria,
+        private readonly AvaliarElegibilidade $elegibilidade,
+        private readonly ConsultarOrganizacao $organizacao,
     ) {}
 
     public function store(SolicitarVinculoRequest $request, string $participantId): JsonResponse
@@ -48,6 +54,7 @@ class GuardianController
             $usuarioId,
             $participantId,
             $request->validated(),
+            $this->escopos->daIgreja($participante->igreja_referencia_id),
         );
 
         return (new ResponsavelParticipanteResource($vinculo))->response()->setStatusCode(201);
@@ -57,9 +64,18 @@ class GuardianController
     public function meusDependentes(Request $request): JsonResponse
     {
         $dependentes = $this->vinculos->dependentesDe((string) $request->user()?->getAuthIdentifier());
+        $fusos = $this->organizacao->fusosDasIgrejas(array_values(array_unique(array_filter(
+            array_map(fn ($p): string => (string) $p->igreja_referencia_id, $dependentes),
+        ))));
 
         return response()->json([
-            'data' => ParticipanteResource::collection($dependentes)->resolve($request),
+            'data' => array_map(fn ($p): array => array_merge((new ParticipanteResource($p))->resolve($request), [
+                'faz_12_em' => $this->elegibilidade->aviso12Anos(
+                    $p,
+                    now(),
+                    $fusos[(string) $p->igreja_referencia_id] ?? 'America/Sao_Paulo',
+                ),
+            ]), $dependentes),
         ]);
     }
 
@@ -83,7 +99,7 @@ class GuardianController
             'recurso' => 'vinculo',
             'ator_id' => (string) $request->user()?->getAuthIdentifier(),
             'origem' => 'api',
-            'escopo' => null,
+            'escopo' => EscopoAuditoria::doContexto($this->contexto($request)),
             'motivo' => $finalidade,
             'metadados_minimizados' => [
                 'vinculo_ids' => array_map(static fn ($v): string => (string) $v->id, $vinculos),

@@ -8,6 +8,7 @@ use App\Domain\Participantes\Contracts\GerirParticipante;
 use App\Http\Requests\Participantes\MesclarParticipanteRequest;
 use App\Http\Resources\ParticipanteResource;
 use App\Support\Participantes\AutorizacaoParticipante;
+use App\Support\Participantes\EscopoAuditoria;
 use App\Support\ProblemException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -38,7 +39,7 @@ class ParticipantMergeController
 
         $this->autorizacao->exigirLigados($this->contexto($request), [$principal, $duplicado], 'participante.mesclar');
 
-        $principal = $this->mesclagem->mesclar($usuarioId, $id, $duplicadoId);
+        $principal = $this->mesclagem->mesclar($usuarioId, $id, $duplicadoId, EscopoAuditoria::doContexto($this->contexto($request)));
 
         return (new ParticipanteResource($principal))->response();
     }
@@ -59,6 +60,7 @@ class ParticipantMergeController
         $principal = $this->mesclagem->desfazer(
             (string) $request->user()?->getAuthIdentifier(),
             $id,
+            EscopoAuditoria::doContexto($this->contexto($request)),
         );
 
         return (new ParticipanteResource($principal))->response();

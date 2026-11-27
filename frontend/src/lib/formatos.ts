@@ -190,6 +190,7 @@ export const SUGESTOES_FINALIDADE: { valor: string; rotulo: string }[] = [
   { valor: 'confirmacao_cadastro', rotulo: 'Confirmar se já existe cadastro' },
   { valor: 'deduplicacao', rotulo: 'Encontrar cadastros duplicados' },
   { valor: 'atendimento_responsavel', rotulo: 'Atender um responsável' },
+  { valor: 'aviso_12_anos', rotulo: 'Acompanhar quem faz 12 anos' },
 ]
 
 /** Data de hoje no formato do `<input type="date">` (para `max`). */

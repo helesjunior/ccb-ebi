@@ -41,6 +41,18 @@ it('feriado zera as ocorrencias do dia', function () {
     expect(app(ConsultarAgenda::class)->ocorrenciasDoDia($this->ebi->id, '2026-12-25'))->toBe([]);
 });
 
+it('limita o motivo a 3..247 para caber "agenda: " na auditoria', function () {
+    Sessao::factory()->create(['ebi_id' => $this->ebi->id, 'igreja_id' => $this->igreja->id, 'inicio_previsto' => '2026-12-25 13:00:00', 'fim_previsto' => '2026-12-25 14:30:00', 'status' => Sessao::STATUS_PREVISTA]);
+    $url = "/api/v1/ebis/{$this->ebi->id}/agenda-exceptions";
+
+    $this->postJson($url, ['tipo' => 'feriado', 'data' => '2026-12-25', 'motivo' => str_repeat('a', 248)], $this->auth)->assertStatus(422);
+    $this->postJson($url, ['tipo' => 'feriado', 'data' => '2026-12-25', 'motivo' => 'ab'], $this->auth)->assertStatus(422);
+    $this->postJson($url, ['tipo' => 'feriado', 'data' => '2026-12-25', 'motivo' => str_repeat('a', 247)], $this->auth)->assertCreated();
+
+    expect(EventoAuditoria::query()->where('acao', 'sessao.cancelada')->value('motivo'))
+        ->toBe('agenda: '.str_repeat('a', 247))->toHaveLength(255);
+});
+
 it('recusa excecao repetida', function () {
     $dados = ['tipo' => 'feriado', 'data' => '2026-12-25', 'motivo' => 'Natal'];
     $this->postJson("/api/v1/ebis/{$this->ebi->id}/agenda-exceptions", $dados, $this->auth)->assertCreated();

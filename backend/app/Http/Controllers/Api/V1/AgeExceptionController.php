@@ -2,15 +2,23 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Auditoria\Contracts\RegistrarEvento;
 use App\Domain\Identidade\Services\ContextoAtuacao;
+use App\Domain\Identidade\Support\Operacoes;
+use App\Domain\Organizacao\Contracts\ConsultarEbi;
+use App\Domain\Participantes\Contracts\AvaliarElegibilidade;
 use App\Domain\Participantes\Contracts\GerirExcecaoEtaria;
 use App\Domain\Participantes\Contracts\GerirParticipante;
 use App\Http\Requests\Participantes\DecidirExcecaoRequest;
 use App\Http\Requests\Participantes\SolicitarExcecaoRequest;
 use App\Http\Resources\ExcecaoEtariaResource;
+use App\Support\FinalidadeLeitura;
 use App\Support\Participantes\AutorizacaoParticipante;
+use App\Support\Participantes\EscopoAuditoria;
 use App\Support\ProblemException;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * Excecao inclusiva (FL-06, ADR-0012): solicitacao pelo responsavel; decisao
@@ -22,6 +30,10 @@ class AgeExceptionController
         private readonly GerirExcecaoEtaria $excecoes,
         private readonly GerirParticipante $participantes,
         private readonly AutorizacaoParticipante $autorizacao,
+        private readonly EscopoAuditoria $escopos,
+        private readonly ConsultarEbi $ebis,
+        private readonly AvaliarElegibilidade $elegibilidade,
+        private readonly RegistrarEvento $auditoria,
     ) {}
 
     public function store(SolicitarExcecaoRequest $request, string $participantId): JsonResponse
@@ -44,6 +56,7 @@ class AgeExceptionController
             $usuarioId,
             $participantId,
             $request->validated(),
+            $this->escopos->daIgreja($participante->igreja_referencia_id),
         );
 
         return (new ExcecaoEtariaResource($excecao))->response()->setStatusCode(201);
@@ -51,6 +64,17 @@ class AgeExceptionController
 
     public function update(DecidirExcecaoRequest $request, string $id): JsonResponse
     {
+        $excecao = $this->excecoes->encontrar($id);
+        $participante = $excecao !== null
+            ? $this->participantes->encontrar((string) $excecao->participante_id)
+            : null;
+
+        // Fora do territorio a excecao se comporta como inexistente (404), como o vinculo.
+        if ($excecao === null || $participante === null
+            || ! $this->autorizacao->ligado($this->contexto($request), $participante, Operacoes::EXCECAO_DECIDIR)) {
+            throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Exceção não encontrada.');
+        }
+
         $validado = $request->validated();
 
         $excecao = $this->excecoes->decidir(
@@ -58,12 +82,46 @@ class AgeExceptionController
             $id,
             (string) $validado['decisao'],
             $validado,
+            EscopoAuditoria::doContexto($this->contexto($request)),
         );
 
         return (new ExcecaoEtariaResource($excecao))->response();
     }
 
-    private function contexto(SolicitarExcecaoRequest $request): ?ContextoAtuacao
+    /** Quem faz 12 anos nos proximos 30 dias na igreja do EBI (CA4), para pedir a excecao a tempo. */
+    public function alertas(Request $request, string $id): JsonResponse
+    {
+        Gate::authorize(Operacoes::EXCECAO_DECIDIR, ['ebi', $id]);
+        $finalidade = FinalidadeLeitura::exigir($request);
+
+        $ebi = $this->ebis->dados($id)
+            ?? throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'EBI não encontrado.');
+
+        $linhas = $this->elegibilidade->aviso12AnosDaIgreja($ebi->igrejaId, now(), $ebi->timezone ?: 'America/Sao_Paulo');
+
+        $this->auditoria->registrar([
+            'acao' => 'participante.lido',
+            'recurso' => 'participante',
+            'ator_id' => (string) $request->user()?->getAuthIdentifier(),
+            'origem' => 'api',
+            'escopo' => "ebi:{$id}",
+            'motivo' => $finalidade,
+            'metadados_minimizados' => [
+                'participante_ids' => array_map(fn (array $l): string => (string) $l['participante']->id, $linhas),
+                'origem_leitura' => 'aviso_12_anos',
+            ],
+            'ocorrido_em' => now(),
+        ]);
+
+        return response()->json(['data' => array_map(fn (array $l): array => [
+            'participante_id' => (string) $l['participante']->id,
+            'nome' => $l['participante']->nome,
+            'matricula' => $l['participante']->matricula,
+            'faz_12_em' => $l['faz_12_em'],
+        ], $linhas)]);
+    }
+
+    private function contexto(Request $request): ?ContextoAtuacao
     {
         $contexto = $request->attributes->get('contexto_atuacao');
 

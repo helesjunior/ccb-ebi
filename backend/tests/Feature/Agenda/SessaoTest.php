@@ -55,6 +55,23 @@ it('corrigir encerrada exige motivo e guarda antes/depois', function () {
         ->and(EventoAuditoria::query()->where('acao', 'sessao.corrigida')->exists())->toBeTrue();
 });
 
+it('limita o motivo de cancelamento e de correcao a 255 caracteres', function () {
+    $this->postJson("/api/v1/sessions/{$this->sessao->id}/cancel", ['motivo' => str_repeat('a', 256)], $this->auth)
+        ->assertStatus(422);
+    $this->postJson("/api/v1/sessions/{$this->sessao->id}/cancel", ['motivo' => str_repeat('a', 255)], $this->auth)
+        ->assertOk();
+    expect(EventoAuditoria::query()->where('acao', 'sessao.cancelada')->value('motivo'))->toBe(str_repeat('a', 255));
+
+    $encerrada = Sessao::factory()->create([
+        'ebi_id' => $this->ebi->id, 'igreja_id' => $this->igreja->id,
+        'status' => Sessao::STATUS_ENCERRADA, 'realizada' => true, 'fim_real' => now(),
+    ]);
+    $this->patchJson("/api/v1/sessions/{$encerrada->id}", ['tema' => 'Novo', 'motivo' => str_repeat('a', 256)], $this->auth)
+        ->assertStatus(422);
+    $this->patchJson("/api/v1/sessions/{$encerrada->id}", ['tema' => 'Novo', 'motivo' => str_repeat('a', 255)], $this->auth)
+        ->assertOk();
+});
+
 it('detalhe traz a equipe minima sem bloquear', function () {
     $this->sessao->update(['status' => Sessao::STATUS_ABERTA, 'auxiliares_escalados' => 2]);
     Presenca::factory()->count(9)->create(['sessao_id' => $this->sessao->id, 'status' => Presenca::STATUS_VALIDA]);
