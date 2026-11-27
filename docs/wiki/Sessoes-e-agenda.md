@@ -50,7 +50,7 @@ foram criadas e quantas ignoradas.
 
 A aba **Exceções** registra datas em que a rotina não segue: feriado, recesso, evento especial.
 Uma exceção pode **suspender** o encontro de um dia (o sistema não gera sessão naquela data) ou
-**substituir** o horário apenas naquele dia.
+**substituir** o horário apenas naquele dia. O **motivo** é obrigatório, de 3 a 247 caracteres.
 
 ## Abrir uma sessão e registrar presença
 
@@ -62,8 +62,26 @@ Uma exceção pode **suspender** o encontro de um dia (o sistema não gera sess�
 A sessão aberta aceita presença a qualquer momento. O encerramento consolida os números que vão
 para os relatórios.
 
-**Contingência.** Se o EBI aconteceu sem registro na hora, a coordenação pode lançar a presença
-**em contingência**, informando o motivo — o lançamento fica marcado como tal na auditoria.
+### Lançar a lista em papel (contingência)
+
+Use quando a presença ficou numa lista em papel. Só vale para sessão **Encerrada**.
+
+1. Em **Sessões**, toque em **Presença** na linha da sessão encerrada.
+2. Toque em **Lançar lista em papel**.
+3. Informe o **Motivo da contingência**, de 3 a 255 caracteres, uma vez só para a lista inteira.
+4. Busque e marque cada criança, mesmo que venham de buscas diferentes. Os marcados aparecem como
+   etiquetas, e o **×** remove.
+5. Toque em **Lançar ‹N› presenças**, onde ‹N› é o número de marcados.
+
+O resultado aparece como "‹n› lançadas, ‹m› já existiam". Quem já tinha presença não é duplicado.
+Quem não pôde ser lançado aparece em "Não lançadas: ‹nomes›", e os demais são gravados. Quem
+aparece como **Bloqueado** não pode ser marcado.
+
+São no máximo 100 crianças por lançamento. Lista maior vai em mais de um lançamento.
+
+**Limpar seleção** desmarca todos, e **Sair da contingência** volta ao modo normal.
+
+A presença lançada aparece com a marca **contingência** e fica na auditoria com o motivo.
 
 ## Quem mexe em quê
 
@@ -73,6 +91,7 @@ para os relatórios.
 | Criar e encerrar faixas, gerar sessões | Coordenação do EBI, Admin da igreja |
 | Abrir/encerrar sessão | Coordenação, auxiliar autorizada, Admin da igreja |
 | Registrar presença | Coordenação, auxiliar autorizada |
+| Lançar lista em papel (contingência) | Coordenação, Admin da igreja |
 | Ver presença de uma sessão | Coordenação, auxiliar, administradores, ministério local |
 
 ## Próximo passo
