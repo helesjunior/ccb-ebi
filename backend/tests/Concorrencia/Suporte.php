@@ -13,6 +13,7 @@ use App\Domain\Identidade\Models\Usuario;
 use App\Domain\Identidade\Models\VinculoAcesso;
 use App\Domain\Organizacao\Models\Ebi;
 use App\Domain\Organizacao\Models\Igreja;
+use App\Domain\Participantes\Models\Participante;
 use App\Domain\Sessoes\Models\Sessao;
 use Database\Seeders\PapelSeeder;
 use Illuminate\Support\Facades\Artisan;
@@ -181,6 +182,32 @@ final class Suporte
             'ofertaAcrescimo' => $ofertaAcrescimo,
             'ofertaAcrescimoOutra' => $ofertaAcrescimoOutra,
             'outroOfertante' => $outroOfertante,
+        ];
+    }
+
+    /**
+     * Banco `ebi_teste` limpo com uma sessao encerrada e 5 participantes
+     * elegiveis, para a corrida da contingencia em lote.
+     *
+     * @return array{escopo: string, sessao: Sessao, dona: Usuario, participantes: array<int, Participante>}
+     */
+    public static function cenarioContingencia(): array
+    {
+        Artisan::call('migrate:fresh', ['--force' => true, '--seed' => false]);
+        app(PapelSeeder::class)->run();
+
+        $igreja = Igreja::factory()->create(['timezone' => 'America/Sao_Paulo']);
+        $ebi = Ebi::factory()->create(['igreja_id' => $igreja->id]);
+
+        return [
+            'escopo' => 'ebi:'.$ebi->id,
+            'sessao' => Sessao::factory()->create([
+                'ebi_id' => $ebi->id, 'igreja_id' => $igreja->id,
+                'inicio_previsto' => '2026-11-18 13:00:00', 'fim_previsto' => '2026-11-18 14:30:00',
+                'status' => Sessao::STATUS_ENCERRADA, 'realizada' => true,
+            ]),
+            'dona' => self::pessoa('coordenadora', 'ebi', (string) $ebi->id),
+            'participantes' => Participante::factory()->count(5)->create(['data_nascimento' => '2016-01-01'])->all(),
         ];
     }
 

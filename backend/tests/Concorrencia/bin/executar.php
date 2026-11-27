@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Executa UMA operacao de escala num processo proprio (concorrencia real:
+ * Executa UMA operacao de escala (ou de presenca) num processo proprio (concorrencia real:
  * conexao de banco independente). Chamado por tests/Concorrencia/Suporte.php.
  *
  * Uso: php executar.php <acao> <id> <alvo> <usuarioId> <papel> <escopo>
@@ -10,6 +10,7 @@
  *   - retirar:  id = membro,  alvo ignorado
  *   - incluir:  id = escala,  alvo = usuario incluido (funcao auxiliar)
  *   - decidir:  id = troca,   alvo = substituto
+ *   - contingencia: id = sessao, alvo = participantes separados por virgula
  *   escopo = `ebi:<id>`.
  *
  * Imprime `ok` ou `code:<problema>` na primeira linha.
@@ -19,6 +20,7 @@ use App\Domain\Escalas\Contracts\GerirEscala;
 use App\Domain\Escalas\Contracts\GerirTrocaEscala;
 use App\Domain\Escalas\Contracts\GerirVagaEscala;
 use App\Domain\Identidade\Contracts\ContextoDecisao;
+use App\Domain\Sessoes\Contracts\RegistrarPresenca;
 use App\Support\ProblemException;
 use Illuminate\Contracts\Console\Kernel;
 
@@ -50,6 +52,7 @@ try {
         'retirar' => $app->make(GerirEscala::class)->retirarMembro($id, $contexto, $usuarioId),
         'incluir' => $app->make(GerirEscala::class)->incluirMembro($id, $alvo, 'auxiliar', $contexto, $usuarioId),
         'decidir' => $app->make(GerirTrocaEscala::class)->decidir($id, 'aprovar', $alvo, null, $contexto, $usuarioId),
+        'contingencia' => $app->make(RegistrarPresenca::class)->registrarContingenciaLote($id, explode(',', $alvo), 'lista em papel', $usuarioId),
         default => throw new RuntimeException("Acao desconhecida: {$acao}"),
     };
 
