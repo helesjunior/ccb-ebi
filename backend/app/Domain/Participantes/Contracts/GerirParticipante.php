@@ -17,7 +17,7 @@ interface GerirParticipante
      *
      * @param  array<string, mixed>  $dados  nome, data_nascimento, nome_social?, igreja_referencia_id?
      */
-    public function cadastrar(string $usuarioId, array $dados): Participante;
+    public function cadastrar(string $usuarioId, array $dados, ?string $escopo = null): Participante;
 
     public function encontrar(string $id): ?Participante;
 
@@ -29,7 +29,7 @@ interface GerirParticipante
      *
      * @param  array<string, mixed>  $dados  nome, data_nascimento, nome_social?, responsavel_nome, tipo_relacao
      */
-    public function cadastrarAssistido(string $usuarioId, array $dados, string $evidenciaArquivoId): Participante;
+    public function cadastrarAssistido(string $usuarioId, array $dados, string $evidenciaArquivoId, ?string $escopo = null): Participante;
 
     /**
      * Busca candidatos por nome normalizado + data de nascimento + igreja de

@@ -33,13 +33,13 @@ class GerenciadorMesclagem implements GerirMesclagem
         return $this->detector->detectar($dados);
     }
 
-    public function mesclar(string $atorId, string $principalId, string $duplicadoId): Participante
+    public function mesclar(string $atorId, string $principalId, string $duplicadoId, ?string $escopo = null): Participante
     {
         if ($principalId === $duplicadoId) {
             throw new ProblemException('mesclagem_invalida', 'Dados inválidos', 422, 'Não é possível mesclar um cadastro com ele mesmo.');
         }
 
-        return DB::transaction(function () use ($atorId, $principalId, $duplicadoId): Participante {
+        return DB::transaction(function () use ($atorId, $principalId, $duplicadoId, $escopo): Participante {
             $principal = $this->buscar($principalId, 'Participante principal não encontrado.');
             $duplicado = $this->buscar($duplicadoId, 'Participante duplicado não encontrado.');
 
@@ -80,15 +80,15 @@ class GerenciadorMesclagem implements GerirMesclagem
 
             $this->registrar('participante.mesclado', $atorId, $principal, [
                 'duplicado_id' => (string) $duplicado->id,
-            ]);
+            ], $escopo);
 
             return $principal;
         });
     }
 
-    public function desfazer(string $atorId, string $principalId): Participante
+    public function desfazer(string $atorId, string $principalId, ?string $escopo = null): Participante
     {
-        return DB::transaction(function () use ($atorId, $principalId): Participante {
+        return DB::transaction(function () use ($atorId, $principalId, $escopo): Participante {
             $principal = $this->buscar($principalId, 'Participante não encontrado.');
             $snapshot = $principal->snapshot_mesclagem;
 
@@ -122,7 +122,7 @@ class GerenciadorMesclagem implements GerirMesclagem
 
             $this->registrar('participante.mesclagem_desfeita', $atorId, $principal, [
                 'duplicado_id' => (string) $snapshot['duplicado']['id'],
-            ]);
+            ], $escopo);
 
             return $principal;
         });
@@ -137,14 +137,14 @@ class GerenciadorMesclagem implements GerirMesclagem
     /**
      * @param  array<string, mixed>  $metadados
      */
-    private function registrar(string $acao, string $atorId, Participante $principal, array $metadados): void
+    private function registrar(string $acao, string $atorId, Participante $principal, array $metadados, ?string $escopo): void
     {
         $this->auditoria->registrar([
             'acao' => $acao,
             'recurso' => 'participante',
             'ator_id' => $atorId,
             'origem' => 'api',
-            'escopo' => null,
+            'escopo' => $escopo,
             'motivo' => null,
             'metadados_minimizados' => [
                 'participante_id' => (string) $principal->id,

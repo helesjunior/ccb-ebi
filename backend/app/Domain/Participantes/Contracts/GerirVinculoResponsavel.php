@@ -18,7 +18,7 @@ interface GerirVinculoResponsavel
     /**
      * @param  array<string, mixed>  $dados  nome, tipo_relacao, telefone?
      */
-    public function solicitar(string $usuarioId, string $participanteId, array $dados): ResponsavelParticipante;
+    public function solicitar(string $usuarioId, string $participanteId, array $dados, ?string $escopo = null): ResponsavelParticipante;
 
     /**
      * O autor do pedido não pode decidir o próprio vínculo, em nenhuma decisão
@@ -26,7 +26,7 @@ interface GerirVinculoResponsavel
      *
      * @param  string  $decisao  aprovar | recusar | pedir_documento | revogar | contestar
      */
-    public function decidir(string $coordenadoraId, string $vinculoId, string $decisao, ?string $motivo = null): ResponsavelParticipante;
+    public function decidir(string $coordenadoraId, string $vinculoId, string $decisao, ?string $motivo = null, ?string $escopo = null): ResponsavelParticipante;
 
     /**
      * Participantes que o usuario pode acessar por propriedade (dependentes com

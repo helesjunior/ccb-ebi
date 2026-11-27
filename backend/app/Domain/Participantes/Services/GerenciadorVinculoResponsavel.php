@@ -22,13 +22,13 @@ class GerenciadorVinculoResponsavel implements GerirVinculoResponsavel
 {
     public function __construct(private readonly RegistrarEvento $auditoria) {}
 
-    public function solicitar(string $usuarioId, string $participanteId, array $dados): ResponsavelParticipante
+    public function solicitar(string $usuarioId, string $participanteId, array $dados, ?string $escopo = null): ResponsavelParticipante
     {
         if (! Participante::query()->whereKey($participanteId)->exists()) {
             throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Participante não encontrado.');
         }
 
-        return DB::transaction(function () use ($usuarioId, $participanteId, $dados): ResponsavelParticipante {
+        return DB::transaction(function () use ($usuarioId, $participanteId, $dados, $escopo): ResponsavelParticipante {
             $vinculo = ResponsavelParticipante::create([
                 'usuario_id' => $usuarioId,
                 'nome' => (string) $dados['nome'],
@@ -51,13 +51,13 @@ class GerenciadorVinculoResponsavel implements GerirVinculoResponsavel
 
             $this->registrar('vinculo.solicitado', $usuarioId, $vinculo, [
                 'tipo' => SolicitacaoVinculo::TIPO_SOLICITACAO,
-            ]);
+            ], $escopo);
 
             return $vinculo;
         });
     }
 
-    public function decidir(string $coordenadoraId, string $vinculoId, string $decisao, ?string $motivo = null): ResponsavelParticipante
+    public function decidir(string $coordenadoraId, string $vinculoId, string $decisao, ?string $motivo = null, ?string $escopo = null): ResponsavelParticipante
     {
         $mapa = [
             'aprovar' => ResponsavelParticipante::VALIDACAO_APROVADA,
@@ -72,7 +72,7 @@ class GerenciadorVinculoResponsavel implements GerirVinculoResponsavel
             throw new ProblemException('decisao_invalida', 'Dados inválidos', 422, 'Decisão de vínculo inválida.');
         }
 
-        return DB::transaction(function () use ($coordenadoraId, $vinculoId, $decisao, $motivo, $mapa, $encerraVinculo): ResponsavelParticipante {
+        return DB::transaction(function () use ($coordenadoraId, $vinculoId, $decisao, $motivo, $mapa, $encerraVinculo, $escopo): ResponsavelParticipante {
             $vinculo = ResponsavelParticipante::query()->find($vinculoId)
                 ?? throw new ProblemException('not_found', 'Recurso não encontrado', 404, 'Vínculo não encontrado.');
 
@@ -118,7 +118,7 @@ class GerenciadorVinculoResponsavel implements GerirVinculoResponsavel
 
             $this->registrar('vinculo.decidido', $coordenadoraId, $vinculo, [
                 'decisao' => $decisao,
-            ]);
+            ], $escopo);
 
             return $vinculo;
         });
@@ -146,14 +146,14 @@ class GerenciadorVinculoResponsavel implements GerirVinculoResponsavel
     /**
      * @param  array<string, mixed>  $metadados
      */
-    private function registrar(string $acao, string $atorId, ResponsavelParticipante $vinculo, array $metadados): void
+    private function registrar(string $acao, string $atorId, ResponsavelParticipante $vinculo, array $metadados, ?string $escopo): void
     {
         $this->auditoria->registrar([
             'acao' => $acao,
             'recurso' => 'vinculo_responsavel',
             'ator_id' => $atorId,
             'origem' => 'api',
-            'escopo' => null,
+            'escopo' => $escopo,
             'motivo' => null,
             'metadados_minimizados' => [
                 'vinculo_id' => (string) $vinculo->id,
