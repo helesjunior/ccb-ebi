@@ -148,7 +148,7 @@ function App() {
       {tela === 'dispositivos' && <Dispositivos />}
       {tela === 'equipe' && <Equipe />}
       {tela === 'privacidade' && <Privacidade />}
-      {tela === 'participantes' && <Participantes />}
+      {tela === 'participantes' && <Participantes escopo={escopo} />}
       {tela === 'dependentes' && <Dependentes />}
       {tela === 'sessoes' && (
         <Sessoes

@@ -4,7 +4,8 @@ import { toast } from 'sonner'
 
 import { api } from '../api/client'
 import { lerErro } from '../api/erro'
-import { cabecalhos } from '../api/sessao'
+import { cabecalhos, type ContextoAtuacao } from '../api/sessao'
+import { CorrigirParticipante } from '../components/CorrigirParticipante'
 import {
   FormularioParticipante,
   type Participante,
@@ -40,7 +41,7 @@ import {
  * leitura): ela vai no parâmetro `finalidade` e é registrada na auditoria do
  * servidor. Sem ela, a API recusa a busca (422).
  */
-export function Participantes() {
+export function Participantes({ escopo }: { escopo: ContextoAtuacao | null }) {
   const [criado, setCriado] = useState<Participante | null>(null)
   const [termo, setTermo] = useState('')
   const [finalidade, setFinalidade] = useState('confirmacao_cadastro')
@@ -49,6 +50,8 @@ export function Participantes() {
   const [erroBusca, setErroBusca] = useState<string | null>(null)
   const [buscando, setBuscando] = useState(false)
   const [buscou, setBuscou] = useState(false)
+  // O servidor confere o papel do contexto (ParticipantController::update), nao usuario.papeis.
+  const podeCorrigir = ['coordenadora', 'coordenadora_chefe', 'super_admin'].includes(escopo?.papel ?? '')
 
   function aoCriar(p: Participante) {
     setCriado(p)
@@ -178,7 +181,17 @@ export function Participantes() {
                       <code>{p.matricula}</code>
                     </TableCell>
                     <TableCell>
+                      <div className="flex flex-wrap gap-2">
                       <HistoricoPresencas participanteId={p.id} rota="operador" />
+                      {podeCorrigir && (
+                        <CorrigirParticipante
+                          participante={p}
+                          onCorrigido={(novo) => setResultados((atuais) => atuais.map((r) => (r.id === novo.id ? novo : r)))}
+                        >
+                          <Button type="button" variant="outline" size="sm">Corrigir</Button>
+                        </CorrigirParticipante>
+                      )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
