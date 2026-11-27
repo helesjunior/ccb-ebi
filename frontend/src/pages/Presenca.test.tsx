@@ -3,15 +3,19 @@ import { describe, expect, it, vi } from 'vitest'
 
 const get = vi.fn()
 const put = vi.fn()
+const post = vi.fn()
 
 vi.mock('../api/client', () => ({
   api: {
     GET: (...args: unknown[]) => get(...args),
     PUT: (...args: unknown[]) => put(...args),
-    POST: () => Promise.resolve({ data: null }),
+    POST: (...args: unknown[]) => post(...args),
   },
 }))
 
+vi.mock('sonner', () => ({ toast: { success: vi.fn() } }))
+
+import { toast } from 'sonner'
 import { Presenca } from './Presenca'
 
 const sessao = (status: string, extras = {}) => ({
@@ -43,11 +47,17 @@ const escala = (extras = {}) => ({
   ...extras,
 })
 
+const candidatos = (busca?: string) => ({
+  Ana: [{ id: 'p-ana', nome: 'Ana Clara', matricula: 'M1', elegivel: true }],
+  Bia: [{ id: 'p-bia', nome: 'Bia Lima', matricula: 'M2', elegivel: true }],
+})[busca ?? ''] ?? []
+
 function responder(status: string, dadosEscala: unknown, extrasSessao = {}) {
-  get.mockImplementation((rota: string) => {
+  get.mockImplementation((rota: string, opcoes?: { params?: { query?: { busca?: string } } }) => {
     if (rota === '/sessions/{id}') return Promise.resolve({ data: sessao(status, { escala_id: 'esc-1', ...extrasSessao }) })
     if (rota === '/sessions/{id}/attendance') return Promise.resolve({ data: { data: [] } })
     if (rota === '/schedules/{id}') return Promise.resolve({ data: { escala: dadosEscala } })
+    if (rota === '/sessions/{id}/participants') return Promise.resolve({ data: { data: candidatos(opcoes?.params?.query?.busca) } })
     return Promise.resolve({ error: { status: 404, detail: 'x' } })
   })
 }
@@ -69,6 +79,62 @@ describe('contingencia', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Lançar lista em papel' }))
     const motivo = screen.getByLabelText('Motivo da contingência (3 a 255 caracteres)')
     expect(motivo).toHaveAttribute('maxLength', '255')
+  })
+
+  async function marcarAnaEBia(motivo = 'lista em papel') {
+    responder('encerrada', escala())
+    render(<Presenca sessaoId="ses-1" onVoltar={() => {}} papeis={['coordenadora']} />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Lançar lista em papel' }))
+    fireEvent.change(screen.getByLabelText('Motivo da contingência (3 a 255 caracteres)'), { target: { value: motivo } })
+    const busca = screen.getByLabelText('Nome ou matrícula')
+    fireEvent.change(busca, { target: { value: 'Ana' } })
+    fireEvent.click(await screen.findByRole('button', { name: /Ana Clara/ }))
+    fireEvent.change(busca, { target: { value: 'Bia' } })
+    fireEvent.click(await screen.findByRole('button', { name: /Bia Lima/ }))
+  }
+
+  it('CT-32 lanca os marcados num unico POST', async () => {
+    post.mockResolvedValue({
+      data: {
+        data: [{ participante_id: 'p-ana', resultado: 'criada' }, { participante_id: 'p-bia', resultado: 'ja_existia' }],
+        resumo: { criadas: 1, ja_existiam: 1, erros: 0 },
+      },
+    })
+    await marcarAnaEBia()
+    expect(screen.getByTestId('contingencia-marcados')).toHaveTextContent('Ana Clara')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Lançar 2 presenças' }))
+
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith('1 lançadas, 1 já existiam'))
+    expect(post).toHaveBeenCalledTimes(1)
+    expect(post).toHaveBeenCalledWith('/sessions/{id}/contingency-attendance/batch', expect.objectContaining({
+      body: { participante_ids: ['p-ana', 'p-bia'], motivo: 'lista em papel' },
+    }))
+    expect(screen.queryByTestId('contingencia-marcados')).not.toBeInTheDocument()
+  })
+
+  it('CT-33 linha com erro lista quem nao foi lancado', async () => {
+    post.mockResolvedValue({
+      data: {
+        data: [{ participante_id: 'p-ana', resultado: 'criada' }, { participante_id: 'p-bia', resultado: 'erro', erro: 'inelegivel' }],
+        resumo: { criadas: 1, ja_existiam: 0, erros: 1 },
+      },
+    })
+    await marcarAnaEBia()
+    fireEvent.click(screen.getByRole('button', { name: 'Lançar 2 presenças' }))
+    expect(await screen.findByText('Não lançadas: Bia Lima')).toBeInTheDocument()
+  })
+
+  it('CT-33 409 mostra o detail', async () => {
+    post.mockResolvedValue({ error: { status: 409, code: 'sessao_em_estado_invalido', detail: 'Sessão não está encerrada.' } })
+    await marcarAnaEBia()
+    fireEvent.click(screen.getByRole('button', { name: 'Lançar 2 presenças' }))
+    expect(await screen.findByText('Sessão não está encerrada.')).toBeInTheDocument()
+  })
+
+  it('CT-33 motivo curto desabilita o lancamento', async () => {
+    await marcarAnaEBia('ab')
+    expect(screen.getByRole('button', { name: 'Lançar 2 presenças' })).toBeDisabled()
   })
 })
 

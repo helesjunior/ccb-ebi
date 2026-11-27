@@ -4058,6 +4058,67 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sessions/{id}/contingency-attendance/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Lançar a lista em papel de uma vez (CA6, CA7)
+         * @description Até 100 participantes distintos com um único motivo. Cada linha roda como a contingência individual, na própria transação, e falha sozinha (`inelegivel`, `not_found` para inexistente ou mesclado, `sessao_em_estado_invalido` se a sessão mudar no meio). Sessão não `encerrada` responde 409 e não grava nada. Exige `sessao.gerenciar`. Escrita idempotente (`Idempotency-Key`).
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Contexto de atuação no formato `papel=<codigo>;escopo=<tipo>:<id>` (RN-11). Obrigatório quando o usuário acumula vínculos; o servidor revalida contra os vínculos vigentes (nunca é aceito sem revalidação). */
+                    "X-Acting-Scope"?: components["parameters"]["XActingScope"];
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path: {
+                    id: components["parameters"]["SessaoId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PresencaContingenciaLoteInput"];
+                };
+            };
+            responses: {
+                /** @description Resultado por linha e resumo */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            data: components["schemas"]["ResultadoContingenciaLote"][];
+                            resumo: {
+                                criadas: number;
+                                ja_existiam: number;
+                                erros: number;
+                            };
+                        };
+                    };
+                };
+                401: components["responses"]["Problem"];
+                403: components["responses"]["Problem"];
+                404: components["responses"]["Problem"];
+                409: components["responses"]["Problem"];
+                422: components["responses"]["Problem"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/attendance/{id}/reversal": {
         parameters: {
             query?: never;
@@ -6118,6 +6179,19 @@ export interface components {
              * @enum {string}
              */
             origem?: "web" | "app";
+        };
+        PresencaContingenciaLoteInput: {
+            participante_ids: string[];
+            motivo: string;
+        };
+        ResultadoContingenciaLote: {
+            participante_id: string;
+            /** @enum {string} */
+            resultado: "criada" | "ja_existia" | "erro";
+            /** @description inelegivel | not_found (inexistente ou mesclado) | sessao_em_estado_invalido */
+            erro?: string;
+            motivo_bloqueio?: string | null;
+            presenca?: components["schemas"]["Presenca"];
         };
         PresencaContingenciaInput: {
             participante_id: string;
