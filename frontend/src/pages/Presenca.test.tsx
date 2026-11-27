@@ -62,6 +62,16 @@ describe('finalidade', () => {
   })
 })
 
+describe('contingencia', () => {
+  it('limita o motivo a 255 caracteres', async () => {
+    responder('encerrada', escala())
+    render(<Presenca sessaoId="ses-1" onVoltar={() => {}} papeis={['coordenadora']} />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Lançar lista em papel' }))
+    const motivo = screen.getByLabelText('Motivo da contingência (3 a 255 caracteres)')
+    expect(motivo).toHaveAttribute('maxLength', '255')
+  })
+})
+
 describe('presenca da equipe', () => {
   it('nao aparece com a sessao aberta', async () => {
     responder('aberta', escala())

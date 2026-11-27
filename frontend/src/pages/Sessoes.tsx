@@ -54,7 +54,7 @@ export function Sessoes({ onAbrirPresenca, papeis }: {
   const [equipeDaEscala, setEquipeDaEscala] = useState<boolean | null>(null)
   const podeGerenciar = papeis.some((p) => ['adm_igreja', 'coordenadora', 'coordenadora_chefe'].includes(p))
   const periodoValido = Boolean(de && ate && de <= ate)
-  const motivoValido = motivo.trim().length >= 3 && motivo.trim().length <= 500
+  const motivoValido = motivo.trim().length >= 3 && motivo.trim().length <= 255
 
   useEffect(() => {
     const controller = new AbortController()
@@ -311,7 +311,7 @@ export function Sessoes({ onAbrirPresenca, papeis }: {
               </div>
             </>}
             {dialogo && dialogo.acao !== 'encerrar' && (
-              <div className="flex flex-col gap-2"><Label htmlFor="sessao-motivo">Motivo (3 a 500 caracteres)</Label><Input id="sessao-motivo" value={motivo} onChange={(e) => setMotivo(e.target.value)} minLength={3} maxLength={500} required disabled={enviando} /></div>
+              <div className="flex flex-col gap-2"><Label htmlFor="sessao-motivo">Motivo (3 a 255 caracteres)</Label><Input id="sessao-motivo" value={motivo} onChange={(e) => setMotivo(e.target.value)} minLength={3} maxLength={255} required disabled={enviando} /></div>
             )}
             <DialogFooter>
               <Button type="button" variant="outline" disabled={enviando} onClick={() => setDialogo(null)}>Voltar</Button>

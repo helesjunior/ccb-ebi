@@ -144,7 +144,7 @@ export function PainelAgenda({ ebiId, podeGerenciar, onAgendaAlterada }: {
 
   function criarExcecao(evento: FormEvent) {
     evento.preventDefault()
-    if (!motivo.trim() || (horarioEspecial && !faixaId)) return
+    if (motivo.trim().length < 3 || (horarioEspecial && !faixaId)) return
     void escrever(() => api.POST('/ebis/{id}/agenda-exceptions', {
       params: { path: { id: ebiId } }, headers: cabecalhos(),
       body: {
@@ -256,8 +256,8 @@ export function PainelAgenda({ ebiId, podeGerenciar, onAgendaAlterada }: {
                   <div className="flex flex-col gap-2"><Label htmlFor="excecao-inicio">Hora de início</Label><Input id="excecao-inicio" type="time" value={excecaoInicio} onChange={(e) => setExcecaoInicio(e.target.value)} required disabled={enviando} /></div>
                   <div className="flex flex-col gap-2"><Label htmlFor="excecao-fim">Hora de fim</Label><Input id="excecao-fim" type="time" value={excecaoFim} onChange={(e) => setExcecaoFim(e.target.value)} required disabled={enviando} /></div>
                 </>}
-                <div className="flex flex-col gap-2 sm:col-span-2"><Label htmlFor="excecao-motivo">Motivo (obrigatório)</Label><Input id="excecao-motivo" value={motivo} onChange={(e) => setMotivo(e.target.value)} required disabled={enviando} /></div>
-                <Button type="submit" className="sm:col-span-2 sm:justify-self-start" disabled={enviando || carregando || !dataExcecao || !motivo.trim() || (horarioEspecial && (!faixaId || !excecaoInicio || !excecaoFim))}>Criar exceção</Button>
+                <div className="flex flex-col gap-2 sm:col-span-2"><Label htmlFor="excecao-motivo">Motivo (obrigatório, 3 a 247 caracteres)</Label><Input id="excecao-motivo" value={motivo} onChange={(e) => setMotivo(e.target.value)} minLength={3} maxLength={247} required disabled={enviando} /></div>
+                <Button type="submit" className="sm:col-span-2 sm:justify-self-start" disabled={enviando || carregando || !dataExcecao || motivo.trim().length < 3 || (horarioEspecial && (!faixaId || !excecaoInicio || !excecaoFim))}>Criar exceção</Button>
               </form>
             )}
           </TabsContent>

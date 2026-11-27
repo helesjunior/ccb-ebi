@@ -63,8 +63,8 @@ export function Presenca({ sessaoId, onVoltar, papeis }: {
   const emContingencia = modoContingencia && podeContingencia
   const podeConfirmar = emContingencia || (sessao?.status === 'aberta' && podeRegistrar)
   const mostrarBusca = sessao?.status === 'aberta' || emContingencia
-  const motivoContingenciaValido = motivoContingencia.trim().length >= 3 && motivoContingencia.trim().length <= 500
-  const motivoEstornoValido = motivoEstorno.trim().length >= 3 && motivoEstorno.trim().length <= 500
+  const motivoContingenciaValido = motivoContingencia.trim().length >= 3 && motivoContingencia.trim().length <= 255
+  const motivoEstornoValido = motivoEstorno.trim().length >= 3 && motivoEstorno.trim().length <= 255
 
   const carregar = useCallback(async () => {
     consulta.current?.abort()
@@ -278,8 +278,8 @@ export function Presenca({ sessaoId, onVoltar, papeis }: {
       {emContingencia && <Alert role="status" className="border-amber-500">
         <AlertDescription className="flex flex-col gap-3">
           <p>Modo contingência: lançando lista em papel de uma sessão encerrada. Informe o motivo de cada presença.</p>
-          <Label htmlFor="contingencia-motivo">Motivo da contingência (3 a 500 caracteres)</Label>
-          <Input id="contingencia-motivo" value={motivoContingencia} onChange={(e) => setMotivoContingencia(e.target.value)} minLength={3} maxLength={500} required disabled={enviando} />
+          <Label htmlFor="contingencia-motivo">Motivo da contingência (3 a 255 caracteres)</Label>
+          <Input id="contingencia-motivo" value={motivoContingencia} onChange={(e) => setMotivoContingencia(e.target.value)} minLength={3} maxLength={255} required disabled={enviando} />
         </AlertDescription>
       </Alert>}
       {mostrarBusca && <Card>
@@ -403,8 +403,8 @@ export function Presenca({ sessaoId, onVoltar, papeis }: {
           <DialogHeader><DialogTitle>Estornar presença</DialogTitle><DialogDescription>Informe o motivo para estornar a presença de {estorno?.participante?.nome}.</DialogDescription></DialogHeader>
           {erro && <Alert variant="destructive" role="alert"><AlertDescription>{erro}</AlertDescription></Alert>}
           <form onSubmit={estornar} className="flex flex-col gap-4">
-            <Label htmlFor="estorno-motivo">Motivo (3 a 500 caracteres)</Label>
-            <Input id="estorno-motivo" value={motivoEstorno} onChange={(e) => setMotivoEstorno(e.target.value)} minLength={3} maxLength={500} required disabled={enviando} />
+            <Label htmlFor="estorno-motivo">Motivo (3 a 255 caracteres)</Label>
+            <Input id="estorno-motivo" value={motivoEstorno} onChange={(e) => setMotivoEstorno(e.target.value)} minLength={3} maxLength={255} required disabled={enviando} />
             <DialogFooter>
               <Button type="button" variant="outline" disabled={enviando} onClick={() => setEstorno(null)}>Voltar</Button>
               <Button type="submit" variant="destructive" disabled={enviando || !motivoEstornoValido}>{enviando ? 'Estornando…' : 'Confirmar estorno'}</Button>
