@@ -18,6 +18,7 @@ Cada linha mostra **data e horário**, a **função** e a **situação**:
 | **Aguardando aprovação** | A escala ainda não foi aprovada pela chefe | Só aguardar |
 | **Escalado** | Você está na escala | **Confirmar presença** |
 | **Confirmado** | Sua presença está registrada | Comparecer |
+| **Troca solicitada** | Você pediu troca e ela ainda não foi decidida | Aguardar ou **Desistir da troca** |
 | **Substituído** | Outra pessoa assumiu seu lugar | Nada |
 
 Se você está em mais de uma equipe, aparecem todas as suas escalas.
@@ -45,6 +46,18 @@ Se precisar sair de uma escala já aprovada:
 
 A troca fica em **Trocas pendentes** até a decisão. Não deixe para a véspera: o EBI precisa de
 gente confirmada na sessão.
+
+**Mudou de ideia?** Enquanto a situação é **Troca solicitada**, a linha mostra "Troca pedida; aguardando aprovação." e o botão **Desistir da troca**.
+
+1. Toque em **Desistir da troca**.
+2. Aparece a confirmação "Desistir da troca?" ("Você continua escalada nesta sessão.").
+3. Confirme em **Desistir da troca**.
+
+Aparece "Pedido de troca cancelado.", e a escala volta para **Escalado** ou **Confirmado**, a
+situação de antes do pedido.
+
+Se a chefe já tiver decidido, aparece "Esta troca já foi decidida.", e a lista é atualizada com a
+decisão.
 
 ## 5. Vagas abertas
 
