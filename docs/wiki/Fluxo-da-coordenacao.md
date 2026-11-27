@@ -4,6 +4,9 @@ Este é o caminho completo de quem toca o EBI no dia a dia: **Coordenadora EBI**
 chefe**. As duas fazem quase tudo igual; a chefe tem mais duas chaves — **aprovar a escala** e
 **decidir as trocas**.
 
+No **Início**, o bloco **Fazem 12 anos nos próximos 30 dias** mostra quem vai precisar de exceção
+para continuar; veja [Exceção inclusiva](Excecao-inclusiva).
+
 ![Início da coordenação chefe](images/02-inicio-chefe.png)
 
 ## O ciclo em uma página
@@ -59,7 +62,8 @@ Passo a passo completo em [Escalas](Escalas).
 ## 5. Acompanhar a sessão
 
 **Participantes → Sessões** → **Abrir** na sessão do dia. Registre a presença e **encerre** ao
-final. Se aconteceu sem registro, use o lançamento em contingência com o motivo.
+final. Se a presença ficou em papel, encerre a sessão e use **Lançar lista em papel**; veja
+[Sessões e agenda](Sessoes-e-agenda).
 
 ## 6. Tratar faltas e trocas
 
@@ -73,6 +77,7 @@ Veja [Fluxo do auxiliar](Fluxo-do-auxiliar) para entender o lado de quem pede.
 - **Busque antes de cadastrar** — sempre.
 - Responsável sem conta no portal: use **Cadastro assistido**, com a evidência do termo.
 - Fichas duplicadas: **Mesclagem**.
+- Dado errado no cadastro: **Corrigir**, na busca de Participantes; veja [Participantes](Participantes).
 - Criança fora da faixa etária: **Exceção inclusiva**, pedido e decisão.
 - Pedido de vínculo de responsável: **Vínculos**.
 
