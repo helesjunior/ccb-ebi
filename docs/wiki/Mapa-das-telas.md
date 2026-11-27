@@ -9,9 +9,9 @@ vê o item — e, mesmo com o endereço da tela, o servidor recusa a ação.
 | Participantes | **Meus dependentes** | Crianças e adolescentes que você representa | Todos (só as ligadas a você) |
 | Participantes | **Sessões** | Abrir, encerrar e registrar presença | Super Admin, Admin regional, Admin de setor, Admin de igreja, Coordenação, Auxiliar, Ministério local |
 | Participantes | **Escalas** | Montar a equipe de cada sessão e acompanhar cobertura | Super Admin, Admin regional, Admin de setor, Admin de igreja, Coordenação, Ministério local |
-| Participantes | **Minhas escalas** | Confirmar presença, pedir troca, ver conflitos | Coordenação, Auxiliar |
+| Participantes | **Minhas escalas** | Confirmar presença, pedir ou desistir de troca, ver conflitos | Coordenação, Auxiliar |
 | Participantes | **Equipes de escala** | Montar a equipe de auxiliares de cada coordenação | Admin de igreja, Coordenação |
-| Participantes | **Participantes** | Buscar e cadastrar participantes | Super Admin, Admin regional, Admin de setor, Admin de igreja, Coordenação, Auxiliar, Ministério local |
+| Participantes | **Participantes** | Buscar, cadastrar e corrigir participantes | Super Admin, Admin regional, Admin de setor, Admin de igreja, Coordenação, Auxiliar, Ministério local |
 | Participantes | **Cadastro assistido** | Cadastro presencial com evidência de aceite | Super Admin, Admin de igreja, Coordenação, Auxiliar, Responsável |
 | Participantes | **Exceção inclusiva** | Pedir ou decidir exceção de faixa etária | Os mesmos de **Participantes** |
 | Participantes | **Mesclagem** | Juntar cadastros duplicados (reversível) | Super Admin, Coordenação |
@@ -33,7 +33,19 @@ em [Escalas](Escalas): a chefe aprova a escala e decide as trocas.
 Cartões de atalho, na ordem em que as pessoas costumam trabalhar. O rodapé da lateral mostra a
 conta e o contexto de atuação.
 
+Para a coordenação, o bloco **Fazem 12 anos nos próximos 30 dias**; veja
+[Exceção inclusiva](Excecao-inclusiva).
+
 ![Início](images/02-inicio-chefe.png)
+
+### Meus dependentes
+
+As crianças ligadas à sua conta, com a frequência e os dados do cadastro. Quando uma delas está
+para fazer 12 anos, aparece um aviso para pedir a exceção à coordenação do EBI.
+
+![Meus dependentes](images/13-dependentes-responsavel.png)
+
+Detalhes em [Fluxo do responsável](Fluxo-do-responsavel).
 
 ### Sessões
 
@@ -62,7 +74,8 @@ Detalhes em [Escalas](Escalas).
 ### Minhas escalas
 
 A própria agenda. Cada linha traz data, função e situação (**Aguardando aprovação**, **Escalado**,
-**Confirmado**), com os botões para confirmar presença, avisar conflito e pedir troca.
+**Confirmado**, **Troca solicitada**), com os botões para confirmar presença, avisar conflito,
+pedir troca e **Desistir da troca**.
 
 ![Minhas escalas do auxiliar](images/12-minhas-escalas-auxiliar.png)
 
@@ -76,7 +89,8 @@ Cada coordenação tem uma equipe de auxiliares. A escala de uma sessão nasce d
 
 ### Participantes
 
-Busca por nome (com a finalidade da leitura registrada) e formulário de cadastro.
+Busca por nome (com a finalidade da leitura registrada), formulário de cadastro e, na linha de cada
+participante, o botão **Corrigir**.
 
 ![Participantes](images/07-participantes-chefe.png)
 
@@ -91,7 +105,7 @@ responsável.
 
 ### Exceção inclusiva
 
-Pedido de exceção (responsável) e decisão (coordenação) no mesmo lugar.
+Pedido e decisão de exceção, feitos pela coordenação (o responsável pede à coordenação).
 
 ![Exceção inclusiva](images/22-excecao.png)
 
