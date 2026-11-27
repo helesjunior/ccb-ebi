@@ -2198,6 +2198,52 @@ paths:
         '404': { $ref: '#/components/responses/Problem' }
         '409': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/Problem' }
+  /sessions/{id}/contingency-attendance/batch:
+    post:
+      tags: [sessions]
+      summary: Lançar a lista em papel de uma vez (CA6, CA7)
+      description: >-
+        Até 100 participantes distintos com um único motivo. Cada linha roda como
+        a contingência individual, na própria transação, e falha sozinha
+        (`inelegivel`, `not_found` para inexistente ou mesclado,
+        `sessao_em_estado_invalido` se a sessão mudar no meio). Sessão não
+        `encerrada` responde 409 e não grava nada. Exige `sessao.gerenciar`.
+        Escrita idempotente (`Idempotency-Key`).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/SessaoId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PresencaContingenciaLoteInput' }
+      responses:
+        '200':
+          description: Resultado por linha e resumo
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, resumo]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ResultadoContingenciaLote' }
+                  resumo:
+                    type: object
+                    required: [criadas, ja_existiam, erros]
+                    properties:
+                      criadas: { type: integer }
+                      ja_existiam: { type: integer }
+                      erros: { type: integer }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
   /attendance/{id}/reversal:
     post:
       tags: [sessions]
@@ -4047,6 +4093,26 @@ components:
       properties:
         participante_id: { type: string }
         origem: { type: string, enum: [web, app], description: 'Padrão: web' }
+    PresencaContingenciaLoteInput:
+      type: object
+      required: [participante_ids, motivo]
+      properties:
+        participante_ids:
+          type: array
+          minItems: 1
+          maxItems: 100
+          uniqueItems: true
+          items: { type: string }
+        motivo: { type: string, minLength: 3, maxLength: 255 }
+    ResultadoContingenciaLote:
+      type: object
+      required: [participante_id, resultado]
+      properties:
+        participante_id: { type: string }
+        resultado: { type: string, enum: [criada, ja_existia, erro] }
+        erro: { type: string, description: 'inelegivel | not_found (inexistente ou mesclado) | sessao_em_estado_invalido' }
+        motivo_bloqueio: { type: [string, 'null'] }
+        presenca: { $ref: '#/components/schemas/Presenca' }
     PresencaContingenciaInput:
       type: object
       required: [participante_id, motivo]

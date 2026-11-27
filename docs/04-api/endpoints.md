@@ -119,6 +119,7 @@ Proposta inicial, prefixo `/api/v1`. Rotas marcadas *novo* não existiam na vers
 | POST | `/sessions/{id}/open`, `/sessions/{id}/close`, `/sessions/{id}/cancel` | Ciclo da sessão *novo* (`no OpenAPI`) | RF-06 |
 | GET | `/sessions/{id}/participants` | Buscar participantes elegíveis na sessão (finalidade obrigatória) *novo* (`no OpenAPI`) | RF-08 |
 | POST | `/sessions/{id}/contingency-attendance` | Lançar presença de lista em papel *novo* (`no OpenAPI`) | RNF-03 |
+| POST | `/sessions/{id}/contingency-attendance/batch` | Lançar a lista em papel de uma vez (até 100, resultado por linha) *novo* (`no OpenAPI`) | RNF-03 |
 | GET | `/participants/{id}/attendance` | Histórico de presenças (operador) *novo* (`no OpenAPI`) | RF-08 |
 
 ## Biblioteca

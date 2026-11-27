@@ -118,6 +118,36 @@ class RegistradorPresenca implements RegistrarPresenca
         return $this->resultado($presenca, true);
     }
 
+    public function registrarContingenciaLote(string $sessaoId, array $participanteIds, string $motivo, string $usuarioId): array
+    {
+        $sessao = $this->sessoes->detalhe($sessaoId) ?? throw new ProblemException('not_found', 'Recurso não encontrado', 404);
+        if ($sessao->status !== Sessao::STATUS_ENCERRADA) {
+            throw new ProblemException('sessao_em_estado_invalido', 'Conflito de estado', 409);
+        }
+
+        $linhas = [];
+        foreach ($participanteIds as $id) {
+            // avaliarPorId lanca RuntimeException para id inexistente; mesclado tambem volta null aqui.
+            if ($this->participantes->encontrar($id) === null) {
+                $linhas[] = ['participante_id' => $id, 'resultado' => 'erro', 'erro' => 'not_found'];
+
+                continue;
+            }
+
+            try {
+                $r = $this->registrarContingencia($sessaoId, $id, $motivo, $usuarioId);
+                $linhas[] = ['participante_id' => $id, 'resultado' => $r->nova ? 'criada' : 'ja_existia', 'presenca' => $r->presenca];
+            } catch (ProblemException $e) {
+                $linhas[] = [
+                    'participante_id' => $id, 'resultado' => 'erro', 'erro' => $e->problemCode,
+                    'motivo_bloqueio' => $e->extra['motivo_bloqueio'] ?? null,
+                ];
+            }
+        }
+
+        return $linhas;
+    }
+
     private function avaliarOuFalhar(SessaoEbi $sessao, string $participanteId): string
     {
         $ebi = $this->ebis->dados($sessao->ebiId) ?? throw new ProblemException('not_found', 'Recurso não encontrado', 404);

@@ -315,6 +315,8 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
             ->middleware(IdempotenciaMiddleware::class)->name('sessions.attendance.store');
         Route::post('sessions/{id}/contingency-attendance', [PresencaController::class, 'contingencia'])
             ->middleware(IdempotenciaMiddleware::class)->name('sessions.attendance.contingency');
+        Route::post('sessions/{id}/contingency-attendance/batch', [PresencaController::class, 'contingenciaLote'])
+            ->middleware(IdempotenciaMiddleware::class)->name('sessions.attendance.contingency.batch');
         Route::post('attendance/{id}/reversal', [PresencaController::class, 'estornar'])
             ->middleware(IdempotenciaMiddleware::class)->name('attendance.reversal');
         Route::get('participants/{id}/attendance', [HistoricoPresencaController::class, 'operador'])
