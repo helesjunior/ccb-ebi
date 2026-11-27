@@ -16,6 +16,8 @@ interface GerirExcecaoEtaria
      */
     public function solicitar(string $solicitanteId, string $participanteId, array $dados, ?string $escopo = null): ExcecaoEtaria;
 
+    public function encontrar(string $excecaoId): ?ExcecaoEtaria;
+
     /**
      * @param  string  $decisao  aprovar | recusar | suspender | revogar
      * @param  array<string, mixed>  $dados  vigente_ate?, revisao_prevista_em?, responsavel_concordante_id?, motivo?

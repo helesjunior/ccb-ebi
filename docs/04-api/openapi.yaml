@@ -2728,7 +2728,9 @@ paths:
       summary: Decidir exceção inclusiva (FL-06, CA-17)
       description: >-
         A coordenadora aprova, recusa, suspende ou revoga a exceção. Exige a
-        operação `excecao.decidir`.
+        operação `excecao.decidir` e o participante ligado ao escopo (igreja
+        de referência ou, sem igreja, presença válida num EBI do escopo).
+        Fora do território responde 404, como se a exceção não existisse.
       security:
         - bearerAuth: []
       parameters:

@@ -38,6 +38,11 @@ class GerenciadorExcecao implements GerirExcecaoEtaria
         return $excecao;
     }
 
+    public function encontrar(string $excecaoId): ?ExcecaoEtaria
+    {
+        return ExcecaoEtaria::query()->find($excecaoId);
+    }
+
     public function decidir(string $decidorId, string $excecaoId, string $decisao, array $dados = [], ?string $escopo = null): ExcecaoEtaria
     {
         $status = match ($decisao) {
