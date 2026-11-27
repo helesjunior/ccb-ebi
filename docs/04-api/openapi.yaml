@@ -998,6 +998,39 @@ paths:
         '401': { $ref: '#/components/responses/Problem' }
         '403': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
+  /ebis/{id}/age-alerts:
+    get:
+      tags: [participants]
+      summary: Quem faz 12 anos nos próximos 30 dias (CA4)
+      description: >-
+        Participantes ativos da igreja do EBI cujo 12o aniversário cai de hoje
+        a 30 dias (fuso da igreja) e que não têm exceção inclusiva aprovada
+        vigente nessa data, ordenados por data e nome. Exige `excecao.decidir`
+        no EBI (coordenadora, coordenadora chefe, super_admin); fora do escopo
+        responde 403. Leitura identificável: exige `finalidade` e grava
+        `participante.lido` com escopo `ebi:<id>`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/XActingScope'
+        - $ref: '#/components/parameters/EbiId'
+        - $ref: '#/components/parameters/FinalidadeLeitura'
+      responses:
+        '200':
+          description: Avisos
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/AlertaDozeAnos' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
   /ebis/{id}/equipes:
     get:
       tags: [escalas]
@@ -3407,6 +3440,14 @@ components:
           type: object
           properties:
             proximo_cursor: { type: [string, 'null'] }
+    AlertaDozeAnos:
+      type: object
+      required: [participante_id, nome, matricula, faz_12_em]
+      properties:
+        participante_id: { type: string }
+        nome: { type: string }
+        matricula: { type: string }
+        faz_12_em: { type: string, format: date }
     Dependente:
       allOf:
         - $ref: '#/components/schemas/Participante'

@@ -213,6 +213,7 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         });
         Route::patch('age-exceptions/{id}', [AgeExceptionController::class, 'update'])
             ->middleware('can:excecao.decidir')->name('age-exceptions.update');
+        Route::get('ebis/{id}/age-alerts', [AgeExceptionController::class, 'alertas'])->name('ebis.age-alerts');
 
         // Equipe do EBI para montar a escala (E07): quem pode ser escalado.
         Route::get('ebis/{id}/team', [EquipeEbiController::class, 'index'])
