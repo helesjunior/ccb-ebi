@@ -19,7 +19,7 @@ class TransferenciaRequest extends FormRequest
         return [
             'sector_id' => ['required', 'string', 'exists:setores,id'],
             'date' => ['required', 'date'],
-            'reason' => ['nullable', 'string', 'max:500'],
+            'reason' => ['nullable', 'string', 'max:255'], // evento_auditoria.motivo e varchar(255).
         ];
     }
 }

@@ -66,11 +66,11 @@ it('permite nova presenca depois do estorno', function () {
     expect(Presenca::query()->where('sessao_id', $this->sessao->id)->count())->toBe(2);
 });
 
-it('aceita motivo de 500 caracteres e rejeita 501', function () {
+it('aceita motivo de 255 caracteres e rejeita 256', function () {
     $url = "/api/v1/attendance/{$this->presenca->id}/reversal";
-    $this->postJson($url, ['motivo' => str_repeat('a', 501)], $this->auth)->assertUnprocessable();
-    $this->postJson($url, ['motivo' => str_repeat('a', 500)], $this->auth)->assertOk()
-        ->assertJsonPath('motivo_estorno', str_repeat('a', 500));
+    $this->postJson($url, ['motivo' => str_repeat('a', 256)], $this->auth)->assertUnprocessable();
+    $this->postJson($url, ['motivo' => str_repeat('a', 255)], $this->auth)->assertOk()
+        ->assertJsonPath('motivo_estorno', str_repeat('a', 255));
 });
 
 it('autoriza historico pela igreja do participante e nao pela sessao frequentada', function () {

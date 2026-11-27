@@ -21,7 +21,7 @@ class CorrigirSessaoRequest extends FormRequest
             'fim_real' => ['sometimes', 'nullable', 'date'],
             'realizada' => ['sometimes', 'nullable', 'boolean'],
             'auxiliares_escalados' => ['sometimes', 'nullable', 'integer', 'min:0'],
-            'motivo' => ['nullable', 'string', 'min:3', 'max:500'],
+            'motivo' => ['nullable', 'string', 'min:3', 'max:255'], // evento_auditoria.motivo e varchar(255).
         ];
     }
 }

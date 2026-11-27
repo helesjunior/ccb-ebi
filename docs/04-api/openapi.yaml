@@ -670,7 +670,7 @@ paths:
               properties:
                 sector_id: { type: string }
                 date: { type: string, format: date }
-                reason: { type: string }
+                reason: { type: string, maxLength: 255 }
       responses:
         '201':
           description: Igreja transferida
@@ -3573,7 +3573,7 @@ components:
         agenda_ebi_id: { type: [string, 'null'] }
         hora_inicio: { type: [string, 'null'] }
         hora_fim: { type: [string, 'null'] }
-        motivo: { type: string, minLength: 3, maxLength: 500 }
+        motivo: { type: string, minLength: 3, maxLength: 247 }
     MembroEquipe:
       type: object
       required: [usuario_id, nome, papeis]
@@ -3929,7 +3929,7 @@ components:
       type: object
       required: [motivo]
       properties:
-        motivo: { type: string, minLength: 3, maxLength: 500 }
+        motivo: { type: string, minLength: 3, maxLength: 255 }
     SessaoCorrecaoInput:
       type: object
       properties:
@@ -3939,7 +3939,7 @@ components:
         fim_real: { type: [string, 'null'], format: date-time }
         realizada: { type: [boolean, 'null'] }
         auxiliares_escalados: { type: [integer, 'null'], minimum: 0 }
-        motivo: { type: [string, 'null'], minLength: 3, maxLength: 500 }
+        motivo: { type: [string, 'null'], minLength: 3, maxLength: 255 }
     GeracaoSessoes:
       type: object
       properties:
@@ -3990,12 +3990,12 @@ components:
       required: [participante_id, motivo]
       properties:
         participante_id: { type: string }
-        motivo: { type: string, minLength: 3, maxLength: 500 }
+        motivo: { type: string, minLength: 3, maxLength: 255 }
     EstornoInput:
       type: object
       required: [motivo]
       properties:
-        motivo: { type: string, minLength: 3, maxLength: 500 }
+        motivo: { type: string, minLength: 3, maxLength: 255 }
     HistoricoPresenca:
       type: object
       properties:

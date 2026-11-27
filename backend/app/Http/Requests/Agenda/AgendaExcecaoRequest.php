@@ -20,7 +20,7 @@ class AgendaExcecaoRequest extends FormRequest
             'agenda_ebi_id' => ['nullable', 'ulid'],
             'hora_inicio' => ['nullable', 'date_format:H:i'],
             'hora_fim' => ['nullable', 'date_format:H:i'],
-            'motivo' => ['required', 'string'],
+            'motivo' => ['required', 'string', 'min:3', 'max:247'], // evento_auditoria.motivo e varchar(255), com o prefixo "agenda: ".
         ];
     }
 }

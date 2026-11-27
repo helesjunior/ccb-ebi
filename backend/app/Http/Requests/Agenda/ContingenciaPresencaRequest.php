@@ -16,7 +16,7 @@ class ContingenciaPresencaRequest extends FormRequest
     {
         return [
             'participante_id' => ['required', 'ulid', 'exists:participante,id'],
-            'motivo' => ['required', 'string', 'min:3', 'max:500'],
+            'motivo' => ['required', 'string', 'min:3', 'max:255'], // evento_auditoria.motivo e varchar(255).
         ];
     }
 }
