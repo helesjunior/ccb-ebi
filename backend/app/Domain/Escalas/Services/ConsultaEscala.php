@@ -228,6 +228,13 @@ class ConsultaEscala implements ConsultarEscala
         $de = CarbonImmutable::parse($inicio, 'UTC');
         $ate = CarbonImmutable::parse($fim, 'UTC');
 
+        /** @var array<string, string> $trocas membro_id => troca pendente aberta pela propria pessoa */
+        $trocas = SolicitacaoTrocaEscala::query()
+            ->whereIn('escala_membro_id', array_map(fn (EscalaMembro $v): string => (string) $v->id, $noPeriodo))
+            ->where('solicitante_id', $usuarioId)
+            ->where('status', SolicitacaoTrocaEscala::STATUS_PENDENTE)
+            ->pluck('id', 'escala_membro_id')->all();
+
         $linhas = [];
 
         foreach ($noPeriodo as $vaga) {
@@ -258,6 +265,7 @@ class ConsultaEscala implements ConsultarEscala
                 'funcao' => (string) $vaga->funcao,
                 'status' => (string) $vaga->status,
                 'presente' => $vaga->presente,
+                'troca_id' => isset($trocas[(string) $vaga->id]) ? (string) $trocas[(string) $vaga->id] : null,
                 'conflitos' => $this->conflitos->apresentar($conflitos, true),
                 '_ordem' => $sessao->inicioPrevisto->getTimestamp(),
             ];

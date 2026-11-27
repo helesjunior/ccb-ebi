@@ -3845,6 +3845,7 @@ components:
         funcao: { type: string, enum: [coordenadora, auxiliar] }
         status: { type: string, enum: [escalado, confirmado, troca_solicitada] }
         presente: { type: [boolean, 'null'] }
+        troca_id: { type: [string, 'null'], description: 'Troca pendente aberta pela propria pessoa; null nos demais casos.' }
         conflitos:
           type: array
           items: { $ref: '#/components/schemas/ConflitoEscala' }
