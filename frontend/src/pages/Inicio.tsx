@@ -1,11 +1,91 @@
-import { ArrowRightIcon, ShieldAlertIcon } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { ArrowRightIcon, CakeIcon, ShieldAlertIcon } from 'lucide-react'
 
-import type { ContextoAtuacao, Usuario } from '../api/sessao'
+import { api } from '../api/client'
+import type { components } from '../api/schema'
+import { cabecalhos, type ContextoAtuacao, type Usuario } from '../api/sessao'
 import { itensVisiveis, type IdTela } from '@/components/layout/ListaNav'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { primeiroNome, rotuloPapel, rotuloTipoEscopo } from '@/lib/formatos'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { formatarData, primeiroNome, rotuloPapel, rotuloTipoEscopo } from '@/lib/formatos'
+
+type AlertaDozeAnos = components['schemas']['AlertaDozeAnos']
+
+/** Quem faz 12 anos nos próximos 30 dias na igreja do EBI (CA4, CA5). */
+function FazemDozeAnos({
+  escopo,
+  onSelecionarTela,
+}: {
+  escopo: ContextoAtuacao
+  onSelecionarTela: (tela: IdTela) => void
+}) {
+  const [alertas, setAlertas] = useState<AlertaDozeAnos[] | null>(null)
+  const [erro, setErro] = useState(false)
+
+  useEffect(() => {
+    let ativo = true
+    setAlertas(null)
+    setErro(false)
+    void api
+      .GET('/ebis/{id}/age-alerts', {
+        params: { path: { id: escopo.escopo_id ?? '' }, query: { finalidade: 'aviso_12_anos' } },
+        headers: cabecalhos(undefined, escopo),
+      })
+      .then(({ data, error }) => {
+        if (!ativo) return
+        if (error || !data) setErro(true)
+        else setAlertas(data.data)
+      })
+    return () => {
+      ativo = false
+    }
+  }, [escopo])
+
+  return (
+    <Card data-testid="aniversarios-12">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <CakeIcon className="size-5" aria-hidden="true" />
+          Fazem 12 anos nos próximos 30 dias
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3">
+        {erro && (
+          <Alert variant="destructive" role="alert">
+            <AlertDescription>Não foi possível carregar os aniversários.</AlertDescription>
+          </Alert>
+        )}
+        {alertas?.length === 0 && (
+          <p className="text-sm text-muted-foreground">Ninguém faz 12 anos nos próximos 30 dias.</p>
+        )}
+        {alertas && alertas.length > 0 && (
+          <>
+            <ul className="flex flex-col gap-2">
+              {alertas.map((a) => (
+                <li key={a.participante_id} className="flex flex-wrap items-center gap-x-3 text-sm">
+                  <span className="font-medium">{a.nome}</span>
+                  <code>{a.matricula}</code>
+                  <span>{formatarData(a.faz_12_em)}</span>
+                </li>
+              ))}
+            </ul>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="self-start"
+              onClick={() => onSelecionarTela('excecao')}
+            >
+              Exceção inclusiva
+            </Button>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
 
 /**
  * Tela inicial: saudação, papéis do usuário e atalhos para as telas que ele
@@ -64,6 +144,11 @@ export function Inicio({
           </AlertDescription>
         </Alert>
       )}
+
+      {escopo?.tipo_escopo === 'ebi' &&
+        ['coordenadora', 'coordenadora_chefe'].includes(escopo.papel ?? '') && (
+          <FazemDozeAnos escopo={escopo} onSelecionarTela={onSelecionarTela} />
+        )}
 
       <div className="flex flex-col gap-3">
         <h3 className="text-sm font-medium tracking-wide text-muted-foreground uppercase">
