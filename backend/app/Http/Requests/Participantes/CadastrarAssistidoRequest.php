@@ -20,7 +20,7 @@ class CadastrarAssistidoRequest extends FormRequest
             'nome' => ['required', 'string', 'max:255'],
             'nome_social' => ['nullable', 'string', 'max:255'],
             'data_nascimento' => ['required', 'date', 'before_or_equal:today'],
-            'igreja_referencia_id' => ['nullable', 'string', 'max:255'],
+            'igreja_referencia_id' => ['nullable', 'string', 'exists:igrejas,id'],
             'responsavel_nome' => ['required', 'string', 'max:255'],
             'responsavel_telefone' => ['nullable', 'string', 'max:30'],
             'tipo_relacao' => ['required', 'string', 'max:50'],

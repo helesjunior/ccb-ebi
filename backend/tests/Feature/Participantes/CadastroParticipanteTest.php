@@ -27,12 +27,23 @@ it('registra o aceite opcional da igreja de referencia', function () {
     $resposta = $this->postJson('/api/v1/participants', [
         'nome' => 'Bia Lima',
         'data_nascimento' => '2015-01-20',
-        'igreja_referencia_id' => (string) Str::ulid(),
+        'igreja_referencia_id' => igrejaComEbi()['igreja']->id,
     ], $this->auth + ['Idempotency-Key' => (string) Str::uuid()])
         ->assertCreated()
         ->json();
 
     expect($resposta['igreja_referencia_id'])->not->toBeNull();
+});
+
+it('recusa igreja de referencia inexistente ou longa demais', function () {
+    foreach ([(string) Str::ulid(), str_repeat('a', 300)] as $igreja) {
+        $this->postJson('/api/v1/participants', [
+            'nome' => 'Fabi', 'data_nascimento' => '2016-05-10', 'igreja_referencia_id' => $igreja,
+        ], $this->auth)->assertStatus(422)->assertJsonValidationErrors('igreja_referencia_id');
+    }
+
+    expect(Participante::query()->count())->toBe(0)
+        ->and(EventoAuditoria::query()->where('acao', 'participante.cadastrado')->exists())->toBeFalse();
 });
 
 it('grava auditoria do cadastro', function () {

@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Auditoria\Models\EventoAuditoria;
 use App\Domain\Participantes\Models\Participante;
 use App\Domain\Participantes\Models\ResponsavelParticipante;
 use App\Domain\Privacidade\Models\ManifestacaoPrivacidade;
@@ -47,6 +48,19 @@ it('cadastro assistido exige evidencia e grava origem assistido', function () {
 
     // O arquivo de evidencia foi criado.
     expect(Arquivo::query()->whereKey($participante->evidencia_consentimento_id)->exists())->toBeTrue();
+});
+
+it('cadastro assistido recusa igreja de referencia inexistente ou longa demais', function () {
+    foreach ([(string) Str::ulid(), str_repeat('a', 300)] as $igreja) {
+        $this->post('/api/v1/participants/assisted', [
+            'nome' => 'Gil', 'data_nascimento' => '2015-04-01', 'responsavel_nome' => 'Marta', 'tipo_relacao' => 'mae',
+            'igreja_referencia_id' => $igreja,
+            'evidencia' => UploadedFile::fake()->createWithContent('termo.pdf', "%PDF-1.4\n%EOF\n"),
+        ], $this->auth + ['Accept' => 'application/json'])->assertStatus(422)->assertJsonValidationErrors('igreja_referencia_id');
+    }
+
+    expect(Participante::query()->count())->toBe(0)
+        ->and(EventoAuditoria::query()->where('acao', 'participante.cadastrado')->exists())->toBeFalse();
 });
 
 it('cadastro assistido sem evidencia e recusado', function () {
